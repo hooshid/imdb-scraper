@@ -1,0 +1,9 @@
+.idea
+/.idea
+composer.lock
+/composer.lock
+/tests/cache
+/tests/.phpunit.result.cache
+.phpunit.result.cache
+/vendor
+/cache
