@@ -69,7 +69,10 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                         <tr>
                             <td><b>Birth:</b></td>
                             <td>
-                                <?php echo $birth["day"] . ' ' . $birth["month"] . ' ' . $birth["year"]; ?> (<?php echo $birth["date"]; ?>)
+                                <?php echo $birth["day"] . ' ' . $birth["month"] . ' ' . $birth["year"]; ?>
+                                <?php if ($birth["date"]) { ?>
+                                    (<?php echo $birth["date"]; ?>)
+                                <?php } ?>
 
                                 <?php if (!empty($birth["place"])) { ?>
                                     <br>in <?php echo $birth["place"]; ?>

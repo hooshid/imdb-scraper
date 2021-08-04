@@ -166,8 +166,12 @@ class Person extends Base
                 preg_match('|/search/name\?birth_year=(\d{4})|ims', $match[1], $year);
                 preg_match('|/search/name\?birth_place=.*?"\s*>(.*?)<|ims', $match[1], $place);
 
-                $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
-                $full_date = date("Y-m-d", $date_normalize);
+                if(!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
+                    $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
+                    $full_date = date("Y-m-d", $date_normalize);
+                } else {
+                    $full_date = null;
+                }
 
                 $this->data['birth'] = [
                     "day" => @$day_mon[2],
@@ -197,8 +201,12 @@ class Person extends Base
                 preg_match('|/search/name\?death_place=.*?"\s*>(.*?)<|ims', $match[1], $place);
                 preg_match('/\(([^)]+)\)/ims', $match[1], $cause);
 
-                $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
-                $full_date = date("Y-m-d", $date_normalize);
+                if(!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
+                    $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
+                    $full_date = date("Y-m-d", $date_normalize);
+                } else {
+                    $full_date = null;
+                }
 
                 $this->data['death'] = [
                     "day" => @$day_mon[2],

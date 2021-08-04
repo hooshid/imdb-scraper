@@ -175,7 +175,7 @@ class Base extends Config
         return $this->htmlDomParser[$page] = HtmlDomParser::str_get_html($source);
     }
 
-    protected function cleanString($str, $remove = null): string
+    protected function cleanString($str, $remove = null): ?string
     {
         if (!empty($remove)) {
             $str = str_replace($remove, "", $str);
@@ -185,6 +185,6 @@ class Base extends Config
         $str = str_replace("&nbsp;", " ", $str);
         $str = html_entity_decode($str);
 
-        return trim(strip_tags($str));
+        return ($str ? trim(strip_tags($str)) : null);
     }
 }

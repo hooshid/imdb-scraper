@@ -71,6 +71,21 @@ class PersonTest extends TestCase
         $this->assertEquals('New York City, New York, USA', $result['place']);
     }
 
+    public function testBirthJustYearFilled()
+    {
+        $person = $this->getPerson("0287891"); // Cihangir Gaffari
+        $result = $person->birth();
+
+        $this->assertIsArray($result);
+        $this->assertCount(6, $result);
+        $this->assertNull($result['day']);
+        $this->assertNull($result['month']);
+        $this->assertNull($result['mon']);
+        $this->assertEquals('1942', $result['year']);
+        $this->assertNull($result['date']);
+        $this->assertNull($result['place']);
+    }
+
     public function testBirthReturnEmptyArrayIfNoData()
     {
         $person = $this->getPerson("0830093"); // Gillian Stein
@@ -154,9 +169,9 @@ class PersonTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertCount(3, $result);
-        $this->assertEquals("5' 9¾\"", $result['imperial']);
-        $this->assertEquals('1.77 m', $result['metric']);
-        $this->assertEquals('177', $result['metric_cm']);
+        $this->assertEquals("5' 9\"", $result['imperial']);
+        $this->assertEquals('1.75 m', $result['metric']);
+        $this->assertEquals('175', $result['metric_cm']);
     }
 
     public function testBodyHeightReturnsEmptyArrayIfNoData()
