@@ -115,7 +115,6 @@ class Base extends Config
         }
     }
 
-
     /**
      * Get and validate the IMDB ID
      *
