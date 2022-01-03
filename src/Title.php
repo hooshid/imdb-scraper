@@ -330,6 +330,10 @@ class Title extends Base
             }
 
             $runtimeValue = $dom->find('[data-testid="title-techspec_runtime"] li span', 0)->innerText();
+            if(empty($runtimeValue)) {
+                $runtimeValue = $this->cleanString($dom->find('[data-testid="title-techspec_runtime"] div', 0)->innerText());
+            }
+
             if (isset($runtimeValue)) {
                 // ..h ..min
                 if(preg_match('/(\d{1,2})h (\d{1,2})min/', $runtimeValue, $matches)) {
@@ -339,6 +343,10 @@ class Title extends Base
                 } // ..h
                 elseif(preg_match('/(\d{1,2})h/', $runtimeValue, $matches)) {
                     $m = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
+                    return $this->data['runtime'] = $m;
+                } // ..minutes
+                elseif(preg_match('/(\d{1,2}) minutes/', $runtimeValue, $matches)) {
+                    $m = isset($matches[1]) ? intval($matches[1]) : 0;
                     return $this->data['runtime'] = $m;
                 } // ..min
                 elseif(preg_match('/(\d{1,2})min/', $runtimeValue, $matches)) {
