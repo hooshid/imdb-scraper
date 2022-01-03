@@ -39,6 +39,7 @@
         <h2 class="text-center pb-30">Examples</h2>
 
         <div class="menu-links">
+            <b><a href="/example/charts.php">Charts: BoxOffice</a></b>
             <a href="/example/person.php?id=0000134">Person: Robert De Niro</a>
             <a href="/example/person.php?id=1297015">Person: Emma Stone</a>
             <a href="/example/person.php?id=0908094">Person: Paul Walker</a>
