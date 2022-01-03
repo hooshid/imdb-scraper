@@ -117,6 +117,27 @@ class Base extends Config
 
 
     /**
+     * Get and validate the IMDB ID
+     *
+     * @param string
+     * @return mixed|string|null
+     */
+    public function getImdbId($id)
+    {
+        if (empty($id)) {
+            return null;
+        }
+
+        $imdbId = null;
+        if (preg_match("/(tt\d{5,8})/", $id, $matches)) {
+            $imdbId = $matches[1];
+        }
+
+        return $imdbId;
+    }
+
+
+    /**
      * Get numerical value for month name
      * @param string name name of month
      * @return integer month number
