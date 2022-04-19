@@ -9,6 +9,11 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
     $config = new Config();
     $config->language = 'en-US,en';
     $title = new Title($_GET["id"], $config);
+    if (isset($_GET["output"])) {
+        header("Content-Type: application/json");
+        echo json_encode($title->full());
+        exit();
+    }
 } else {
     header("Location: /example");
     exit;
@@ -27,6 +32,7 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 <body>
 
 <a href="/example" class="back-page">Go back</a>
+<a href="/example/title.php?id=<?php echo $_GET["id"]; ?>&output=json" class="output-json-link">JSON Format</a>
 
 <div class="container">
     <div class="boxed">

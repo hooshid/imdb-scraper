@@ -242,7 +242,7 @@ class Title extends Base
             }
 
             $this->data['original_title'] = $dom->find('[data-testid="hero-title-block__original-title"]', 0)->innerText();
-            $this->data['original_title'] = $this->cleanString(htmlspecialchars_decode($this->data['original_title']), "Original title:");
+            $this->data['original_title'] = $this->cleanString(htmlspecialchars_decode($this->data['original_title']), ["Original title:", "Originaltitel:"]);
         }
 
         return $this->data['original_title'];
@@ -375,15 +375,7 @@ class Title extends Base
 
             $photo = $dom->find('[data-testid="hero-media__poster"] img', 0)->getAttribute('src');
 
-            $arr = explode('@@', $photo);
-            if (!isset($arr[1])) {
-                $arr = explode('@', $photo);
-            }
-
-            $this->data['photo'] = [
-                "original" => @str_replace($arr[1], ".jpg", $photo),
-                "thumbnail" => @$photo
-            ];
+            $this->data['photo'] = $this->photoUrl($photo);
         }
 
         return $this->data['photo'];

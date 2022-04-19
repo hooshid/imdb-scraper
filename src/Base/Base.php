@@ -130,7 +130,9 @@ class Base extends Config
         $imdbId = null;
         if (preg_match("/(tt\d{5,8})/", $id, $matches)) {
             $imdbId = $matches[1];
-        }
+        } else if (preg_match("/(nm\d{5,8})/", $id, $matches)) {
+                $imdbId = $matches[1];
+            }
 
         return $imdbId;
     }
@@ -206,5 +208,29 @@ class Base extends Config
         $str = html_entity_decode($str);
 
         return ($str ? trim(strip_tags($str)) : null);
+    }
+
+    /**
+     * extract numbers from string
+     *
+     * @param string $str
+     * @return int
+     */
+    protected function getNumbers(string $str): int
+    {
+        return (int)filter_var($str, FILTER_SANITIZE_NUMBER_INT);
+    }
+
+    protected function photoUrl(string $url): array
+    {
+        $arr = explode('@@', $url);
+        if (!isset($arr[1])) {
+            $arr = explode('@', $url);
+        }
+
+        return [
+            "original" => @str_replace($arr[1], ".jpg", $url),
+            "thumbnail" => @$url
+        ];
     }
 }

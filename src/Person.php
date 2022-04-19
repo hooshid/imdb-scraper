@@ -135,15 +135,7 @@ class Person extends Base
             }
 
             if (preg_match('!<td.*?id="img_primary".*?>*.*?<img.*?src="(.*?)"!ims', $source, $match)) {
-                $arr = explode('@@', $match[1]);
-                if (!isset($arr[1])) {
-                    $arr = explode('@', $match[1]);
-                }
-
-                $this->data['photo'] = [
-                    "original" => @str_replace($arr[1], ".jpg", $match[1]),
-                    "thumbnail" => @$match[1]
-                ];
+                $this->data['photo'] = $this->photoUrl($match[1]);
             } else {
                 return [];
             }
@@ -196,23 +188,26 @@ class Person extends Base
     {
         if (empty($this->data['death'])) {
             if (preg_match('|Died</td>(.*?)</td|ims', $this->getContentOfPage("bio"), $match)) {
-                preg_match('|/search/name\?death_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<|', $match[1], $day_mon);
-                preg_match('|/search/name\?death_date=(\d{4})|ims', $match[1], $year);
-                preg_match('|/search/name\?death_place=.*?"\s*>(.*?)<|ims', $match[1], $place);
-                preg_match('/\(([^)]+)\)/ims', $match[1], $cause);
+                preg_match('<time datetime="(.*)">', $match[1], $death_date_regx);
+                $death_date = explode("-", $death_date_regx[1]);
 
-                if(!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
-                    $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
+                preg_match('/<a href="\/search\/name\?death_date=\d{4}-\d{2}-\d{2}.*"\n?>(\w+)\s(\d+)/', $match[1], $day_mon);
+
+                preg_match('|/search/name\?death_place=.*?"\s*>(.*?)<|ims', $match[1], $place); // place of death
+                preg_match('/\(([^)]+)\)/ims', $match[1], $cause); // cause of death
+
+                if(!empty($death_date[0]) and !empty($death_date[1]) and !empty($death_date[2])) {
+                    $date_normalize = mktime(00, 00, 00, $death_date[1], @$death_date[2], $death_date[0]);
                     $full_date = date("Y-m-d", $date_normalize);
                 } else {
                     $full_date = null;
                 }
 
                 $this->data['death'] = [
-                    "day" => @$day_mon[2],
-                    "month" => @$day_mon[3],
-                    "mon" => @$day_mon[1],
-                    "year" => @$year[1],
+                    "day" => @$death_date[2],
+                    "month" => @$day_mon[1],
+                    "mon" => @$death_date[1],
+                    "year" => @$death_date[0],
                     "date" => @$full_date,
                     "place" => @$this->cleanString($place[1]),
                     "cause" => @$this->cleanString($cause[1])

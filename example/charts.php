@@ -8,6 +8,11 @@ require __DIR__ . "/../vendor/autoload.php";
 $config = new Config();
 $config->language = 'en-US,en';
 $charts = new Charts($config);
+if (isset($_GET["output"])) {
+    header("Content-Type: application/json");
+    echo json_encode($charts->getChartsBoxOffice());
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,6 +27,7 @@ $charts = new Charts($config);
 <body>
 
 <a href="/example" class="back-page">Go back</a>
+<a href="/example/charts.php?output=json" class="output-json-link">JSON Format</a>
 
 <div class="container">
     <div class="boxed">

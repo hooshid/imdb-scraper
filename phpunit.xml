@@ -2,5 +2,6 @@
 
 <phpunit bootstrap="vendor/autoload.php"
          colors="true"
-         verbose="true">
+         verbose="true"
+         stopOnFailure="true">
 </phpunit>

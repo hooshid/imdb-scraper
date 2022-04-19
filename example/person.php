@@ -9,6 +9,11 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
     $config = new Config();
     $config->language = 'en-US,en';
     $person = new Person($_GET["id"], $config);
+    if (isset($_GET["output"])) {
+        header("Content-Type: application/json");
+        echo json_encode($person->full());
+        exit();
+    }
 } else {
     header("Location: /example");
     exit;
@@ -27,6 +32,7 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 <body>
 
 <a href="/example" class="back-page">Go back</a>
+<a href="/example/person.php?id=<?php echo $_GET["id"]; ?>&output=json" class="output-json-link">JSON Format</a>
 
 <div class="container">
     <div class="boxed">
@@ -89,7 +95,8 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                         <tr>
                             <td><b>Death:</b></td>
                             <td>
-                                <?php echo $death["day"] . ' ' . $death["month"] . ' ' . $death["year"]; ?> (<?php echo $death["date"]; ?>)
+                                <?php echo $death["day"] . ' ' . $death["month"] . ' ' . $death["year"]; ?>
+                                (<?php echo $death["date"]; ?>)
 
                                 <?php if (!empty($death["place"])) { ?>
                                     <br>in <?php echo $death["place"]; ?>
@@ -131,7 +138,9 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                         ?>
                         <tr>
                             <td><b>Body Height:</b></td>
-                            <td><?php echo $body_height["imperial"]; ?> - <?php echo $body_height["metric"]; ?> (<?php echo $body_height["metric_cm"]; ?> cm)</td>
+                            <td><?php echo $body_height["imperial"]; ?> - <?php echo $body_height["metric"]; ?>
+                                (<?php echo $body_height["metric_cm"]; ?> cm)
+                            </td>
                         </tr>
                     <?php } ?>
 

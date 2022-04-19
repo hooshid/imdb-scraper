@@ -22,3 +22,9 @@ if (empty($_GET["search"])) {
     header("Location: /example");
     exit;
 }
+
+// search person
+if ($_GET['type'] === 'nm') {
+    header("Location: person-search.php?name=" . $search);
+    exit;
+}
