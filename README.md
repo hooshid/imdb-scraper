@@ -14,7 +14,12 @@ $ composer require hooshid/imdb-scraper
 see example folder
 
 ## Todo
-* add sort in search in example
+* add search title
+* add example of search person
+* add charts
+* add full feature of person
+* add full feature of movies
+* add series seasons
 
 ## License
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
