@@ -174,24 +174,24 @@ class Title extends Base
             $ititle = $imatch['ititle'];
             // serial
             if (preg_match('!(?<title>.*) \((?<movietype>.*)(?<year>\d{4}|\?{4})((&nbsp;|–)(?<endyear>\d{4}|)).*\)(.*)!', $ititle, $match)) {
-                $this->data['title'] = htmlspecialchars_decode($match['title']);
+                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
                 $this->data['year'] = $match['year'];
                 $this->data['end_year'] = $match['endyear'] ?: null;
                 $this->data['type'] = trim($match['movietype']);
             } elseif (preg_match('!(?<title>.*) \((?<movietype>.*)(?<year>\d{4}|\?{4}).*\)(.*)!', $ititle, $match)) {
-                $this->data['title'] = htmlspecialchars_decode($match['title']);
+                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
                 $this->data['year'] = $match['year'];
                 $this->data['end_year'] = $match['year'];
                 $this->data['type'] = trim($match['movietype']);
             } // not yet released, but have been given a movietype.
             elseif (preg_match('!(?<title>.*) \((?<movietype>.*)\)(.*)!', $ititle, $match)) {
-                $this->data['title'] = htmlspecialchars_decode($match['title']);
+                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
                 $this->data['year'] = null;
                 $this->data['end_year'] = null;
                 $this->data['type'] = trim($match['movietype']);
             } // not yet released, so no dates etc.
             elseif (preg_match('!<title>(?<title>.*) - IMDb</title>!', $this->page["title"], $match)) {
-                $this->data['title'] = htmlspecialchars_decode($match['title']);
+                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
                 $this->data['year'] = null;
                 $this->data['end_year'] = null;
             }
@@ -221,7 +221,7 @@ class Title extends Base
             }
 
             $this->data['title'] = $dom->find('[data-testid="hero-title-block__title"]', 0)->innerText();
-            $this->data['title'] = $this->cleanString(htmlspecialchars_decode($this->data['title']));
+            $this->data['title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($this->data['title'])));
         }
 
         return $this->data['title'];
@@ -242,7 +242,7 @@ class Title extends Base
             }
 
             $this->data['original_title'] = $dom->find('[data-testid="hero-title-block__original-title"]', 0)->innerText();
-            $this->data['original_title'] = $this->cleanString(htmlspecialchars_decode($this->data['original_title']), ["Original title:", "Originaltitel:"]);
+            $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($this->data['original_title']), ["Original title:", "Originaltitel:"]));
         }
 
         return $this->data['original_title'];

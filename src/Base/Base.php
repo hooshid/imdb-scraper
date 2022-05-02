@@ -233,4 +233,17 @@ class Base extends Config
             "thumbnail" => @$url
         ];
     }
+
+    /**
+     * Decode special chars
+     *
+     * @param $str
+     * @return array|string|string[]
+     */
+    public function htmlSpecialCharsDecode($str)
+    {
+        $str = str_replace("&#x27;","'", $str);
+
+        return $str;
+    }
 }
