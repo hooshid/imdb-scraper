@@ -127,6 +127,7 @@ class Title extends Base
         $this->title();
         $this->originalTitle();
         $this->setupTitleYearType();
+        $this->type();
         $this->runtime();
         $this->photo();
         $this->tagline();
@@ -268,7 +269,7 @@ class Title extends Base
                 $this->data['type'] = 'TV Special';
             }
 
-            if(empty($this->data['type'])){
+            if (empty($this->data['type'])) {
                 $this->data['type'] = 'Movie';
             }
         }
@@ -330,26 +331,26 @@ class Title extends Base
             }
 
             $runtimeValue = $dom->find('[data-testid="title-techspec_runtime"] li span', 0)->innerText();
-            if(empty($runtimeValue)) {
+            if (empty($runtimeValue)) {
                 $runtimeValue = $this->cleanString($dom->find('[data-testid="title-techspec_runtime"] div', 0)->innerText());
             }
 
             if (isset($runtimeValue)) {
                 // ..h ..min
-                if(preg_match('/(\d{1,2})h (\d{1,2})min/', $runtimeValue, $matches)) {
+                if (preg_match('/(\d{1,2})h (\d{1,2})min/', $runtimeValue, $matches)) {
                     $h = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
                     $m = isset($matches[2]) ? intval($matches[2]) : 0;
                     return $this->data['runtime'] = $h + $m;
                 } // ..h
-                elseif(preg_match('/(\d{1,2})h/', $runtimeValue, $matches)) {
+                elseif (preg_match('/(\d{1,2})h/', $runtimeValue, $matches)) {
                     $m = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
                     return $this->data['runtime'] = $m;
                 } // ..minutes
-                elseif(preg_match('/(\d{1,2}) minutes/', $runtimeValue, $matches)) {
+                elseif (preg_match('/(\d{1,2}) minutes/', $runtimeValue, $matches)) {
                     $m = isset($matches[1]) ? intval($matches[1]) : 0;
                     return $this->data['runtime'] = $m;
                 } // ..min
-                elseif(preg_match('/(\d{1,2})min/', $runtimeValue, $matches)) {
+                elseif (preg_match('/(\d{1,2})min/', $runtimeValue, $matches)) {
                     $m = isset($matches[1]) ? intval($matches[1]) : 0;
                     return $this->data['runtime'] = $m;
                 }
@@ -381,6 +382,7 @@ class Title extends Base
         return $this->data['photo'];
     }
 
+    // TODO deprecate this method
     /**
      * Get the main tagline for the movie
      *
@@ -389,14 +391,9 @@ class Title extends Base
     public function tagline(): ?string
     {
         if (empty($this->data['tagline'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="storyline-taglines"]') == false) {
-                return null;
+            if (count($this->taglines()) > 0) {
+                $this->data['tagline'] = $this->taglines()[0];
             }
-
-            $this->data['tagline'] = $dom->find('[data-testid="storyline-taglines"] span', 0)->innerText();
-            $this->data['tagline'] = $this->cleanString($this->data['tagline']);
         }
 
         return $this->data['tagline'];
