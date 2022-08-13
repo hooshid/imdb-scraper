@@ -322,7 +322,7 @@ class TitleTest extends TestCase
 
     public function testLanguagesReturnEmptyArrayIfNoData()
     {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
+        $title = $this->getTitle("0171236"); // The Lor Girl (Dokhtare Lor ya irane druz va emruz)
         $result = $title->languages();
 
         $this->assertIsArray($result);
@@ -360,7 +360,7 @@ class TitleTest extends TestCase
 
     public function testCountriesReturnsEmptyArrayIfNoCountry()
     {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
+        $title = $this->getTitle("7332864"); // Der Schuldschein des Pandola (Marineleutnant von Brinken. I)
         $result = $title->countries();
 
         $this->assertIsArray($result);
