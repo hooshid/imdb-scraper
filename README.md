@@ -42,9 +42,9 @@ echo $title->originalTitle(); // Lost in Translation
 ### Get movie/series (title) data
 Movie: The Matrix (1999) / URL: https://www.imdb.com/title/tt0133093 / ID: 0133093
 ``` php
-$config = new Config();
+$config = new \Hooshid\ImdbScraper\Base\Config();
 $config->language = 'en-US,en';
-$title = new Title(0133093, $config);
+$title = new \Hooshid\ImdbScraper\Title(0133093, $config);
 echo $title->title(); // The Matrix
 echo $title->year(); // 1999
 
@@ -53,7 +53,7 @@ echo json_encode($title->full());
 ```
 Tv Series: Game of Thrones (2011-2019) / URL: https://www.imdb.com/title/tt0944947 / ID: 0944947
 ``` php
-$title = new Title(0944947); // without config!
+$title = new \Hooshid\ImdbScraper\Title(0944947); // without config!
 echo $title->title(); // Game of Thrones
 echo $title->year(); // 2011
 echo $title->endYear(); // 2019 -> just for series
