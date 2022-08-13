@@ -13,6 +13,14 @@ $ composer require hooshid/imdb-scraper
 ```
 see example folder
 
+Run examples
+=========
+The example gives you a quick demo to make sure everything's working, some sample code and lets you easily see some available data.
+
+From the example folder in the root of this repository start up php's inbuilt webserver and browse to [http://localhost:8000]()
+
+`php -S localhost:8000`
+
 ## Todo
 * add search title
 * add example of search person
