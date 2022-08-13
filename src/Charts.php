@@ -40,8 +40,8 @@ class Charts extends Base
 
         $i = 0;
         foreach ($dom->find('table.chart tbody tr') as $row) {
-            $id = $this->getImdbId($row->find('.titleColumn a',0)->getAttribute('href'));
-            if($id) {
+            $id = $this->getImdbId($row->find('.titleColumn a', 0)->getAttribute('href'));
+            if ($id) {
                 $this->data['boxoffice'][$i]['id'] = $id;
                 $this->data['boxoffice'][$i]['title'] = $this->cleanString($row->find('.titleColumn a', 0)->innerText());
                 $this->data['boxoffice'][$i]['weeks'] = $this->cleanString($row->find('.weeksColumn', 0)->innerText());
@@ -50,13 +50,13 @@ class Charts extends Base
                 $weekend = $this->cleanString($row->find('.ratingColumn', 0)->innerText());
                 $moneyPattern = "/[\$£]([\d\.]+)(M|K)/";
                 $weekendMatches = null;
-                preg_match($moneyPattern, $weekend, $weekendMatches,PREG_OFFSET_CAPTURE);
+                preg_match($moneyPattern, $weekend, $weekendMatches, PREG_OFFSET_CAPTURE);
                 $this->data['boxoffice'][$i]['weekend'] = $weekendMatches[2][0] === 'M' ? $weekendMatches[1][0] : $weekendMatches[1][0] / 1000;
 
                 // Gross
                 $gross = $this->cleanString($row->find('.ratingColumn .secondaryInfo', 0)->innerText());
                 $grossMatches = null;
-                preg_match($moneyPattern, $gross, $grossMatches,PREG_OFFSET_CAPTURE);
+                preg_match($moneyPattern, $gross, $grossMatches, PREG_OFFSET_CAPTURE);
                 $this->data['boxoffice'][$i]['gross'] = $grossMatches[2][0] === 'M' ? $grossMatches[1][0] : $grossMatches[1][0] / 1000;
 
                 $i++;
