@@ -83,6 +83,10 @@ echo json_encode($person->full());
 ### Other examples
 just open the example folder, we put all examples and methods demo for you in there!
 
+## Related projects
+* [Rottentomatoes Scraper](https://github.com/hooshid/rottentomatoes-scraper)
+* [Metacritic Scraper](https://github.com/hooshid/metacritic-scraper)
+
 ## Todo
 * add search title
 * add example of search person

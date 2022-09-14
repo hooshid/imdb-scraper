@@ -131,12 +131,11 @@ class Base extends Config
         if (preg_match("/(tt\d{5,8})/", $id, $matches)) {
             $imdbId = $matches[1];
         } else if (preg_match("/(nm\d{5,8})/", $id, $matches)) {
-                $imdbId = $matches[1];
-            }
+            $imdbId = $matches[1];
+        }
 
         return $imdbId;
     }
-
 
     /**
      * Get numerical value for month name
@@ -150,10 +149,10 @@ class Base extends Config
 
     /**
      * Get a page from IMDb, which will be cached in memory for repeated use
-     * @param string $page Name of the page or some other context to build the URL with to retrieve the page
+     * @param string|null $page Name of the page or some other context to build the URL with to retrieve the page
      * @return string
      */
-    protected function getContentOfPages($page = null): string
+    protected function getContentOfPages(string $page = null): string
     {
         return $this->pages->get($this->buildUrl($page));
     }
@@ -164,7 +163,7 @@ class Base extends Config
      * @param string|null $page
      * @return string
      */
-    protected function getContentOfPage($page = null): string
+    protected function getContentOfPage(string $page = null): string
     {
         if (!empty($this->page[$page])) {
             return $this->page[$page];
@@ -174,12 +173,13 @@ class Base extends Config
 
         return $this->page[$page];
     }
+
     /**
      * Overrideable method to build the URL used by getPage
-     * @param string $page OPTIONAL
+     * @param string|null $page OPTIONAL
      * @return string
      */
-    protected function buildUrl($page = null): string
+    protected function buildUrl(string $page = null): string
     {
         return '';
     }
@@ -188,7 +188,8 @@ class Base extends Config
      * @param $page
      * @return mixed|HtmlDomParser
      */
-    protected function getHtmlDomParser($page){
+    protected function getHtmlDomParser($page)
+    {
         if (!empty($this->htmlDomParser[$page])) {
             return $this->htmlDomParser[$page];
         }
@@ -242,8 +243,6 @@ class Base extends Config
      */
     public function htmlSpecialCharsDecode($str)
     {
-        $str = str_replace("&#x27;","'", $str);
-
-        return $str;
+        return str_replace("&#x27;", "'", $str);
     }
 }

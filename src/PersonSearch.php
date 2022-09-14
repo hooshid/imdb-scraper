@@ -27,7 +27,7 @@ class PersonSearch extends Base
      * @return string
      * @throws Exception
      */
-    protected function buildUrl($page = null): string
+    protected function buildUrl(string $page = null): string
     {
         return "https://" . $this->imdbSiteUrl . "/search/name/" . $page;
     }
