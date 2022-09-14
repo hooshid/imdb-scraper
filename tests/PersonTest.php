@@ -73,7 +73,7 @@ class PersonTest extends TestCase
 
     public function testBirthJustYearFilled()
     {
-        $person = $this->getPerson("0287891"); // Cihangir Gaffari
+        $person = $this->getPerson("0275981"); // Karin Field
         $result = $person->birth();
 
         $this->assertIsArray($result);
@@ -81,9 +81,9 @@ class PersonTest extends TestCase
         $this->assertNull($result['day']);
         $this->assertNull($result['month']);
         $this->assertNull($result['mon']);
-        $this->assertEquals('1942', $result['year']);
+        $this->assertEquals('1944', $result['year']);
         $this->assertNull($result['date']);
-        $this->assertNull($result['place']);
+        $this->assertEquals('Hamburg, Germany', $result['place']);
     }
 
     public function testBirthReturnEmptyArrayIfNoData()
