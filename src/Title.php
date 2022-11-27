@@ -579,7 +579,7 @@ class Title extends Base
                 return null;
             }
 
-            $this->data['aspect_ratio'] = $dom->find('[data-testid="title-techspec_aspectratio"] li span', 0)->innerText();
+            $this->data['aspect_ratio'] = $dom->find('[data-testid="title-techspec_aspectratio"] li label', 0)->innerText();
             $this->data['aspect_ratio'] = $this->cleanString($this->data['aspect_ratio']);
         }
 
