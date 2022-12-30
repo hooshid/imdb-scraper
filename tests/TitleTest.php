@@ -423,7 +423,7 @@ class TitleTest extends TestCase
 
     public function testColorsReturnEmptyArrayIfNoData()
     {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
+        $title = $this->getTitle("9843312"); // Ninja Ko
         $result = $title->colors();
 
         $this->assertIsArray($result);
