@@ -3,6 +3,7 @@
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
 [![Total Downloads][ico-downloads]][link-downloads]
+[![PHP Composer](https://github.com/hooshid/imdb-scraper/actions/workflows/tests.yml/badge.svg)](https://github.com/hooshid/imdb-scraper/actions/workflows/tests.yml)
 
 Using this IMDb API, you are able to search, browse and extract data of movies, tv series and musics on imdb.com.
 
