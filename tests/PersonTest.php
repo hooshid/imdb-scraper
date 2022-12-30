@@ -28,7 +28,7 @@ class PersonTest extends TestCase
     public function testFullName()
     {
         $person = $this->getPerson("0000134"); // Robert De Niro
-        $this->assertEquals('Robert De Niro', $person->fullName());
+        $this->assertEquals('Robert De Niro Test', $person->fullName());
     }
 
     /***************************************[ Photo ]***************************************/
