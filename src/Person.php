@@ -129,16 +129,15 @@ class Person extends Base
     public function photo(): array
     {
         if (empty($this->data['photo'])) {
-            $source = $this->getContentOfPage("name");
-            if (preg_match('/<img class="no-pic-image".*alt="No photo available.*>/isU', $source)) {
+            $dom = $this->getHtmlDomParser("name");
+
+            if ($dom->findOneOrFalse('.ipc-page-background--baseAlt .ipc-page-section--baseAlt .ipc-poster .ipc-poster__poster-image img.ipc-image') == false) {
                 return [];
             }
 
-            if (preg_match('!<td.*?id="img_primary".*?>*.*?<img.*?src="(.*?)"!ims', $source, $match)) {
-                $this->data['photo'] = $this->photoUrl($match[1]);
-            } else {
-                return [];
-            }
+            $photo = $dom->find('.ipc-page-background--baseAlt .ipc-page-section--baseAlt .ipc-poster .ipc-poster__poster-image img.ipc-image', 0)->getAttribute('src');
+
+            $this->data['photo'] = $this->photoUrl($photo);
         }
 
         return $this->data['photo'];
