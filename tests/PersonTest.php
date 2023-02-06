@@ -193,7 +193,7 @@ class PersonTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertCount(1, $result);
-        $this->assertGreaterThan("3000", strlen($result[0]['text']));
+        $this->assertEquals("3297", strlen($result[0]['text']));
     }
 
     public function testBioReturnsEmptyArrayIfNoData()

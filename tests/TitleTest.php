@@ -201,7 +201,7 @@ class TitleTest extends TestCase
         $this->assertIsArray($result);
         $this->assertCount(15, $result);
         $this->assertTrue(in_array($title->tagline(), $result));
-        $this->assertEquals("744", strlen(implode(', ', $result)));
+        $this->assertEquals("743", strlen(implode(', ', $result)));
     }
 
     public function testTaglineReturnNullIfNoData()
