@@ -86,7 +86,7 @@ class Title extends Base
             "ReleaseInfo" => "/releaseinfo",
             "Soundtrack" => "/soundtrack",
             "Synopsis" => "/plotsummary",
-            "taglines" => "/taglines",
+            "taglines" => "/taglines/",
             "Technical" => "/technical",
             "title" => "/",
             "Trailers" => "/videogallery/content_type-trailer",
@@ -383,6 +383,7 @@ class Title extends Base
     }
 
     // TODO deprecate this method
+
     /**
      * Get the main tagline for the movie
      *
@@ -595,14 +596,18 @@ class Title extends Base
     public function taglines(): array
     {
         if (empty($this->data['taglines'])) {
-            $this->getContentOfPage("taglines");
-            // no such page
-            if ($this->page["taglines"] == "cannot open page") {
+            $dom = $this->getHtmlDomParser("taglines");
+
+            // not found boxoffice table
+            if ($dom->findOneOrFalse('.ipc-page-section--base ul.ipc-metadata-list') == false) {
                 return [];
             }
 
-            if (preg_match_all('!<div class="soda[^>]+>\s*(.*)\s*</div!U', $this->page["taglines"], $matches)) {
-                $this->data['taglines'] = array_map('trim', $matches[1]);
+            foreach ($dom->find('.ipc-page-section--base ul.ipc-metadata-list li') as $row) {
+                $tag = $this->cleanString($row->find('.ipc-html-content-inner-div', 0)->innerText());
+                if ($tag) {
+                    $this->data['taglines'][] = $tag;
+                }
             }
         }
 
