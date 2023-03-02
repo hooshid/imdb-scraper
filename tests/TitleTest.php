@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 class TitleTest extends TestCase
 {
-    protected function getTitle($id, $language = "en-US"): Title
+    protected function getTitle($id, $language = "en-US,en"): Title
     {
         $config = new Config();
         $config->language = $language;
