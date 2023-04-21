@@ -169,7 +169,7 @@ class PersonTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertCount(3, $result);
-        $this->assertEquals("5' 9\"", $result['imperial']);
+        $this->assertEquals("5' 9½\"", $result['imperial']);
         $this->assertEquals('1.75 m', $result['metric']);
         $this->assertEquals('175', $result['metric_cm']);
     }

@@ -152,6 +152,45 @@ class Person extends Base
     public function birth(): array
     {
         if (empty($this->data['birth'])) {
+            $dom = $this->getHtmlDomParser("bio");
+
+            // not found
+            if ($dom->findOneOrFalse('[data-testid="sub-section-overview"] .meta-data-list-full') == false) {
+                return [];
+            }
+
+            // new theme
+            /*
+            foreach ($dom->find('[data-testid="sub-section-overview"] .meta-data-list-full li') as $row) {
+                $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
+                if($label == "Born"){
+
+                    $html = $row->find('div')->innerhtml;
+                    preg_match('|/search/name\?birth_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<|', $html, $day_mon);
+                    preg_match('|/search/name\?birth_year=(\d{4})|ims', $html, $year);
+                    preg_match('|/search/name\?birth_place=.*?"\s*>(.*?)<|ims', $html, $place);
+
+                    if(!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
+                        $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
+                        $full_date = date("Y-m-d", $date_normalize);
+                    } else {
+                        $full_date = null;
+                    }
+
+                    $this->data['birth'] = [
+                        "day" => @$day_mon[2],
+                        "month" => @$day_mon[3],
+                        "mon" => @$day_mon[1],
+                        "year" => @$year[1],
+                        "date" => @$full_date,
+                        "place" => @$this->cleanString($place[1])
+                    ];
+
+                }
+            }
+*/
+
+            // old theme
             if (preg_match('|Born</td>(.*)</td|iUms', $this->getContentOfPage("bio"), $match)) {
                 preg_match('|/search/name\?birth_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<|', $match[1], $day_mon);
                 preg_match('|/search/name\?birth_year=(\d{4})|ims', $match[1], $year);
@@ -240,6 +279,29 @@ class Person extends Base
      */
     public function nickNames(): array
     {
+        // new theme
+        if (empty($this->data['nick_names'])) {
+            $dom = $this->getHtmlDomParser("bio");
+
+            // not found
+            if ($dom->findOneOrFalse('[data-testid="sub-section-overview"] .meta-data-list-full') == false) {
+                return [];
+            }
+
+            foreach ($dom->find('[data-testid="sub-section-overview"] .meta-data-list-full li') as $row) {
+                $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
+                if($label == "Nicknames" or $label == "Nickname"){
+                    foreach ($row->find('ul li span')->text() as $nick_name) {
+                        $nick_name = $this->cleanString($nick_name);
+                        if (!empty($nick_name)) {
+                            $this->data['nick_names'][] = $nick_name;
+                        }
+                    }
+                }
+            }
+        }
+
+        // old theme
         if (empty($this->data['nick_names'])) {
             $source = $this->getContentOfPage("bio");
             if (preg_match("!Nicknames</td>\s*<td>\s*(.*?)</td>\s*</tr>!ms", $source, $match)) {
