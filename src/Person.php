@@ -299,7 +299,7 @@ class Person extends Base
                 foreach ($dom->find('[data-testid="sub-section-overview"] ul li') as $row) {
                     $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
                     if ($label == "Birth name") {
-                        $this->data['birth_name'] = $this->cleanString($row->find('.ipc-metadata-list-item__content-container .ipc-html-content-inner-div')->text());
+                        $this->data['birth_name'] = $this->cleanString($row->find('.ipc-metadata-list-item__content-container .ipc-html-content-inner-div', 0)->text());
                     }
                 }
             }
