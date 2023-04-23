@@ -151,52 +151,45 @@ class Person extends Base
      */
     public function birth(): array
     {
+        // new theme
         if (empty($this->data['birth'])) {
-            $dom = $this->getHtmlDomParser("bio");
+            $dom = $this->getHtmlDomParser("name");
 
-            // not found
-            if ($dom->findOneOrFalse('[data-testid="sub-section-overview"] .meta-data-list-full') == false) {
-                return [];
-            }
+            // check data exist in index page of name
+            if ($dom->findOneOrFalse('[data-testid="nm_pd_bl"]') != false) {
 
-            // new theme
-            /*
-            foreach ($dom->find('[data-testid="sub-section-overview"] .meta-data-list-full li') as $row) {
-                $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
-                if($label == "Born"){
+                $html = $dom->find('[data-testid="nm_pd_bl"] ul', 0)->innerhtml;
 
-                    $html = $row->find('div')->innerhtml;
-                    preg_match('|/search/name\?birth_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<|', $html, $day_mon);
-                    preg_match('|/search/name\?birth_year=(\d{4})|ims', $html, $year);
-                    preg_match('|/search/name\?birth_place=.*?"\s*>(.*?)<|ims', $html, $place);
+                preg_match('/\/search\/name\/\?birth_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<\/a>/im', $html, $day_mon);
+                preg_match('/\/search\/name\/\?birth_year=(\d{4})/im', $html, $year);
+                preg_match('/\/search\/name\/\?birth_place=.*?"\s*>(.*?)<\/a>/im', $html, $place);
 
-                    if(!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
-                        $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
-                        $full_date = date("Y-m-d", $date_normalize);
-                    } else {
-                        $full_date = null;
-                    }
-
-                    $this->data['birth'] = [
-                        "day" => @$day_mon[2],
-                        "month" => @$day_mon[3],
-                        "mon" => @$day_mon[1],
-                        "year" => @$year[1],
-                        "date" => @$full_date,
-                        "place" => @$this->cleanString($place[1])
-                    ];
-
+                if (!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
+                    $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
+                    $full_date = date("Y-m-d", $date_normalize);
+                } else {
+                    $full_date = null;
                 }
-            }
-*/
 
-            // old theme
+                $this->data['birth'] = [
+                    "day" => @$day_mon[2],
+                    "month" => @$day_mon[3],
+                    "mon" => @$day_mon[1],
+                    "year" => @$year[1],
+                    "date" => @$full_date,
+                    "place" => @$this->cleanString($place[1])
+                ];
+            }
+        }
+
+        // old theme
+        if (empty($this->data['birth'])) {
             if (preg_match('|Born</td>(.*)</td|iUms', $this->getContentOfPage("bio"), $match)) {
                 preg_match('|/search/name\?birth_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<|', $match[1], $day_mon);
                 preg_match('|/search/name\?birth_year=(\d{4})|ims', $match[1], $year);
                 preg_match('|/search/name\?birth_place=.*?"\s*>(.*?)<|ims', $match[1], $place);
 
-                if(!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
+                if (!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
                     $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
                     $full_date = date("Y-m-d", $date_normalize);
                 } else {
@@ -225,6 +218,40 @@ class Person extends Base
     public function death(): array
     {
         if (empty($this->data['death'])) {
+            $dom = $this->getHtmlDomParser("name");
+
+            // check data exist in index page of name
+            if ($dom->findOneOrFalse('[data-testid="nm_pd_dl"]') != false) {
+                $html = $dom->find('[data-testid="nm_pd_dl"] ul', 0)->innerhtml;
+
+                // date of death
+                preg_match('/\/search\/name\/\?death_date=(\d{4}-\d{2}-\d{2}).*"\n?>(\w+)\s(\d+)<\/a>/im', $html, $death_date_regx);
+                $death_date = explode("-", $death_date_regx[1]);
+                // place of death
+                preg_match('/\/search\/name\/\?death_place=.*?"\s*>(.*?)<\/a>/im', $html, $place);
+                // cause of death
+                preg_match('/\(([^)]+)\)/im', $html, $cause);
+
+                if (!empty($death_date[0]) and !empty($death_date[1]) and !empty($death_date[2])) {
+                    $date_normalize = mktime(00, 00, 00, $death_date[1], @$death_date[2], $death_date[0]);
+                    $full_date = date("Y-m-d", $date_normalize);
+                } else {
+                    $full_date = null;
+                }
+
+                $this->data['death'] = [
+                    "day" => @$death_date[2],
+                    "month" => @$death_date_regx[2],
+                    "mon" => @$death_date[1],
+                    "year" => @$death_date[0],
+                    "date" => @$full_date,
+                    "place" => @$this->cleanString($place[1]),
+                    "cause" => @$this->cleanString($cause[1])
+                ];
+            }
+        }
+
+        if (empty($this->data['death'])) {
             if (preg_match('|Died</td>(.*?)</td|ims', $this->getContentOfPage("bio"), $match)) {
                 preg_match('<time datetime="(.*)">', $match[1], $death_date_regx);
                 $death_date = explode("-", $death_date_regx[1]);
@@ -234,7 +261,7 @@ class Person extends Base
                 preg_match('|/search/name\?death_place=.*?"\s*>(.*?)<|ims', $match[1], $place); // place of death
                 preg_match('/\(([^)]+)\)/ims', $match[1], $cause); // cause of death
 
-                if(!empty($death_date[0]) and !empty($death_date[1]) and !empty($death_date[2])) {
+                if (!empty($death_date[0]) and !empty($death_date[1]) and !empty($death_date[2])) {
                     $date_normalize = mktime(00, 00, 00, $death_date[1], @$death_date[2], $death_date[0]);
                     $full_date = date("Y-m-d", $date_normalize);
                 } else {
@@ -281,20 +308,19 @@ class Person extends Base
     {
         // new theme
         if (empty($this->data['nick_names'])) {
-            $dom = $this->getHtmlDomParser("bio");
+            $dom = $this->getHtmlDomParser("name");
 
-            // not found
-            if ($dom->findOneOrFalse('[data-testid="sub-section-overview"] .meta-data-list-full') == false) {
-                return [];
-            }
+            // check exist in index page
+            if ($dom->findOneOrFalse('[data-testid="DidYouKnow"]') != false) {
 
-            foreach ($dom->find('[data-testid="sub-section-overview"] .meta-data-list-full li') as $row) {
-                $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
-                if($label == "Nicknames" or $label == "Nickname"){
-                    foreach ($row->find('ul li span')->text() as $nick_name) {
-                        $nick_name = $this->cleanString($nick_name);
-                        if (!empty($nick_name)) {
-                            $this->data['nick_names'][] = $nick_name;
+                foreach ($dom->find('[data-testid="DidYouKnow"] div') as $row) {
+                    $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
+                    if ($label == "Nicknames" or $label == "Nickname") {
+                        foreach ($row->find('ul li span')->text() as $nick_name) {
+                            $nick_name = $this->cleanString($nick_name);
+                            if (!empty($nick_name)) {
+                                $this->data['nick_names'][] = $nick_name;
+                            }
                         }
                     }
                 }
@@ -354,7 +380,7 @@ class Person extends Base
 
                 preg_match("!(?<imperial>.*?)\((?<metric>.*?)\)!m", $height, $match);
 
-                if(empty($match['imperial']) or empty($match['metric'])){
+                if (empty($match['imperial']) or empty($match['metric'])) {
                     return [];
                 }
 
