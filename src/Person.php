@@ -316,7 +316,7 @@ class Person extends Base
                 foreach ($dom->find('[data-testid="DidYouKnow"] div') as $row) {
                     $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
                     if ($label == "Nicknames" or $label == "Nickname") {
-                        foreach ($row->find('ul li span')->text() as $nick_name) {
+                        foreach ($row->find('.ipc-metadata-list-item__content-container ul li span')->text() as $nick_name) {
                             $nick_name = $this->cleanString($nick_name);
                             if (!empty($nick_name)) {
                                 $this->data['nick_names'][] = $nick_name;
@@ -353,6 +353,33 @@ class Person extends Base
      */
     public function bodyHeight(): array
     {
+        // new theme
+        if (empty($this->data['body_height'])) {
+            $dom = $this->getHtmlDomParser("name");
+
+            // check exist in index page
+            if ($dom->findOneOrFalse('[data-testid="nm_pd_he"]') != false) {
+                $height = $dom->find('[data-testid="nm_pd_he"] .ipc-metadata-list-item__content-container span', 0)->innerText();
+                preg_match("/(?<imperial>.*?)\((?<metric>.*?)\)/im", $height, $match);
+
+                if (empty($match['imperial']) or empty($match['metric'])) {
+                    return [];
+                }
+
+                $this->data['body_height']["imperial"] = trim($match['imperial']);
+                $this->data['body_height']["metric"] = trim($match['metric']);
+
+                // change to centimeter
+                $height = $this->data['body_height']["metric"];
+                $height = str_replace(["m", ".", " "], "", $height);
+                if (strlen($height) == '2') {
+                    $height = $height . '0';
+                }
+                $this->data['body_height']["metric_cm"] = (int)$height;
+            }
+        }
+
+
         if (empty($this->data['body_height'])) {
             if (preg_match("!Height</td>\s*<td>\s*(?<imperial>.*?)\s*(&nbsp;)?\((?<metric>.*?)\)!m", $this->getContentOfPage("bio"), $match)) {
                 $this->data['body_height']["imperial"] = str_replace('&nbsp;', ' ', trim($match['imperial']));
