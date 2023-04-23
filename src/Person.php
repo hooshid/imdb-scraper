@@ -290,6 +290,21 @@ class Person extends Base
      */
     public function birthName(): ?string
     {
+        // new theme
+        if (empty($this->data['birth_name'])) {
+            $dom = $this->getHtmlDomParser("bio");
+
+            // check exist in bio page
+            if ($dom->findOneOrFalse('[data-testid="sub-section-overview"]') != false) {
+                foreach ($dom->find('[data-testid="sub-section-overview"] ul li') as $row) {
+                    $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
+                    if ($label == "Birth name") {
+                        $this->data['birth_name'] = $this->cleanString($row->find('.ipc-metadata-list-item__content-container .ipc-html-content-inner-div')->text());
+                    }
+                }
+            }
+        }
+
         if (empty($this->data['birth_name'])) {
             if (preg_match("!Birth Name</td>\s*<td>(.*?)</td>\n!m", $this->getContentOfPage("bio"), $match)) {
                 $this->data['birth_name'] = $this->cleanString($match[1]);
@@ -359,14 +374,16 @@ class Person extends Base
 
             // check exist in index page
             if ($dom->findOneOrFalse('[data-testid="nm_pd_he"]') != false) {
-                $height = $dom->find('[data-testid="nm_pd_he"] .ipc-metadata-list-item__content-container span', 0)->innerText();
-                preg_match("/(?<imperial>.*?)\((?<metric>.*?)\)/im", $height, $match);
+                $html = $dom->find('[data-testid="nm_pd_he"] .ipc-metadata-list-item__content-container span', 0)->innerText();
+                preg_match("/(?<imperial>.*?)\((?<metric>.*?)\)/im", $html, $match);
 
                 if (empty($match['imperial']) or empty($match['metric'])) {
                     return [];
                 }
 
-                $this->data['body_height']["imperial"] = trim($match['imperial']);
+                $imperial = str_replace("″", '"', $match['imperial']);
+                $imperial = str_replace("′", "'", $imperial);
+                $this->data['body_height']["imperial"] = trim($imperial);
                 $this->data['body_height']["metric"] = trim($match['metric']);
 
                 // change to centimeter
@@ -434,6 +451,33 @@ class Person extends Base
      */
     public function bio(): array
     {
+        // new theme
+        if (empty($this->data['bio'])) {
+            $dom = $this->getHtmlDomParser("bio");
+
+            // check exist
+            if ($dom->findOneOrFalse('[data-testid="sub-section-mini_bio"]') != false) {
+                $text = $dom->find('[data-testid="sub-section-mini_bio"] .ipc-metadata-list-item__content-container .ipc-html-content-inner-div', 0)->innerText();
+                $text = str_replace("class=\"ipc-md-link ipc-md-link--entity\"", "", $text);
+                $text = str_replace("/?ref_=nmbio_mbio", "", $text);
+                $text = str_replace("?ref_=nmbio_mbio", "", $text);
+                $bio["text"] = str_replace("href=\"/name/nm", "href=\"https://" . $this->imdbSiteUrl . "/name/nm",
+                    str_replace("href=\"/title/tt", "href=\"https://" . $this->imdbSiteUrl . "/title/tt",
+                        str_replace('/search/name', 'https://' . $this->imdbSiteUrl . '/search/name',
+                            $text)));
+
+                $author = $dom->find('[data-testid="sub-section-mini_bio"] .ipc-metadata-list-item-html-item--subtext div', 0)->innerText();
+                $author = str_replace("- IMDb Mini Biography By:", "", $author);
+                if ($author) {
+                    $bio["author"]["url"] = '';
+                    $bio["author"]["name"] = trim($author);
+                }
+
+                $this->data['bio'][] = $bio;
+            }
+        }
+
+        // old theme
         if (empty($this->data['bio'])) {
             $this->getContentOfPage("bio");
             // no such page
