@@ -36,14 +36,12 @@ class TitleTest extends TestCase
         $title = $this->getTitle("0133093"); // The Matrix
         $this->assertNull($title->originalTitle());
     }
-    // TODO fix this test
-/*
+
     public function testTitleWithOriginalTitle()
     {
         $title = $this->getTitle('0087544'); // Nausicaä of the Valley of the Wind
         $this->assertEquals('Kaze no tani no Naushika', $title->originalTitle());
     }
-    */
 
     public function testTitleNonEnglishTitleUsesEnglishTitle()
     {
@@ -57,15 +55,12 @@ class TitleTest extends TestCase
         $this->assertEquals('Thelma & Louise', $title->title());
     }
 
-    // TODO fix this test
-    /*
     public function testTitleInDifferentLanguage()
     {
         $title = $this->getTitle('3110958', 'de-DE'); // Now You See Me 2
         $this->assertEquals('Die Unfassbaren 2', $title->title());
         $this->assertEquals('Now You See Me 2', $title->originalTitle());
     }
-    */
 
     public function testTitleEpisodeTitle()
     {

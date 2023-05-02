@@ -238,12 +238,21 @@ class Title extends Base
         if (empty($this->data['original_title'])) {
             $dom = $this->getHtmlDomParser("title");
 
-            if ($dom->findOneOrFalse('[data-testid="hero-title-block__original-title"]') == false) {
-                return null;
+            if ($dom->findOneOrFalse('[data-testid="hero__pageTitle"], h1')) {
+                $original_title = $dom->find('[data-testid="hero__pageTitle"], h1', 0)->next_sibling()->innerText();
+                if(str_contains($original_title, "Original")){
+                    $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($original_title), ["Original title:", "Originaltitel:"]));
+                }
             }
+        }
 
+        if (empty($this->data['original_title'])) {
+            $dom = $this->getHtmlDomParser("title");
+
+            if ($dom->findOneOrFalse('[data-testid="hero-title-block__original-title"]') != false) {
             $this->data['original_title'] = $dom->find('[data-testid="hero-title-block__original-title"]', 0)->innerText();
             $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($this->data['original_title']), ["Original title:", "Originaltitel:"]));
+        }
         }
 
         return $this->data['original_title'];
