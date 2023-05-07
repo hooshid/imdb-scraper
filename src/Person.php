@@ -52,7 +52,7 @@ class Person extends Base
     {
         $pageUrls = [
             "name" => "/",
-            "bio" => "/bio"
+            "bio" => "/bio/"
         ];
 
         if (isset($pageUrls[$pageName])) {
