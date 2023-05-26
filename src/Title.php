@@ -631,6 +631,19 @@ class Title extends Base
      */
     public function locations(): array
     {
+        // new theme
+        if (empty($this->data['locations'])) {
+            $dom = $this->getHtmlDomParser("locations");
+
+            // check exist in locations page
+            if ($dom->findOneOrFalse('[data-testid="sub-section-flmg_locations"]') != false) {
+                foreach ($dom->find('[data-testid="sub-section-flmg_locations"] [data-testid="item-id"] .ipc-link')->text() as $location) {
+                    $this->data['locations'][] = $this->cleanString($location);
+                }
+            }
+        }
+
+        // old theme
         if (empty($this->data['locations'])) {
             $dom = $this->getHtmlDomParser("locations");
 
