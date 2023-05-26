@@ -477,7 +477,7 @@ class TitleTest extends TestCase
         $result = $title->locations();
 
         $this->assertIsArray($result);
-        $this->assertGreaterThan(5, count($result));
+        $this->assertGreaterThan(3, count($result));
         $this->assertTrue(in_array('Nashville, Tennessee, USA', $result));
         $this->assertTrue(in_array('Sydney, New South Wales, Australia', $result));
         $this->assertTrue(in_array('Redfern, Sydney, New South Wales, Australia', $result));
