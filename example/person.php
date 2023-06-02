@@ -157,7 +157,9 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                             <td><b>Mini Bio:</b></td>
                             <td>
                                 <?php echo $mini_bio; ?>
+                                <?php if(isset($bio[$idx]['author']) and isset($bio[$idx]['author']['name'])){?>
                                 <br>(Written by: <?php echo $bio[$idx]['author']['name']; ?>)
+                                <?php }?>
                             </td>
                         </tr>
                     <?php } ?>

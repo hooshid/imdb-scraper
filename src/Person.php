@@ -225,7 +225,7 @@ class Person extends Base
                 $html = $dom->find('[data-testid="nm_pd_dl"] ul', 0)->innerhtml;
 
                 // date of death
-                preg_match('/\/search\/name\/\?death_date=(\d{4}-\d{2}-\d{2}).*"\n?>(\w+)\s(\d+)<\/a>/im', $html, $death_date_regx);
+                preg_match('/\/search\/name\/\?death_date=(\d{4}-\d{1,2}-\d{1,2}).*"\n?>(\w+)\s(\d+)<\/a>/im', $html, $death_date_regx);
                 $death_date = explode("-", $death_date_regx[1]);
                 // place of death
                 preg_match('/\/search\/name\/\?death_place=.*?"\s*>(.*?)<\/a>/im', $html, $place);
@@ -256,7 +256,7 @@ class Person extends Base
                 preg_match('<time datetime="(.*)">', $match[1], $death_date_regx);
                 $death_date = explode("-", $death_date_regx[1]);
 
-                preg_match('/<a href="\/search\/name\?death_date=\d{4}-\d{2}-\d{2}.*"\n?>(\w+)\s(\d+)/', $match[1], $day_mon);
+                preg_match('/<a href="\/search\/name\?death_date=\d{4}-\d{1,2}-\d{1,2}.*"\n?>(\w+)\s(\d+)/', $match[1], $day_mon);
 
                 preg_match('|/search/name\?death_place=.*?"\s*>(.*?)<|ims', $match[1], $place); // place of death
                 preg_match('/\(([^)]+)\)/ims', $match[1], $cause); // cause of death
@@ -471,6 +471,9 @@ class Person extends Base
                 if ($author) {
                     $bio["author"]["url"] = '';
                     $bio["author"]["name"] = trim($author);
+                } else {
+                    $bio["author"]["url"] = null;
+                    $bio["author"]["name"] = null;
                 }
 
                 $this->data['bio'][] = $bio;

@@ -668,6 +668,18 @@ class Title extends Base
      */
     public function keywords(): array
     {
+        // new theme
+        if (empty($this->data['locations'])) {
+            $dom = $this->getHtmlDomParser("keywords");
+
+            // check exist in locations page
+            if ($dom->findOneOrFalse('[data-testid="sub-section"]') != false) {
+                foreach ($dom->find('[data-testid="sub-section"] ul li')->text() as $keyword) {
+                    $this->data['keywords'][] = $this->cleanString($keyword);
+                }
+            }
+        }
+
         if (empty($this->data['keywords'])) {
             $page = $this->getContentOfPage("keywords");
             if (preg_match_all('|<a href="/search/keyword[^>]+?>(.*?)</a>|', $page, $matches)) {
