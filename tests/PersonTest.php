@@ -124,6 +124,16 @@ class PersonTest extends TestCase
         $this->assertEmpty($result);
     }
 
+    public function testDeathReturnEmptyArrayIfNoValidData()
+    {
+        $person = $this->getPerson("0711405"); // Rasmus Rasmussen
+        $result = $person->death();
+
+        $this->assertIsArray($result);
+        $this->assertCount(0, $result);
+        $this->assertEmpty($result);
+    }
+
     /***************************************[ Birth Name ]***************************************/
 
     public function testBirthName()
