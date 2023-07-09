@@ -33,8 +33,14 @@ class Charts extends Base
     {
         $dom = $this->getHtmlDomParser("boxoffice");
 
+        // in first try page not load -> then sleep 5 sec and try again
+        if (!$dom->findOneOrFalse('table.chart')) {
+            sleep(5);
+            $dom = $this->getHtmlDomParser("boxoffice");
+        }
+
         // not found boxoffice table
-        if ($dom->findOneOrFalse('table.chart') == false) {
+        if (!$dom->findOneOrFalse('table.chart')) {
             return [];
         }
 
