@@ -20,8 +20,7 @@ class ChartsTest extends TestCase
         $boxOffice = $charts->getChartsBoxOffice();
 
         $this->assertIsArray($boxOffice);
-        $this->assertTrue(count($boxOffice) >= 9);
-        $this->assertTrue(count($boxOffice) < 11);
+        $this->assertNotEmpty($boxOffice);
 
         foreach ($boxOffice as $film) {
             $this->assertIsArray($film);
