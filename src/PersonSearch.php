@@ -42,29 +42,36 @@ class PersonSearch extends Base
 
         $dom = $this->getHtmlDomParser("?" . http_build_query($params));
 
-        if ($dom->findOneOrFalse('.lister-list') == false) {
+        if (!$dom->findOneOrFalse('.ipc-metadata-list')) {
             return [];
         }
 
-        $list = $dom->find('.lister-list', 0);
-        foreach ($list->find('.lister-item.mode-detail') as $loop) {
+        $list = $dom->find('.ipc-metadata-list', 0);
+        foreach ($list->find('.ipc-metadata-list-summary-item') as $loop) {
             $job = null;
-            if($loop->find("p.text-muted.text-small", 0)->innerText()){
-                $job = explode("|", $this->cleanString($loop->find("p.text-muted.text-small", 0)->innerText()))[0];
+            if($loop->findOneOrFalse('[data-testid="nlib-professions"]')){
+                $job = $this->cleanString($loop->find('[data-testid="nlib-professions"] li',0)->innerText());
                 $job = trim($job);
             }
 
             $bio = null;
-            if($loop->find("p", 1)->innerText()){
-                $bio = $this->cleanString($loop->find("p", 1)->innerText());
+            if($loop->find(".ipc-html-content-inner-div", 0)->innerText()){
+                $bio = $this->cleanString($loop->find(".ipc-html-content-inner-div", 0)->innerText());
+            }
+
+            $name = $this->cleanString(preg_replace('/^\d+\.\s*/', '', $loop->find(".ipc-title__text", 0)->text()));
+
+            $index = 0;
+            if (preg_match('/^(\d+)\.\s*/', $loop->find(".ipc-title__text", 0)->text(), $matches)) {
+                $index = $this->getNumbers($matches[1]);
             }
 
             $this->data['result'][] = [
-                'id' => $this->getImdbId($loop->find(".lister-item-header a", 0)->getAttribute('href')),
-                'url' => "https://" . $this->imdbSiteUrl . $this->cleanString($loop->find(".lister-item-header a", 0)->getAttribute('href')),
-                'photo' => $this->photoUrl($this->cleanString($loop->find(".lister-item-image img", 0)->getAttribute('src'))),
-                'index' => $this->getNumbers($loop->find(".lister-item-index", 0)->innerText()),
-                'name' => $this->cleanString($loop->find(".lister-item-header a", 0)->innerText()),
+                'id' => $this->getImdbId($loop->find(".ipc-title a", 0)->getAttribute('href')),
+                'url' => "https://" . $this->imdbSiteUrl . $this->cleanString($loop->find(".ipc-title a", 0)->getAttribute('href')),
+                'photo' => $this->photoUrl($this->cleanString($loop->find(".ipc-media img", 0)->getAttribute('src'))),
+                'index' => $index,
+                'name' => $name,
                 'job' => $job,
                 'bio' => $bio,
             ];

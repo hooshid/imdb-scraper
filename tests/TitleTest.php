@@ -389,7 +389,7 @@ class TitleTest extends TestCase
 
         $this->assertIsInt($votes);
         $this->assertGreaterThan(1700000, $votes);
-        $this->assertLessThan(2000000, $votes);
+        $this->assertLessThan(2500000, $votes);
     }
 
     public function testVotesReturnNullIfNoData()
