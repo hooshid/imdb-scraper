@@ -153,7 +153,7 @@ class TitleTest extends TestCase
     public function testRuntimeTVSeries()
     {
         $title = $this->getTitle("0306414"); // The Wire
-        $this->assertEquals(59, $title->runtime());
+        $this->assertEquals(60, $title->runtime());
     }
 
     public function testRuntimeTVEpisode()

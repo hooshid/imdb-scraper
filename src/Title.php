@@ -354,6 +354,10 @@ class Title extends Base
                 elseif (preg_match('/(\d{1,2})h/', $runtimeValue, $matches)) {
                     $m = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
                     return $this->data['runtime'] = $m;
+                } // ..hour
+                elseif (preg_match('/(\d{1,2}) hour/', $runtimeValue, $matches)) {
+                    $m = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
+                    return $this->data['runtime'] = $m;
                 } // ..minutes
                 elseif (preg_match('/(\d{1,2}) minutes/', $runtimeValue, $matches)) {
                     $m = isset($matches[1]) ? intval($matches[1]) : 0;
