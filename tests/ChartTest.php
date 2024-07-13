@@ -1,23 +1,23 @@
 <?php
 
 use Hooshid\ImdbScraper\Base\Config;
-use Hooshid\ImdbScraper\Charts;
+use Hooshid\ImdbScraper\Chart;
 use PHPUnit\Framework\TestCase;
 
-class ChartsTest extends TestCase
+class ChartTest extends TestCase
 {
-    protected function getCharts($language = "en-US"): Charts
+    protected function getChart($language = "en-US"): Chart
     {
         $config = new Config();
         $config->language = $language;
 
-        return new Charts($config);
+        return new Chart($config);
     }
 
-    public function testGetChartsBoxOffice()
+    public function testBoxOffice()
     {
-        $charts = $this->getCharts();
-        $boxOffice = $charts->getChartsBoxOffice();
+        $charts = $this->getChart();
+        $boxOffice = $charts->getBoxOffice();
 
         $this->assertIsArray($boxOffice);
         $this->assertNotEmpty($boxOffice);
