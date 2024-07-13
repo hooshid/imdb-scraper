@@ -9,11 +9,11 @@ if (count($_GET) > 0) {
     $config = new Config();
     $config->language = 'en-US,en';
     $nameSearch = new NameSearch($config);
-    $result = $nameSearch->search($_GET);
+    $results = $nameSearch->search($_GET);
 
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
-        echo json_encode($result);
+        echo json_encode($results);
         exit();
     }
 } else {
@@ -88,18 +88,18 @@ if (count($_GET) > 0) {
                     <th>Job</th>
                     <th>Bio</th>
                 </tr>
-                <?php foreach ($result as $row) { ?>
+                <?php foreach ($results as $result) { ?>
                     <tr>
-                        <td><?php echo $row['index']; ?></td>
+                        <td><?php echo $result['index']; ?></td>
                         <td>
-                            <?php if ($row['photo']) { ?>
-                                <img src="<?php echo $row['photo']['thumbnail']; ?>" alt="<?php echo $row['name']; ?>">
+                            <?php if ($result['photo']) { ?>
+                                <img src="<?php echo $result['photo']['thumbnail']; ?>" alt="<?php echo $result['name']; ?>">
                             <?php } ?>
                         </td>
-                        <td><a href="name.php?id=<?php echo $row['id']; ?>"><?php echo $row['name']; ?></a></td>
-                        <td><?php echo $row['id']; ?></td>
-                        <td><?php echo $row['job']; ?></td>
-                        <td><?php echo $row['bio']; ?></td>
+                        <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a></td>
+                        <td><?php echo $result['id']; ?></td>
+                        <td><?php echo $result['job']; ?></td>
+                        <td><?php echo $result['bio']; ?></td>
                     </tr>
                 <?php } ?>
             </table>
