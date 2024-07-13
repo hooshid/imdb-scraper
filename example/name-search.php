@@ -1,15 +1,15 @@
 <?php
 
 use Hooshid\ImdbScraper\Base\Config;
-use Hooshid\ImdbScraper\PersonSearch;
+use Hooshid\ImdbScraper\NameSearch;
 
 require __DIR__ . "/../vendor/autoload.php";
 
 if (count($_GET) > 0) {
     $config = new Config();
     $config->language = 'en-US,en';
-    $personSearch = new PersonSearch($config);
-    $result = $personSearch->search($_GET);
+    $nameSearch = new NameSearch($config);
+    $result = $nameSearch->search($_GET);
 
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
@@ -28,35 +28,44 @@ if (count($_GET) > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="googlebot" content="noindex">
-    <title>Person Search</title>
+    <title>Name search</title>
     <link rel="stylesheet" href="/example/style.css">
 </head>
 <body>
 
 <a href="/example" class="back-page">Go back</a>
-<a href="/example/person-search.php?<?php echo http_build_query($_GET); ?>&output=json" class="output-json-link">JSON Format</a>
+<a href="/example/name-search.php?<?php echo http_build_query($_GET); ?>&output=json" class="output-json-link">JSON
+    Format</a>
 
 <div class="container">
     <div class="boxed" style="max-width: 700px;">
-        <h2 class="text-center pb-30">Person Search</h2>
+        <h2 class="text-center pb-30">Name Search</h2>
 
-        <form action="/example/person-search.php" method="get">
+        <form action="/example/name-search.php" method="get">
             <div class="form-group">
                 <label for="name">Name:</label>
-                <input class="form-field" type="text" id="name" name="name" maxlength="50" placeholder="Search person name" value="<?php echo @strip_tags($_GET['name']); ?>">
+                <input class="form-field" type="text" id="name" name="name" maxlength="50"
+                       placeholder="Search name" value="<?php echo @strip_tags($_GET['name']); ?>">
             </div>
 
             <div class="form-group">
                 <label for="birth_monthday">Birthday:</label>
-                <input class="form-field" type="text" id="birth_monthday" name="birth_monthday" maxlength="50" placeholder="Format: MM-DD" value="<?php echo @strip_tags($_GET['birth_monthday']); ?>">
+                <input class="form-field" type="text" id="birth_monthday" name="birth_monthday" maxlength="50"
+                       placeholder="Format: MM-DD" value="<?php echo @strip_tags($_GET['birth_monthday']); ?>">
             </div>
 
             <div class="form-group">
                 <label for="gender">Gender:</label>
                 <select id="gender" name="gender" class="form-field">
                     <option value="">All</option>
-                    <option value="male" <?php if($_GET['gender']=="male"){echo " selected";}?>>Male</option>
-                    <option value="female" <?php if($_GET['gender']=="female"){echo " selected";}?>>Female</option>
+                    <option value="male" <?php if (@$_GET['gender'] == "male") {
+                        echo " selected";
+                    } ?>>Male
+                    </option>
+                    <option value="female" <?php if (@$_GET['gender'] == "female") {
+                        echo " selected";
+                    } ?>>Female
+                    </option>
                 </select>
             </div>
 
@@ -82,8 +91,12 @@ if (count($_GET) > 0) {
                 <?php foreach ($result as $row) { ?>
                     <tr>
                         <td><?php echo $row['index']; ?></td>
-                        <td><img src="<?php echo $row['photo']['thumbnail']; ?>"></td>
-                        <td><a href="<?php echo $row['url']; ?>" target="_blank"><?php echo $row['name']; ?></a></td>
+                        <td>
+                            <?php if ($row['photo']) { ?>
+                                <img src="<?php echo $row['photo']['thumbnail']; ?>" alt="<?php echo $row['name']; ?>">
+                            <?php } ?>
+                        </td>
+                        <td><a href="name.php?id=<?php echo $row['id']; ?>"><?php echo $row['name']; ?></a></td>
                         <td><?php echo $row['id']; ?></td>
                         <td><?php echo $row['job']; ?></td>
                         <td><?php echo $row['bio']; ?></td>
