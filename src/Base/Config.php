@@ -8,11 +8,17 @@ class Config
     /**
      * Set the language Imdb will use for titles, and some other localised data (e.g. tv episode air dates)
      * Any valid language code can be used here (e.g. en-US, de, pt-BR).
-     * If this option is specified, a Accept-Language header with this value
+     * If this option is specified, an Accept-Language header with this value
      * will be included in requests to IMDb.
      * @var string
      */
     public $language = "";
+
+    /**
+     * IMDB base domain.
+     * @var string
+     */
+    protected $baseUrl = 'https://www.imdb.com';
 
     /**
      * IMDB domain to use.
