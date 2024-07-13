@@ -32,7 +32,7 @@ class NameSearch extends Base
             return [];
         }
 
-        // if already result exist
+        // if result exist
         if ($this->data['result']) {
             return $this->data['result'];
         }
