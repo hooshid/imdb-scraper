@@ -1,20 +1,17 @@
 <?php
 
 use Hooshid\ImdbScraper\Base\Config;
-use Hooshid\ImdbScraper\Person;
+use Hooshid\ImdbScraper\Name;
 use PHPUnit\Framework\TestCase;
 
-class PersonTest extends TestCase
+class NameTest extends TestCase
 {
-    protected function getPerson($id, $language = "en-US"): Person
+    protected function getPerson($id, $language = "en-US"): Name
     {
         $config = new Config();
         $config->language = $language;
-        //$config->cachedir = realpath(dirname(__FILE__) . '/cache') . '/';
-        //$config->usezip = false;
-        //$config->cache_expire = 259200;
 
-        return new Person($id, $config);
+        return new Name($id, $config);
     }
 
     public function testMainUrl()

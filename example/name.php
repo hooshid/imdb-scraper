@@ -1,17 +1,18 @@
 <?php
 
-use Hooshid\ImdbScraper\Person;
+use Hooshid\ImdbScraper\Name;
 use Hooshid\ImdbScraper\Base\Config;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
+$id = $_GET["id"];
+if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $config = new Config();
     $config->language = 'en-US,en';
-    $person = new Person($_GET["id"], $config);
+    $name = new Name($id, $config);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
-        echo json_encode($person->full());
+        echo json_encode($name->full());
         exit();
     }
 } else {
@@ -26,25 +27,25 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="googlebot" content="noindex">
-    <title><?php echo $person->fullName(); ?></title>
+    <title><?php echo $name->fullName(); ?></title>
     <link rel="stylesheet" href="/example/style.css">
 </head>
 <body>
 
 <a href="/example" class="back-page">Go back</a>
-<a href="/example/person.php?id=<?php echo $_GET["id"]; ?>&output=json" class="output-json-link">JSON Format</a>
+<a href="/example/name.php?id=<?php echo $id; ?>&output=json" class="output-json-link">JSON Format</a>
 
 <div class="container">
     <div class="boxed">
         <!-- Name -->
-        <h2 class="text-center pb-30"><?php echo $person->fullName(); ?></h2>
+        <h2 class="text-center pb-30"><?php echo $name->fullName(); ?></h2>
 
         <div class="flex-container">
             <div class="col-25">
                 <!-- Photo -->
                 <div class="photo">
                     <?php
-                    if (($photo_url = $person->photo()) != NULL) {
+                    if (($photo_url = $name->photo()) != NULL) {
                         echo '<img src="' . $photo_url['original'] . '" alt="Cover">';
                     } else {
                         echo "No photo available";
@@ -58,18 +59,18 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                     <!-- Main Url -->
                     <tr>
                         <td style="width: 140px;"><b>IMDb Full Url:</b></td>
-                        <td>[<a href="<?php echo $person->mainUrl(); ?>">IMDb</a>]</td>
+                        <td>[<a href="<?php echo $name->mainUrl(); ?>">IMDb</a>]</td>
                     </tr>
 
                     <!-- IMDb id -->
                     <tr>
                         <td><b>IMDb id:</b></td>
-                        <td><?php echo $person->imdbId(); ?></td>
+                        <td><?php echo $name->imdbId(); ?></td>
                     </tr>
 
                     <!-- Birth information -->
                     <?php
-                    $birth = $person->birth();
+                    $birth = $name->birth();
                     if (!empty($birth)) {
                         ?>
                         <tr>
@@ -89,7 +90,7 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 
                     <!-- Death information -->
                     <?php
-                    $death = $person->death();
+                    $death = $name->death();
                     if (!empty($death)) {
                         ?>
                         <tr>
@@ -111,7 +112,7 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 
                     <!-- Birth name -->
                     <?php
-                    $birth_name = $person->birthName();
+                    $birth_name = $name->birthName();
                     if (!empty($birth_name)) {
                         ?>
                         <tr>
@@ -122,7 +123,7 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 
                     <!-- Nick name(s) -->
                     <?php
-                    $nick_names = $person->nickNames();
+                    $nick_names = $name->nickNames();
                     if (!empty($nick_names)) {
                         ?>
                         <tr>
@@ -133,7 +134,7 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 
                     <!-- Body Height -->
                     <?php
-                    $body_height = $person->bodyHeight();
+                    $body_height = $name->bodyHeight();
                     if (!empty($body_height)) {
                         ?>
                         <tr>
@@ -146,20 +147,20 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 
                     <!-- Mini Bio -->
                     <?php
-                    $bio = $person->bio();
+                    $bio = $name->bio();
                     if (!empty($bio)) {
                         if (count($bio) < 2) $idx = 0; else $idx = 1;
                         $mini_bio = $bio[$idx]["text"];
-                        $mini_bio = preg_replace('/https:\/\/' . str_replace(".", "\.", $person->imdbSiteUrl) . '\/name\/nm(\d{7,8})(\?ref_=nmbio_mbio)?/', 'person.php?id=\\1', $mini_bio);
-                        $mini_bio = preg_replace('/https:\/\/' . str_replace(".", "\.", $person->imdbSiteUrl) . '\/title\/tt(\d{7,8})(\?ref_=nmbio_mbio)?/', 'title.php?id=\\1', $mini_bio);
+                        $mini_bio = preg_replace('/https:\/\/' . str_replace(".", "\.", $name->imdbSiteUrl) . '\/name\/nm(\d{7,8})(\?ref_=nmbio_mbio)?/', 'name.php?id=nm\\1', $mini_bio);
+                        $mini_bio = preg_replace('/https:\/\/' . str_replace(".", "\.", $name->imdbSiteUrl) . '\/title\/tt(\d{7,8})(\?ref_=nmbio_mbio)?/', 'title.php?id=tt\\1', $mini_bio);
                         ?>
                         <tr>
                             <td><b>Mini Bio:</b></td>
                             <td>
                                 <?php echo $mini_bio; ?>
-                                <?php if(isset($bio[$idx]['author']) and isset($bio[$idx]['author']['name'])){?>
-                                <br>(Written by: <?php echo $bio[$idx]['author']['name']; ?>)
-                                <?php }?>
+                                <?php if (isset($bio[$idx]['author']) and isset($bio[$idx]['author']['name'])) { ?>
+                                    <br>(Written by: <?php echo $bio[$idx]['author']['name']; ?>)
+                                <?php } ?>
                             </td>
                         </tr>
                     <?php } ?>

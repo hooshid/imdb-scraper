@@ -6,7 +6,7 @@ use Exception;
 use Hooshid\ImdbScraper\Base\Base;
 use Hooshid\ImdbScraper\Base\Config;
 
-class Person extends Base
+class Name extends Base
 {
     protected $data = [
         'full_name' => null,
