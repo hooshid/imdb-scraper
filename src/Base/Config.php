@@ -27,53 +27,6 @@ class Config
     public $imdbSiteUrl = "www.imdb.com";
 
     /**
-     * Directory to store cached pages. This must be writable by the web
-     * server. It doesn't need to be under documentroot.
-     * @var string
-     */
-    public $cacheDir = './cache/';
-
-    /**
-     * Use cached pages if available?
-     * @var boolean
-     */
-    public $useCache = true;
-
-    /**
-     * Store the pages retrieved for later use?
-     * @var boolean
-     */
-    public $storeCache = true;
-
-    /**
-     * Use zip compression for caching the retrieved html-files?
-     * @see $converttozip if you're changing from false to true
-     * @var boolean
-     */
-    public $useZip = true;
-
-    /**
-     * Convert non-zip cache-files to zip
-     * You might want to use this if you weren't gzipping your cache files, but now are. They will be rewritten when they're used
-     * @var boolean
-     */
-    public $convertToZip = false;
-
-    /**
-     * Cache expiration time - cached pages older than this value (in seconds) will
-     * be automatically deleted.
-     * If 0 cached pages will never expire
-     * @var integer
-     */
-    public $cacheExpire = 604800;
-
-    /**
-     * Enable debug mode?
-     * @var boolean
-     */
-    public $debug = false;
-
-    /**
      * Throw exceptions when a request to fetch some content fails?
      * @var boolean
      */
@@ -126,7 +79,7 @@ class Config
      * Set the default user agent (if none is detected)
      * @var string
      */
-    public $defaultAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0';
+    public $defaultAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
     /**
      * Enforce the use of a special user agent
