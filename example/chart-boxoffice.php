@@ -45,7 +45,7 @@ if (isset($_GET["output"])) {
                 </tr>
                 <?php foreach ($chart->getBoxOffice() as $row) { ?>
                 <tr>
-                    <td><?php echo $row['id']; ?></td>
+                    <td><a href="title.php?id=<?php echo $row['id']; ?>"><?php echo $row['id']; ?></a></td>
                     <td><?php echo $row['title']; ?></td>
                     <td><?php echo $row['weekend']; ?></td>
                     <td><?php echo $row['gross']; ?></td>
