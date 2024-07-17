@@ -68,13 +68,6 @@ class Base extends Config
             foreach (array(
                          "language",
                          "imdbSiteUrl",
-                         "cacheDir",
-                         "useCache",
-                         "storeCache",
-                         "useZip",
-                         "convertToZip",
-                         "cacheExpire",
-                         "debug",
                          "throwHttpExceptions",
                          "useProxy",
                          "ipAddress",
@@ -163,15 +156,20 @@ class Base extends Config
      * @param string|null $page
      * @return string
      */
-    protected function getContentOfPage(string $page = null): string
+    protected function getContentOfPage(string $url = null): string
     {
-        if (!empty($this->page[$page])) {
-            return $this->page[$page];
+        if (!empty($this->page[$url])) {
+            return $this->page[$url];
         }
 
-        $this->page[$page] = $this->pages->get($this->buildUrl($page));
+        $u = $this->buildUrl($url);
+        if (!$u or $u == "") {
+            $u = $this->baseUrl . $url;
+        }
 
-        return $this->page[$page];
+        $this->page[$url] = $this->pages->get($u);
+
+        return $this->page[$url];
     }
 
     /**
@@ -185,17 +183,20 @@ class Base extends Config
     }
 
     /**
-     * @param $page
+     * Get content of URL as HtmlDomParser
+     *
+     * @param $url
      * @return mixed|HtmlDomParser
      */
-    protected function getHtmlDomParser($page)
+    protected function getHtmlDomParser($url)
     {
-        if (!empty($this->htmlDomParser[$page])) {
-            return $this->htmlDomParser[$page];
+        if (!empty($this->htmlDomParser[$url])) {
+            return $this->htmlDomParser[$url];
         }
 
-        $source = $this->getContentOfPage($page);
-        return $this->htmlDomParser[$page] = HtmlDomParser::str_get_html($source);
+        $source = $this->getContentOfPage($url);
+
+        return $this->htmlDomParser[$url] = HtmlDomParser::str_get_html($source);
     }
 
     protected function cleanString($str, $remove = null): ?string
@@ -222,8 +223,12 @@ class Base extends Config
         return (int)filter_var($str, FILTER_SANITIZE_NUMBER_INT);
     }
 
-    protected function photoUrl(string $url): array
+    protected function photoUrl(string $url = null): ?array
     {
+        if (!$url) {
+            return null;
+        }
+
         $arr = explode('@@', $url);
         if (!isset($arr[1])) {
             $arr = explode('@', $url);
