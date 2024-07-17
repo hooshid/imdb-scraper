@@ -67,11 +67,11 @@ echo $title->votes(); // 2022832
 // get all available data as json
 echo json_encode($title->full());
 ```
-### Get person (name) data
+### Get name data
 Person: Christopher Nolan / URL: https://www.imdb.com/name/nm0634240 / ID: 0634240
 
 ``` php
-$person = new \Hooshid\ImdbScraper\Person(0634240); // without config!
+$person = new \Hooshid\ImdbScraper\Name(0634240); // without config!
 echo $person->fullName(); // Christopher Nolan
 echo $person->birthName(); // Christopher Edward Nolan
 echo $person->birth()["date"]; // 1970-07-30
@@ -88,13 +88,24 @@ just open the example folder, we put all examples and methods demo for you in th
 * [Rottentomatoes Scraper](https://github.com/hooshid/rottentomatoes-scraper)
 * [Metacritic Scraper](https://github.com/hooshid/metacritic-scraper)
 
-## Todo
-* add search title
-* add example of search person
-* add charts
-* add full feature of person
-* add full feature of movies
-* add series seasons
+## Supported pages
+* Search:
+  * [ ] title (Movies, Series, Episodes, ...)
+  * [x] name (Actors, Directors, ...)
+* Chart:
+  * [x] Top 250 Movies
+  * [x] Top 250 TV Shows
+  * [x] Boxoffice
+* Name
+  * [x] Full name & Birth name & Nicknames
+  * [x] Photo
+  * [x] Birth date & Birth place
+  * [x] Death date & Death place & Cause of death
+  * [x] Bio
+  * [x] Body height
+* Title
+  * [x] Movie/Series Title
+  * [ ] Series seasons
 
 ## License
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
