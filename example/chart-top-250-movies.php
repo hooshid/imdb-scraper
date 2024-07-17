@@ -21,7 +21,7 @@ if (isset($_GET["output"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="googlebot" content="noindex">
-    <title>Chart - BoxOffice</title>
+    <title>Chart - Top 250 Movies</title>
     <link rel="stylesheet" href="/example/style.css">
 </head>
 <body>
