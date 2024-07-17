@@ -41,6 +41,7 @@
         <div class="menu-links">
             <a href="/example/chart-boxoffice.php">Chart: BoxOffice</a>
             <a href="/example/chart-top-250-movies.php">Chart: Top 250 Movies</a>
+            <a href="/example/chart-top-250-tv.php">Chart: Top 250 TV Shows</a>
 
             <a href="/example/name.php?id=nm0000134">Name: Robert De Niro</a>
             <a href="/example/name.php?id=nm1297015">Name: Emma Stone</a>

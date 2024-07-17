@@ -49,4 +49,22 @@ class ChartTest extends TestCase
         $this->assertGreaterThan(2916000, $result[0]['votes']);
     }
 
+    public function testTop250TV()
+    {
+        $chart = $this->getChart();
+        $result = $chart->getTop250TV();
+
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+
+        $this->assertEquals(1, $result[0]['rank']);
+        $this->assertEquals("tt0903747", $result[0]['id']);
+        $this->assertEquals("Breaking Bad", $result[0]['title']);
+        $this->assertEquals("tvSeries", $result[0]['type']);
+        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BYmQ4YWMxYjUtNjZmYi00MDQ1LWFjMjMtNjA5ZDdiYjdiODU5XkEyXkFqcGdeQXVyMTMzNDExODE5._V1_.jpg", $result[0]['image']);
+        $this->assertEquals(2008, $result[0]['year']);
+        $this->assertGreaterThan(9, $result[0]['rating']);
+        $this->assertGreaterThan(2150000, $result[0]['votes']);
+    }
+
 }
