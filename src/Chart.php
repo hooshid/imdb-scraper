@@ -8,6 +8,7 @@ class Chart extends Base
 {
     protected $data = [
         'boxoffice' => [],
+        'top-250-movies' => [],
     ];
 
     /**
@@ -58,5 +59,35 @@ class Chart extends Base
         return $this->data['boxoffice'];
     }
 
+    public function getTop250Movies()
+    {
+        $dom = $this->getHtmlDomParser("/chart/top/");
+
+        // if result exist
+        if ($this->data['top-250-movies']) {
+            return $this->data['top-250-movies'];
+        }
+
+        $list = $dom->find('#__NEXT_DATA__', 0);
+        $jsonLD = json_decode($list->innerText());
+
+        foreach ($jsonLD->props->pageProps->pageData->chartTitles->edges as $e) {
+            $id = $this->getImdbId($e->node->id);
+            if ($id) {
+                $this->data['top-250-movies'][] = [
+                    'rank' => (int)$e->currentRank,
+                    'id' => $id,
+                    'title' => $e->node->titleText->text,
+                    'type' => $e->node->titleType->id,
+                    'image' => $e->node->primaryImage->url,
+                    'year' => $e->node->releaseYear->year,
+                    'rating' => $e->node->ratingsSummary->aggregateRating,
+                    'votes' => $e->node->ratingsSummary->voteCount,
+                ];
+            }
+        }
+
+        return $this->data['top-250-movies'];
+    }
 }
 
