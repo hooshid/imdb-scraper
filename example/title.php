@@ -5,10 +5,11 @@ use Hooshid\ImdbScraper\Base\Config;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
+$id = $_GET["id"];
+if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $config = new Config();
     $config->language = 'en-US,en';
-    $title = new Title($_GET["id"], $config);
+    $title = new Title($id, $config);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title->full());
@@ -32,12 +33,15 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
 <body>
 
 <a href="/example" class="back-page">Go back</a>
-<a href="/example/title.php?id=<?php echo $_GET["id"]; ?>&output=json" class="output-json-link">JSON Format</a>
+<a href="/example/title.php?id=<?php echo $id; ?>&output=json" class="output-json-link">JSON Format</a>
 
 <div class="container">
     <div class="boxed">
         <!-- Title -->
-        <h2 class="text-center pb-30"><?php echo $title->title(); ?> (<?php echo $title->year(); ?><?php if($title->endYear() != $title->year()) {echo "-".$title->endYear();} ?>)</h2>
+        <h2 class="text-center pb-30"><?php echo $title->title(); ?>
+            (<?php echo $title->year(); ?><?php if ($title->endYear() != $title->year()) {
+                echo "-" . $title->endYear();
+            } ?>)</h2>
 
         <div class="flex-container">
             <div class="col-25">
@@ -120,7 +124,9 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                     <?php if ($title->year()) { ?>
                         <tr>
                             <td><b>Year:</b></td>
-                            <td><?php echo $title->year(); ?><?php if($title->endYear() != $title->year()) {echo "-".$title->endYear();} ?></td>
+                            <td><?php echo $title->year(); ?><?php if ($title->endYear() != $title->year()) {
+                                    echo "-" . $title->endYear();
+                                } ?></td>
                         </tr>
                     <?php } ?>
 
@@ -136,7 +142,9 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                     <?php if ($title->rating() and $title->votes()) { ?>
                         <tr>
                             <td><b>Rating & Votes:</b></td>
-                            <td><?php echo $title->rating(); ?>/10 from <?php echo number_format($title->votes()); ?> votes</td>
+                            <td><?php echo $title->rating(); ?>/10 from <?php echo number_format($title->votes()); ?>
+                                votes
+                            </td>
                         </tr>
                     <?php } ?>
 
@@ -225,6 +233,33 @@ if (isset ($_GET["id"]) && preg_match('/^[0-9]+$/', $_GET["id"])) {
                                         <li><?php echo $country; ?> : <?php echo $mpaa; ?></li>
                                     <?php } ?>
                                 </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Trailers -->
+                    <?php if (!empty($title->trailers())) { ?>
+                        <tr>
+                            <td><b>Trailers:</b></td>
+                            <td>
+                                <?php foreach ($title->trailers() as $video) { ?>
+                                    <a class="trailer-box" href="video.php?id=<?php echo $video['id']; ?>">
+                                        <div class="thumbnail">
+                                            <?php if ($video['thumbnail']) { ?>
+                                                <img src="<?php echo $video['thumbnail']; ?>"
+                                                     alt="<?php echo $video['video_title']; ?>" loading="lazy">
+                                            <?php } ?>
+
+                                            <div class="duration">
+                                                <?php echo $video['type']; ?> - <?php echo $video['duration']; ?>
+                                            </div>
+                                        </div>
+
+                                        <div class="title">
+                                            <?php echo $video['video_title']; ?>
+                                        </div>
+                                    </a>
+                                <?php } ?>
                             </td>
                         </tr>
                     <?php } ?>

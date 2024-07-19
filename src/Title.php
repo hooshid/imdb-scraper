@@ -30,6 +30,7 @@ class Title extends Base
         'taglines' => [],
         'locations' => [],
         'keywords' => [],
+        'trailers' => [],
         'mpaas' => [],
         'mpaa_reason' => null,
     ];
@@ -89,7 +90,8 @@ class Title extends Base
             "taglines" => "/taglines/",
             "Technical" => "/technical",
             "title" => "/",
-            "Trailers" => "/videogallery/content_type-trailer",
+            "videogallery" => "/videogallery/",
+            "trailer" => "/videogallery/?contentTypes=trailer",
             "Trivia" => "/trivia",
             "VideoSites" => "/externalsites",
         ];
@@ -144,6 +146,7 @@ class Title extends Base
         $this->keywords();
         $this->mpaa();
         $this->mpaaReason();
+        $this->trailers();
 
         return $this->data;
     }
@@ -217,7 +220,7 @@ class Title extends Base
         if (empty($this->data['title'])) {
             $dom = $this->getHtmlDomParser("title");
 
-            if ($dom->findOneOrFalse('[data-testid="hero-title-block__title"]') == false) {
+            if (!$dom->findOneOrFalse('[data-testid="hero-title-block__title"]')) {
                 return null;
             }
 
@@ -240,7 +243,7 @@ class Title extends Base
 
             if ($dom->findOneOrFalse('[data-testid="hero__pageTitle"], h1')) {
                 $original_title = $dom->find('[data-testid="hero__pageTitle"], h1', 0)->next_sibling()->innerText();
-                if(str_contains($original_title, "Original")){
+                if (strpos($original_title, 'Original') !== false) {
                     $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($original_title), ["Original title:", "Originaltitel:"]));
                 }
             }
@@ -249,10 +252,10 @@ class Title extends Base
         if (empty($this->data['original_title'])) {
             $dom = $this->getHtmlDomParser("title");
 
-            if ($dom->findOneOrFalse('[data-testid="hero-title-block__original-title"]') != false) {
-            $this->data['original_title'] = $dom->find('[data-testid="hero-title-block__original-title"]', 0)->innerText();
-            $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($this->data['original_title']), ["Original title:", "Originaltitel:"]));
-        }
+            if ($dom->findOneOrFalse('[data-testid="hero-title-block__original-title"]')) {
+                $this->data['original_title'] = $dom->find('[data-testid="hero-title-block__original-title"]', 0)->innerText();
+                $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($this->data['original_title']), ["Original title:", "Originaltitel:"]));
+            }
         }
 
         return $this->data['original_title'];
@@ -730,6 +733,46 @@ class Title extends Base
         }
 
         return $this->data['mpaa_reason'];
+    }
+
+    public function trailers()
+    {
+        $dom = $this->getHtmlDomParser("trailer");
+
+        if (empty($this->data['trailers'])) {
+            if ($dom->findOneOrFalse('.ipc-sub-grid')) {
+                foreach ($dom->find('.ipc-sub-grid .ipc-slate-card') as $e) {
+                    $id = $e->find('a', 0)->getAttribute('href');
+                    preg_match('/vi\d+/', $id, $matches);
+                    $id = $matches[0];
+
+                    $thumbnail = $e->find('.ipc-media img', 0)->getAttribute('src');
+                    $title = $e->find('.ipc-slate-card__title-text', 0)->text();
+                    $video_title = $e->find('.ipc-media img', 0)->getAttribute('alt');
+
+                    $type = $e->find('.ipc-lockup-overlay .ipc-lockup-overlay__text', 0)->text();
+                    $type = trim(preg_replace("/\s*\d{1,2}:\d{2}/", '', $type));
+
+                    $duration = $e->find('.ipc-lockup-overlay .ipc-lockup-overlay__text', 0)->text();
+                    if (preg_match("/\d{1,2}:\d{2}/", $duration, $match)) {
+                        $duration = trim($match[0]);
+                    }
+
+                    if (!empty($id) and !empty($title)) {
+                        $this->data['trailers'][] = [
+                            'id' => $id,
+                            'type' => $type,
+                            'title' => $this->cleanString($title),
+                            'video_title' => $this->cleanString($video_title),
+                            'thumbnail' => $this->cleanString($thumbnail),
+                            'duration' => $duration,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $this->data['trailers'];
     }
 
 }

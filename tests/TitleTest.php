@@ -526,4 +526,15 @@ class TitleTest extends TestCase
         $this->assertEquals('Rated R for sci-fi violence and brief language', $title->mpaaReason());
     }
 
+    /***************************************[ TRAILERS ]***************************************/
+
+    public function testTrailers()
+    {
+        $title = $this->getTitle("0133093"); // The Matrix
+        $result = $title->trailers();
+
+        $this->assertIsArray($result);
+        $this->assertGreaterThanOrEqual(3, count($result));
+    }
+
 }

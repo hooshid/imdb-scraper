@@ -51,7 +51,10 @@
             <a href="/example/name-search.php?birth_monthday=<?php echo date("m-d"); ?>">Search name: Born today</a>
 
             <a href="/example/title.php?id=tt0133093">Movie: The Matrix (1999)</a>
+            <a href="/example/title.php?id=tt6723592">Movie: Tenet (2020)</a>
             <a href="/example/title.php?id=tt3228774">Movie: Cruella (2021)</a>
+            <a href="/example/title.php?id=tt16277242">Movie: Society of the Snow (2023)</a>
+
             <a href="/example/title.php?id=tt0944947">TV Series: Game of Thrones (2011-2019)</a>
             <a href="/example/title.php?id=tt10048342">TV Mini Series: The Queen's Gambit (2020)</a>
         </div>

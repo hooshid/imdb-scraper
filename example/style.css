@@ -273,7 +273,40 @@ h2 {
     margin-top: 5px;
 }
 
+.trailer-box {
+    display: inline-block;
+    width: 273px;
+    margin-bottom: 15px;
+    text-decoration: none;
+}
 
+.trailer-box img {
+    max-width: 100%;
+    min-height: 140px;
+    border-radius: 5px;
+    box-shadow: 1px 1px 5px 0 #c7c7c7;
+}
+
+.trailer-box .thumbnail {
+    position: relative;
+    display: flex;
+}
+
+.trailer-box .title {
+    margin: 3px 0;
+}
+
+.trailer-box .duration {
+    background: rgba(0, 0, 0, 0.73);
+    display: inline-block;
+    border-radius: 5px;
+    color: #fff;
+    padding: 4px 8px;
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    font-size: 80%;
+}
 
 
 /*
