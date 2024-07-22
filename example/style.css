@@ -240,6 +240,7 @@ h2 {
     text-align: center;
     left: 0;
     top: 5px;
+    z-index: 1;
 }
 
 .back-page:hover,
