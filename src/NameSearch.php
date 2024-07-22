@@ -59,6 +59,11 @@ class NameSearch extends Base
 
             $name = $this->cleanString(preg_replace('/^\d+\.\s*/', '', $title));
 
+            $photo = null;
+            if (!empty($e->find(".ipc-media img", 0)->getAttribute('src'))) {
+                $photo = $this->photoUrl($this->cleanString($e->find(".ipc-media img", 0)->getAttribute('src')));
+            }
+
             $job = null;
             if ($e->findOneOrFalse('[data-testid="nlib-professions"]')) {
                 $job = implode(", ", $e->find('[data-testid="nlib-professions"] li')->innerText());
@@ -75,7 +80,7 @@ class NameSearch extends Base
                 'id' => $this->getImdbId($url),
                 'url' => $this->baseUrl . $url,
                 'name' => $name,
-                'photo' => $this->photoUrl($this->cleanString($e->find(".ipc-media img", 0)->getAttribute('src'))),
+                'photo' => $photo,
                 'job' => $job,
                 'bio' => $bio,
             ];
