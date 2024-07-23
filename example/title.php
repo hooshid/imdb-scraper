@@ -241,7 +241,7 @@ if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
                     <?php if (!empty($title->trailers())) { ?>
                         <tr>
                             <td><b>Trailers:</b></td>
-                            <td>
+                            <td class="trailers">
                                 <?php foreach ($title->trailers() as $video) { ?>
                                     <a class="trailer-box" href="video.php?id=<?php echo $video['id']; ?>">
                                         <div class="thumbnail">

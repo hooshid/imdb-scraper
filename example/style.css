@@ -114,15 +114,19 @@ td:last-child {
     background: var(--input-background);
     transition: border 0.3s ease;
 }
+
 .form-field::-moz-placeholder {
     color: var(--input-placeholder);
 }
+
 .form-field:-ms-input-placeholder {
     color: var(--input-placeholder);
 }
+
 .form-field::placeholder {
     color: var(--input-placeholder);
 }
+
 .form-field:focus {
     outline: none;
     border-color: var(--input-border-focus);
@@ -133,27 +137,33 @@ td:last-child {
     display: flex;
     width: 100%;
 }
+
 .form-group > label,
 .form-group .form-field {
     white-space: nowrap;
     display: block;
 }
+
 .form-group > label:not(:first-child):not(:last-child),
 .form-group .form-field:not(:first-child):not(:last-child) {
     border-radius: 0;
 }
+
 .form-group > label:first-child,
 .form-group .form-field:first-child {
     border-radius: 6px 0 0 6px;
 }
+
 .form-group > label:last-child,
 .form-group .form-field:last-child {
     border-radius: 0 6px 6px 0;
 }
+
 .form-group > label:not(:first-child),
 .form-group .form-field:not(:first-child) {
     margin-left: -1px;
 }
+
 .form-group .form-field {
     position: relative;
     z-index: 1;
@@ -162,6 +172,7 @@ td:last-child {
     margin-top: 0;
     margin-bottom: 0;
 }
+
 .form-group > label {
     text-align: center;
     padding: 8px 12px;
@@ -172,6 +183,7 @@ td:last-child {
     border: 1px solid var(--group-border);
     transition: background 0.3s ease, border 0.3s ease, color 0.3s ease;
 }
+
 .form-group:focus-within > label {
     color: var(--group-color-focus);
     background: var(--group-background-focus);
@@ -215,8 +227,6 @@ input[type=submit]:hover {
 }
 
 
-
-
 .photo img {
     border-radius: 4px;
     box-shadow: 0 2px 6px #777;
@@ -226,7 +236,6 @@ input[type=submit]:hover {
 h2 {
     font-size: 50px;
 }
-
 
 
 .back-page,
@@ -244,7 +253,7 @@ h2 {
 }
 
 .back-page:hover,
-.output-json-link:hover{
+.output-json-link:hover {
     color: #fff;
     background: #275efe;
 }
@@ -274,11 +283,16 @@ h2 {
     margin-top: 5px;
 }
 
+.trailers {
+    /*display: flex;*/
+}
+
 .trailer-box {
     display: inline-block;
     width: 273px;
     margin-bottom: 15px;
     text-decoration: none;
+    /*margin-right: 5px;*/
 }
 
 .trailer-box img {
@@ -294,7 +308,8 @@ h2 {
 }
 
 .trailer-box .title {
-    margin: 3px 0;
+    margin: 6px 0;
+    font-size: 90%;
 }
 
 .trailer-box .duration {
@@ -309,6 +324,10 @@ h2 {
     font-size: 80%;
 }
 
+.video {
+    max-width: 100%;
+    min-width: 100%;
+}
 
 /*
 h2 span {

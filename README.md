@@ -105,6 +105,7 @@ just open the example folder, we put all examples and methods demo for you in th
   * [x] Body height
 * Title
   * [x] Movie/Series Title
+  * [x] Trailers
   * [ ] Series seasons
 
 ## License

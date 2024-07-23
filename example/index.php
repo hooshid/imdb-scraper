@@ -57,6 +57,9 @@
 
             <a href="/example/title.php?id=tt0944947">TV Series: Game of Thrones (2011-2019)</a>
             <a href="/example/title.php?id=tt10048342">TV Mini Series: The Queen's Gambit (2020)</a>
+
+            <a href="/example/video.php?id=vi2051194393">Video: Tenet - Final Trailer</a>
+            <a href="/example/video.php?id=vi1032782617">Video: The Matrix - Theatrical Trailer</a>
         </div>
     </div>
 
