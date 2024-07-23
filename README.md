@@ -99,7 +99,7 @@ just open the example folder, we put all examples and methods demo for you in th
 * Name
   * [x] Full name & Birth name & Nicknames
   * [x] Photo
-  * [x] Birth date & Birth place
+  * [x] Birthdate & Birthplace
   * [x] Death date & Death place & Cause of death
   * [x] Bio
   * [x] Body height
