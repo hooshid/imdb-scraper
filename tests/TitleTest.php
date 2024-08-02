@@ -503,9 +503,10 @@ class TitleTest extends TestCase
         $this->assertIsArray($result);
         $this->assertGreaterThan(40, count($result));
         $this->assertTrue(in_array('artificial reality', $result));
-        $this->assertTrue(in_array('war with machines', $result));
         $this->assertTrue(in_array('simulated reality', $result));
         $this->assertTrue(in_array('dystopia', $result));
+        $this->assertTrue(in_array('post apocalypse', $result));
+        $this->assertTrue(in_array('artificial intelligence', $result));
     }
 
     /***************************************[ MPAA ]***************************************/
