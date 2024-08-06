@@ -329,6 +329,10 @@ h2 {
     min-width: 100%;
 }
 
+.name-photo {
+    width: 100px;
+}
+
 /*
 h2 span {
     text-decoration: underline;

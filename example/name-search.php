@@ -92,8 +92,18 @@ if (count($_GET) > 0) {
                     <tr>
                         <td><?php echo $result['index']; ?></td>
                         <td>
-                            <?php if ($result['photo']) { ?>
-                                <img src="<?php echo $result['photo']['thumbnail']; ?>" alt="<?php echo $result['name']; ?>">
+                            <?php if (!empty($result['photo'])) { ?>
+                                <img class="name-photo" src="<?php
+                                if (strpos($result['photo']['original'], '@') === false) {
+                                    echo str_replace('.jpg', '@._V1_QL75_UY120_CR30,0,120,120_.jpg', $result['photo']['original']);
+                                } elseif (strpos($result['photo']['original'], '@@')) {
+                                    echo str_replace('@@', '@@._V1_QL75_UY120_CR30,0,120,120_', $result['photo']['original']);
+                                } else {
+                                    echo str_replace('@', '@._V1_QL75_UY120_CR30,0,120,120_', $result['photo']['original']);
+                                }
+                                ?>"
+                                     alt="<?php echo $result['name']; ?>"
+                                     loading="lazy">
                             <?php } ?>
                         </td>
                         <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a></td>

@@ -39,6 +39,41 @@ class NameSearch extends Base
 
         $dom = $this->getHtmlDomParser("/search/name/?" . http_build_query($params));
 
+        $list = $dom->find('#__NEXT_DATA__', 0);
+        $jsonLD = json_decode($list->innerText());
+        $index = 1;
+        foreach ($jsonLD->props->pageProps->searchResults->nameResults->nameListItems as $e) {
+            $id = $this->getImdbId($e->nameId);
+            if ($id) {
+                $photo = null;
+                if (!empty($e->primaryImage)) {
+                    $photo = $this->photoUrl($this->cleanString($e->primaryImage->url));
+                }
+
+                $job = null;
+                if ($e->primaryProfessions) {
+                    $job = implode(", ", $e->primaryProfessions);
+                    $job = $this->cleanString($job);
+                }
+
+                $this->data['result'][] = [
+                    'index' => $index,
+                    'id' => $id,
+                    'url' => $this->baseUrl . "/name/" . $id,
+                    'name' => $this->cleanString($e->nameText),
+                    'photo' => $photo,
+                    'job' => $job,
+                    'bio' => $this->cleanString($e->bio),
+                ];
+                $index++;
+            }
+        }
+
+        // if result exist
+        if ($this->data['result']) {
+            return $this->data['result'];
+        }
+
         // check name list exist
         if (!$dom->findOneOrFalse('.ipc-metadata-list')) {
             return [];
