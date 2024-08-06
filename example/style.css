@@ -283,6 +283,10 @@ h2 {
     margin-top: 5px;
 }
 
+.name-photo {
+    width: 100px;
+}
+
 .trailers {
     /*display: flex;*/
 }
@@ -327,10 +331,6 @@ h2 {
 .video {
     max-width: 100%;
     min-width: 100%;
-}
-
-.name-photo {
-    width: 100px;
 }
 
 /*
