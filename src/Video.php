@@ -79,13 +79,28 @@ class Video extends Base
             'thumbnail_width' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->width,
             'thumbnail_height' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->height,
             'aspect_ratio' => $jsonLD->props->pageProps->videoPlaybackData->video->videoDimensions->aspectRatio,
-            'runtime' => $runtime,
+            'runtime' => $this->secondsToTimeFormat($jsonLD->props->pageProps->videoPlaybackData->video->runtime->value),
             'runtime_sec' => $jsonLD->props->pageProps->videoPlaybackData->video->runtime->value,
             'created_date' => $jsonLD->props->pageProps->videoPlaybackData->video->createdDate,
             'urls' => $urls,
         ];
 
         return $this->data['result'];
+    }
+
+    private function secondsToTimeFormat($seconds): string
+    {
+        // Calculate hours, minutes, and seconds
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $seconds = $seconds % 60;
+
+        // Determine the format based on whether there are hours
+        if ($hours > 0) {
+            return sprintf("%d:%d:%02d", $hours, $minutes, $seconds);
+        } else {
+            return sprintf("%d:%02d", $minutes, $seconds);
+        }
     }
 }
 
