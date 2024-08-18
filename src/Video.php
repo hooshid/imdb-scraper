@@ -58,15 +58,6 @@ class Video extends Base
             }
         }
 
-        $runtime = null;
-        if ($jsonLD->props->pageProps->videoPlaybackData->video->runtime->value <= 60) {
-            $runtime = '0:' . date('s', $jsonLD->props->pageProps->videoPlaybackData->video->runtime->value);
-        } else if ($jsonLD->props->pageProps->videoPlaybackData->video->runtime->value <= 86400) {
-            $runtime = ltrim(date('i:s', $jsonLD->props->pageProps->videoPlaybackData->video->runtime->value), '0');
-        } else if ($jsonLD->props->pageProps->videoPlaybackData->video->runtime->value > 86400) {
-            $runtime = date('G:', $jsonLD->props->pageProps->videoPlaybackData->video->runtime->value) . ltrim(date('i:s', $jsonLD->props->pageProps->videoPlaybackData->video->runtime->value), '0');
-        }
-
         $this->data['result'] = [
             'id' => $jsonLD->props->pageProps->videoPlaybackData->video->id,
             'type' => $jsonLD->props->pageProps->videoPlaybackData->video->contentType->displayName->value,
