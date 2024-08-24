@@ -69,7 +69,7 @@ class Video extends Base
             'thumbnail' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->url,
             'thumbnail_width' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->width,
             'thumbnail_height' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->height,
-            'aspect_ratio' => $jsonLD->props->pageProps->videoPlaybackData->video->videoDimensions->aspectRatio,
+            'aspect_ratio' => @$jsonLD->props->pageProps->videoPlaybackData->video->videoDimensions->aspectRatio,
             'runtime' => $this->secondsToTimeFormat($jsonLD->props->pageProps->videoPlaybackData->video->runtime->value),
             'runtime_sec' => $jsonLD->props->pageProps->videoPlaybackData->video->runtime->value,
             'created_date' => $jsonLD->props->pageProps->videoPlaybackData->video->createdDate,
