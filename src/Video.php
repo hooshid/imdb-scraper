@@ -62,7 +62,7 @@ class Video extends Base
             'id' => $jsonLD->props->pageProps->videoPlaybackData->video->id,
             'type' => $jsonLD->props->pageProps->videoPlaybackData->video->contentType->displayName->value,
             'title_id' => $jsonLD->props->pageProps->videoPlaybackData->video->primaryTitle->id,
-            'title' => $jsonLD->props->pageProps->videoPlaybackData->video->primaryTitle->titleText->text,
+            'title' => @$jsonLD->props->pageProps->videoPlaybackData->video->primaryTitle->titleText->text,
             'video_title' => $jsonLD->props->pageProps->videoPlaybackData->video->name->value,
             'description' => $jsonLD->props->pageProps->videoPlaybackData->video->description->value,
             'caption' => $jsonLD->props->pageProps->videoPlaybackData->video->primaryTitle->primaryImage->caption->plainText,
