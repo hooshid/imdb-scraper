@@ -27,7 +27,7 @@ class VideoTest extends TestCase
         $this->assertEquals('Tenet', $vi['title']);
         $this->assertEquals('Tenet', $vi['video_title']);
         $this->assertEquals('Official Trailer', $vi['description']);
-        $this->assertEquals('Dimple Kapadia, John David Washington, and Robert Pattinson in Tenet (2020)', $vi['caption']);
+        $this->assertEquals('John David Washington in Tenet (2020)', $vi['caption']);
         $this->assertEquals('https://m.media-amazon.com/images/M/MV5BZWEyNGRmMDUtM2E5MS00ZTM3LTk5ZWEtNjJmYTAzNTFiNzg3XkEyXkFqcGdeQVRoaXJkUGFydHlJbmdlc3Rpb25Xb3JrZmxvdw@@._V1_.jpg', $vi['thumbnail']);
         $this->assertEquals(1920, $vi['thumbnail_width']);
         $this->assertEquals(1080, $vi['thumbnail_height']);
