@@ -43,7 +43,7 @@ class ChartTest extends TestCase
         $this->assertEquals("tt0111161", $result[0]['id']);
         $this->assertEquals("The Shawshank Redemption", $result[0]['title']);
         $this->assertEquals("movie", $result[0]['type']);
-        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg", $result[0]['image']);
+        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMDAyY2FhYjctNDc5OS00MDNlLThiMGUtY2UxYWVkNGY2ZjljXkEyXkFqcGc@._V1_.jpg", $result[0]['image']);
         $this->assertEquals(1994, $result[0]['year']);
         $this->assertGreaterThan(9, $result[0]['rating']);
         $this->assertGreaterThan(2916000, $result[0]['votes']);
@@ -61,7 +61,7 @@ class ChartTest extends TestCase
         $this->assertEquals("tt0903747", $result[0]['id']);
         $this->assertEquals("Breaking Bad", $result[0]['title']);
         $this->assertEquals("tvSeries", $result[0]['type']);
-        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BYmQ4YWMxYjUtNjZmYi00MDQ1LWFjMjMtNjA5ZDdiYjdiODU5XkEyXkFqcGdeQXVyMTMzNDExODE5._V1_.jpg", $result[0]['image']);
+        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_.jpg", $result[0]['image']);
         $this->assertEquals(2008, $result[0]['year']);
         $this->assertGreaterThan(9, $result[0]['rating']);
         $this->assertGreaterThan(2150000, $result[0]['votes']);

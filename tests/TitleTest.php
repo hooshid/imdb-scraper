@@ -171,8 +171,8 @@ class TitleTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertCount(2, $result);
-        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_QL75_UX190_CR0,2,190,281_.jpg', $result['thumbnail']);
-        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@.jpg', $result['original']);
+        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_QL75_UX190_CR0,2,190,281_.jpg', $result['thumbnail']);
+        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@.jpg', $result['original']);
     }
 
     public function testPhotoReturnEmptyArrayIfNoData()
