@@ -705,12 +705,25 @@ class Title extends Base
      */
     public function mpaa(): array
     {
+        // old theme
         if (empty($this->data['mpaas'])) {
             $source = $this->getContentOfPage("parentalguide");
             if (preg_match_all("|/search/title\?certificates=.*?>\s*(.*?):(.*?)<|", $source, $matches)) {
                 $cc = count($matches[0]);
                 for ($i = 0; $i < $cc; ++$i) {
                     $this->data['mpaas'][$matches[1][$i]] = $this->cleanString($matches[2][$i]);
+                }
+            }
+        }
+
+        // new theme
+        if (empty($this->data['mpaas'])) {
+            $dom = $this->getHtmlDomParser("parentalguide");
+
+            // check exist in locations page
+            if ($dom->findOneOrFalse('[data-testid="certificates"]') != false) {
+                foreach ($dom->find('[data-testid="certificates"] ul li') as $mp) {
+                    $this->data['mpaas'][$mp->find('.ipc-metadata-list-item__label',0)->text()] = $mp->find('a',0)->text();
                 }
             }
         }
@@ -725,11 +738,27 @@ class Title extends Base
      */
     public function mpaaReason(): ?string
     {
+        // Old theme
         if (empty($this->data['mpaa_reason'])) {
             $source = $this->getContentOfPage("parentalguide");
             if (preg_match('!id="mpaa-rating"\s*>\s*<td[^>]*>.*</td>\s*<td[^>]*>(.*)</td>!im', $source, $match)) {
                 $this->data['mpaa_reason'] = trim($match[1]);
             }
+        }
+
+        // new theme
+        if (empty($this->data['mpaa_reason'])) {
+            $dom = $this->getHtmlDomParser("parentalguide");
+            try {
+                $list = $dom->find('#__NEXT_DATA__', 0);
+                $jsonLD = json_decode($list->innerText());
+                if ($jsonLD->props->pageProps->contentData->contentRatingData->ratingReason) {
+                    $this->data['mpaa_reason'] = trim($jsonLD->props->pageProps->contentData->contentRatingData->ratingReason);
+                }
+            } catch (Exception $e) {
+
+            }
+
         }
 
         return $this->data['mpaa_reason'];
