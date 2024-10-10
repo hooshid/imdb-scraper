@@ -452,7 +452,7 @@ class Title extends Base
     public function languages(): array
     {
         if (empty($this->data['languages'])) {
-            if (preg_match_all('!href="/search/title\?.+?primary_language=([^&]*)[^>]*>\s*(.*?)\s*</a>(\s+\((.*?)\)|)!m',
+            if (preg_match_all('!href="/search/title.+?primary_language=([^&]*)[^>]*>\s*(.*?)\s*</a>(\s+\((.*?)\)|)!m',
                 $this->getContentOfPage("title"), $matches)) {
                 $this->data['languages'] = $matches[2];
                 $mc = count($matches[2]);
@@ -465,6 +465,30 @@ class Title extends Base
                 }
             }
         }
+
+
+        // new theme
+        /*
+        if (empty($this->data['languages'])) {
+            $dom = $this->getHtmlDomParser("title");
+            try {
+                $list = $dom->find('#__NEXT_DATA__', 0);
+                $jsonLD = json_decode($list->innerText());
+                $spokenLanguages = $jsonLD->props->pageProps->mainColumnData->spokenLanguages;
+                foreach ($spokenLanguages as $item) {
+                    $this->data['languages'][] = $item->text;
+                    $this->data['languages_detailed'][] = [
+                        'name' => $item->text,
+                        'code' => $item->id,
+                        'comment' => null
+                    ];
+                }
+            } catch (Exception $e) {
+
+            }
+
+        }
+        */
 
         return $this->data['languages'];
     }
@@ -752,7 +776,7 @@ class Title extends Base
             try {
                 $list = $dom->find('#__NEXT_DATA__', 0);
                 $jsonLD = json_decode($list->innerText());
-                if ($jsonLD->props->pageProps->contentData->contentRatingData->ratingReason) {
+                if (isset($jsonLD->props->pageProps->contentData->contentRatingData->ratingReason)) {
                     $this->data['mpaa_reason'] = trim($jsonLD->props->pageProps->contentData->contentRatingData->ratingReason);
                 }
             } catch (Exception $e) {
