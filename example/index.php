@@ -43,6 +43,10 @@
             <a href="/example/chart-top-250-movies.php">Chart: Top 250 Movies</a>
             <a href="/example/chart-top-250-tv.php">Chart: Top 250 TV Shows</a>
 
+            <a href="/example/calendar.php?type=MOVIE">Calendar: Upcoming Movies</a>
+            <a href="/example/calendar.php?type=TV">Calendar: Upcoming TV Series</a>
+            <a href="/example/calendar.php?type=TV_EPISODE">Calendar: Upcoming TV Episodes</a>
+
             <a href="/example/name.php?id=nm0000134">Name: Robert De Niro</a>
             <a href="/example/name.php?id=nm1297015">Name: Emma Stone</a>
             <a href="/example/name.php?id=nm0908094">Name: Paul Walker</a>

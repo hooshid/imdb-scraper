@@ -287,6 +287,10 @@ h2 {
     width: 100px;
 }
 
+.small-image {
+    width: 50px;
+}
+
 .trailers {
     /*display: flex;*/
 }
