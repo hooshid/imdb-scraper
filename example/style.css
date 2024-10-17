@@ -283,8 +283,9 @@ h2 {
     margin-top: 5px;
 }
 
-.name-photo {
+.name-image {
     width: 100px;
+    border-radius: 50%;
 }
 
 .small-image {

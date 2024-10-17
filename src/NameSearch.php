@@ -2,126 +2,147 @@
 
 namespace Hooshid\ImdbScraper;
 
-use Hooshid\ImdbScraper\Base\Base;
-use Hooshid\ImdbScraper\Base\Config;
+use Exception;
+use Hooshid\ImdbScraper\GraphQL\Base;
 
 class NameSearch extends Base
 {
-    protected $data = [
-        'result' => [],
-    ];
-
     /**
-     * @param Config|null $config OPTIONAL override default config
-     */
-    public function __construct(Config $config = null)
-    {
-        parent::__construct($config);
-    }
-
-    /**
-     * Search name
-     *
-     * @param $params
+     * @param array $params
+     *  Example: [
+     *      'name' => '',
+     *      'birthMonthDay' => '',
+     *      'gender' => '',
+     *      'adult' => 'EXCLUDE_ADULT',
+     *      'limit' => 50,
+     *      'sortBy' => 'POPULARITY',
+     *      'sortOrder' => 'ASC'
+     *  ]
      * @return array
+     * @throws Exception
      */
-    public function search($params): array
+    public function search(array $params = []): array
     {
-        // if params is empty or null
-        if (empty($params)) {
-            return [];
+        // Define default values for the parameters
+        $defaults = [
+            'name' => '',
+            'birthMonthDay' => '',
+            'gender' => '',
+            'adult' => 'EXCLUDE_ADULT',
+            'limit' => 50,
+            'sortBy' => 'POPULARITY',
+            'sortOrder' => 'ASC'
+        ];
+
+        // Merge the defaults with the incoming parameters
+        $params = array_merge($defaults, $params);
+
+        // Extract the parameters
+        $searchTerm = $params['name'];
+        $birthMonthDay = $params['birthMonthDay'];
+        $gender = strtoupper($params['gender']);
+        $adult = strtoupper($params['adult']);
+
+        $limit = (int)$params['limit'];
+        $sortBy = strtoupper($params['sortBy']);
+        $sortOrder = strtoupper($params['sortOrder']);
+
+        $birthDateConstraint = "";
+        if ($birthMonthDay) {
+            $birthDateConstraint = "birthDateConstraint: {birthday: \"--$birthMonthDay\"}";
         }
 
-        // if result exist
-        if ($this->data['result']) {
-            return $this->data['result'];
+        $results = [];
+        $query = <<<EOF
+query advancedSearch {
+  advancedNameSearch(
+    first: $limit,
+    sort: {sortBy: $sortBy sortOrder: $sortOrder}
+    constraints: {
+        nameTextConstraint: {searchTerm: "$searchTerm"}
+        $birthDateConstraint
+        genderIdentityConstraint: {anyGender: [$gender]}
+        explicitContentConstraint: {explicitContentFilter: $adult}
+    }
+  ) {
+    edges {
+      node{
+        name {
+          id
+          nameText {
+            text
+          }
+          bio {
+            displayableArticle {
+              body {
+               plaidHtml
+              }
+            }
+          }
+          primaryImage {
+             url
+          }
+          primaryProfessions {
+            category {
+                text
+            }
+          }
         }
+      }
+    }
+  }
+}
+EOF;
+        $data = $this->graphql->query($query, "advancedSearch");
 
-        $dom = $this->getHtmlDomParser("/search/name/?" . http_build_query($params));
-
-        $list = $dom->find('#__NEXT_DATA__', 0);
-        $jsonLD = json_decode($list->innerText());
         $index = 1;
-        foreach ($jsonLD->props->pageProps->searchResults->nameResults->nameListItems as $e) {
-            $id = $this->getImdbId($e->nameId);
-            if ($id) {
-                $photo = null;
-                if (!empty($e->primaryImage)) {
-                    $photo = $this->photoUrl($this->cleanString($e->primaryImage->url));
-                }
+        foreach ($data->advancedNameSearch->edges as $edge) {
+            $imdbId = $edge->node->name->id ?? '';
+            $name = $edge->node->name->nameText->text ?? '';
 
-                $job = null;
-                if ($e->primaryProfessions) {
-                    $job = implode(", ", $e->primaryProfessions);
-                    $job = $this->cleanString($job);
-                }
-
-                $this->data['result'][] = [
-                    'index' => $index,
-                    'id' => $id,
-                    'url' => $this->baseUrl . "/name/" . $id,
-                    'name' => $this->cleanString($e->nameText),
-                    'photo' => $photo,
-                    'job' => $job,
-                    'bio' => $this->cleanString($e->bio),
-                ];
-                $index++;
-            }
-        }
-
-        // if result exist
-        if ($this->data['result']) {
-            return $this->data['result'];
-        }
-
-        // check name list exist
-        if (!$dom->findOneOrFalse('.ipc-metadata-list')) {
-            return [];
-        }
-
-        $list = $dom->find('.ipc-metadata-list', 0);
-        foreach ($list->find('.ipc-metadata-list-summary-item') as $e) {
-            $title = $e->find(".ipc-title__text", 0)->text();
-
-            $index = 0;
-            if (preg_match('/^(\d+)\.\s*/', $title, $matches)) {
-                $index = $this->getNumbers($matches[1]);
+            if (empty($imdbId) or empty($name)) {
+                continue;
             }
 
-            $url = $this->cleanString($e->find(".ipc-title a", 0)->getAttribute('href'));
-            $url = str_replace($this->baseUrl, '', $url);
-            $url = preg_replace('/\?.*/', '', $url);
-
-            $name = $this->cleanString(preg_replace('/^\d+\.\s*/', '', $title));
-
-            $photo = null;
-            if (!empty($e->find(".ipc-media img", 0)->getAttribute('src'))) {
-                $photo = $this->photoUrl($this->cleanString($e->find(".ipc-media img", 0)->getAttribute('src')));
+            // Image url
+            $imageUrl = null;
+            if (isset($edge->node->name->primaryImage->url) and !empty($edge->node->name->primaryImage->url)) {
+                $imageUrl = $this->imageUrl($edge->node->name->primaryImage->url);
             }
 
+            // Jobs
             $job = null;
-            if ($e->findOneOrFalse('[data-testid="nlib-professions"]')) {
-                $job = implode(", ", $e->find('[data-testid="nlib-professions"] li')->innerText());
-                $job = $this->cleanString($job);
+            if (isset($edge->node->name->primaryProfessions)) {
+                $jobs = [];
+                foreach ($edge->node->name->primaryProfessions as $primaryProfession) {
+                    $jobs[] = $primaryProfession->category->text;
+                }
+
+                if (!empty($jobs)) {
+                    $job = implode(", ", $jobs);
+                }
             }
 
+            // Bio
             $bio = null;
-            if ($e->find(".ipc-html-content-inner-div", 0)->innerText()) {
-                $bio = $this->cleanString($e->find(".ipc-html-content-inner-div", 0)->innerText());
+            if (isset($edge->node->name->bio->displayableArticle->body->plaidHtml)) {
+                $bio = $this->cleanString($edge->node->name->bio->displayableArticle->body->plaidHtml);
             }
 
-            $this->data['result'][] = [
+            $results[] = [
                 'index' => $index,
-                'id' => $this->getImdbId($url),
-                'url' => $this->baseUrl . $url,
-                'name' => $name,
-                'photo' => $photo,
+                'id' => $imdbId,
+                'url' => $this->baseUrl . "/name/" . $imdbId,
+                'name' => $this->cleanString($name),
+                'imageUrl' => $imageUrl,
                 'job' => $job,
                 'bio' => $bio,
             ];
+            $index++;
         }
 
-        return $this->data['result'];
+        return $results;
     }
+
 }
 

@@ -6,10 +6,13 @@ use Hooshid\ImdbScraper\NameSearch;
 require __DIR__ . "/../vendor/autoload.php";
 
 if (count($_GET) > 0) {
-    $config = new Config();
-    $config->language = 'en-US,en';
-    $nameSearch = new NameSearch($config);
-    $results = $nameSearch->search($_GET);
+    $nameSearch = new NameSearch();
+    $results = $nameSearch->search([
+        'name' => $_GET['name'] ?? '',
+        'birthMonthDay' => $_GET['birth_monthday'] ?? '',
+        'gender' => $_GET['gender'] ?? '',
+        'adult' => $_GET['adult'] ?? 'EXCLUDE_ADULT',
+    ]);
 
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
@@ -58,13 +61,27 @@ if (count($_GET) > 0) {
                 <label for="gender">Gender:</label>
                 <select id="gender" name="gender" class="form-field">
                     <option value="">All</option>
-                    <option value="male" <?php if (@$_GET['gender'] == "male") {
+                    <option value="MALE" <?php if (@$_GET['gender'] == "MALE") {
                         echo " selected";
                     } ?>>Male
                     </option>
-                    <option value="female" <?php if (@$_GET['gender'] == "female") {
+                    <option value="FEMALE" <?php if (@$_GET['gender'] == "FEMALE") {
                         echo " selected";
                     } ?>>Female
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="adult">Adult names:</label>
+                <select id="adult" name="adult" class="form-field">
+                    <option value="EXCLUDE_ADULT" <?php if (@$_GET['adult'] == "EXCLUDE_ADULT") {
+                        echo " selected";
+                    } ?>>Exclude
+                    </option>
+                    <option value="INCLUDE_ADULT" <?php if (@$_GET['adult'] == "INCLUDE_ADULT") {
+                        echo " selected";
+                    } ?>>Include
                     </option>
                 </select>
             </div>
@@ -92,18 +109,9 @@ if (count($_GET) > 0) {
                     <tr>
                         <td><?php echo $result['index']; ?></td>
                         <td>
-                            <?php if (!empty($result['photo'])) { ?>
-                                <img class="name-photo" src="<?php
-                                if (strpos($result['photo']['original'], '@') === false) {
-                                    echo str_replace('.jpg', '@._V1_QL75_UY120_CR30,0,120,120_.jpg', $result['photo']['original']);
-                                } elseif (strpos($result['photo']['original'], '@@')) {
-                                    echo str_replace('@@', '@@._V1_QL75_UY120_CR30,0,120,120_', $result['photo']['original']);
-                                } else {
-                                    echo str_replace('@', '@._V1_QL75_UY120_CR30,0,120,120_', $result['photo']['original']);
-                                }
-                                ?>"
-                                     alt="<?php echo $result['name']; ?>"
-                                     loading="lazy">
+                            <?php if (!empty($result['imageUrl']['120x120'])) { ?>
+                                <img class="name-image" src="<?php echo $result['imageUrl']['120x120']; ?>"
+                                     alt="<?php echo $result['name']; ?>" loading="lazy">
                             <?php } ?>
                         </td>
                         <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a></td>

@@ -92,8 +92,8 @@ EOF;
 
         $calendar = [];
         foreach ($data->comingSoon->edges as $edge) {
-            $imdbId = $edge->node->id;
-            $title = $edge->node->titleText->text;
+            $imdbId = $edge->node->id ?? '';
+            $title = $edge->node->titleText->text ?? '';
 
             if (empty($imdbId) or empty($title)) {
                 continue;
@@ -124,7 +124,7 @@ EOF;
 
             // Image url
             $imageUrl = null;
-            if (isset($edge->node->primaryImage->url) && $edge->node->primaryImage->url != null) {
+            if (isset($edge->node->primaryImage->url) and !empty($edge->node->primaryImage->url)) {
                 $imageUrl = $this->imageUrl($edge->node->primaryImage->url);
             }
 

@@ -7,7 +7,7 @@ use CurlHandle;
 class Request
 {
     private false|CurlHandle $ch;
-    private false|CurlHandle $page;
+    private $page;
     private array $requestHeaders = [];
     private array $responseHeaders = [];
 

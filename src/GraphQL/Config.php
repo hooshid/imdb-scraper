@@ -38,4 +38,10 @@ class Config
      */
     public string $language = "de-DE";
 
+    /**
+     * IMDB base domain.
+     * @var string
+     */
+    protected string $baseUrl = 'https://www.imdb.com';
+
 }
