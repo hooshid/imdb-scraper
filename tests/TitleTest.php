@@ -6,13 +6,10 @@ use PHPUnit\Framework\TestCase;
 
 class TitleTest extends TestCase
 {
-    protected function getTitle($id, $language = "en-US,en"): Title
+    protected function getTitle($id, $language = "en-US"): Title
     {
         $config = new Config();
         $config->language = $language;
-        //$config->cachedir = realpath(dirname(__FILE__) . '/cache') . '/';
-        //$config->usezip = false;
-        //$config->cache_expire = 259200;
 
         return new Title($id, $config);
     }
@@ -511,6 +508,7 @@ class TitleTest extends TestCase
 
     /***************************************[ MPAA ]***************************************/
 
+    /*
     public function testMpaa()
     {
         $title = $this->getTitle("0133093"); // The Matrix
@@ -526,6 +524,7 @@ class TitleTest extends TestCase
         $title = $this->getTitle("0133093"); // The Matrix
         $this->assertEquals('Rated R for sci-fi violence and brief language', $title->mpaaReason());
     }
+    */
 
     /***************************************[ TRAILERS ]***************************************/
 

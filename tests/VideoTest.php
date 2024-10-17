@@ -6,17 +6,9 @@ use PHPUnit\Framework\TestCase;
 
 class VideoTest extends TestCase
 {
-    protected function getVideo($language = "en-US"): Video
-    {
-        $config = new Config();
-        $config->language = $language;
-
-        return new Video($config);
-    }
-
     public function testVideo1()
     {
-        $video = $this->getVideo();
+        $video = new Video();
         $vi = $video->video('vi3067265305'); // Tenet - Official Trailer
 
         $this->assertIsArray($vi);
@@ -50,7 +42,7 @@ class VideoTest extends TestCase
 
     public function testVideo2()
     {
-        $video = $this->getVideo();
+        $video = new Video();
         $vi = $video->video('vi1574944793'); // Cruella - Meet the Villain
 
         $this->assertIsArray($vi);
