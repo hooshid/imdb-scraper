@@ -3,7 +3,7 @@
 namespace Hooshid\ImdbScraper;
 
 use Exception;
-use Hooshid\ImdbScraper\GraphQL\Base;
+use Hooshid\ImdbScraper\Base\Base;
 
 class Calendar extends Base
 {
