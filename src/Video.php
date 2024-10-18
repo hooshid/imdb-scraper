@@ -22,18 +22,14 @@ class Video extends Base
     /**
      * Search name
      *
-     * @param $id
+     * @param string $id
      * @return array
      */
-    public function video($id): array
+    public function video(string $id): array
     {
         // if id is empty or null
         if (empty($id)) {
             return [];
-        }
-
-        if (substr($id, 0, 2) != 'vi') {
-            $id = "vi" . $id;
         }
 
         // if result exist
