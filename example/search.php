@@ -21,4 +21,12 @@ elseif (preg_match('/^tt\d+$/', $search)) {
 elseif ($_GET['type'] === 'name') {
     header("Location: name-search.php?name=" . $search);
     exit;
+} // search type is title
+elseif ($_GET['type'] === 'title') {
+    header("Location: title-search.php?searchTerm=" . $search);
+    exit;
+}// search type is episode
+elseif ($_GET['type'] === 'episode') {
+    header("Location: title-search.php?searchTerm=" . $search ."&types=tvEpisode");
+    exit;
 }

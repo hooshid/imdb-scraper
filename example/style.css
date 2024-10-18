@@ -324,6 +324,10 @@ h2 {
     width: 50px;
 }
 
+.medium-image {
+    width: 100px;
+}
+
 .trailers {
     /*display: flex;*/
 }

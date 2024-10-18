@@ -98,7 +98,7 @@ if (count($_GET) > 0) {
             <table class="table">
                 <tr>
                     <th>Index</th>
-                    <th>Photo</th>
+                    <th>Image</th>
                     <th>Name</th>
                     <th>Id</th>
                     <th>Job</th>
