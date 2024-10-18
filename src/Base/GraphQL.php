@@ -1,6 +1,6 @@
 <?php
 
-namespace Hooshid\ImdbScraper\GraphQL;
+namespace Hooshid\ImdbScraper\Base;
 
 use Exception;
 use stdClass;

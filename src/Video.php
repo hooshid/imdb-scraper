@@ -2,12 +2,12 @@
 
 namespace Hooshid\ImdbScraper;
 
-use Hooshid\ImdbScraper\Base\Base;
+use Hooshid\ImdbScraper\Base\Old\Base;
 use Hooshid\ImdbScraper\Base\Config;
 
 class Video extends Base
 {
-    protected $data = [
+    protected array $data = [
         'result' => [],
     ];
 

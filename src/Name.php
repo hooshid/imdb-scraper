@@ -3,7 +3,7 @@
 namespace Hooshid\ImdbScraper;
 
 use Exception;
-use Hooshid\ImdbScraper\Base\Base;
+use Hooshid\ImdbScraper\Base\Old\Base;
 use Hooshid\ImdbScraper\Base\Config;
 
 class Name extends Base

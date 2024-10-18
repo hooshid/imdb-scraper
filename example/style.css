@@ -283,6 +283,38 @@ h2 {
     margin-top: 5px;
 }
 
+.badge::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #000000;
+    display: inline-block;
+    margin: 0 8px 0 0;
+}
+
+.badge-red.badge::before {
+    background-color: red;
+}
+.badge-green.badge::before {
+    background-color: #45a049;
+}
+.badge-blue.badge::before {
+    background-color: #0f53cc;
+}
+.badge-purple.badge::before {
+    background-color: #b70bde;
+}
+.badge-orange.badge::before {
+    background-color: #de830b;
+}
+.badge-pink.badge::before {
+    background-color: #de0b9b;
+}
+.badge-yellow.badge::before {
+    background-color: #f6e700;
+}
+
 .name-image {
     width: 100px;
     border-radius: 50%;

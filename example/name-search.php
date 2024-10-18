@@ -1,6 +1,5 @@
 <?php
 
-use Hooshid\ImdbScraper\Base\Config;
 use Hooshid\ImdbScraper\NameSearch;
 
 require __DIR__ . "/../vendor/autoload.php";

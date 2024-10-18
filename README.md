@@ -32,9 +32,10 @@ this package needs no configuration by default but can change languages of imdb.
 
 Configuration is done by the `\Hooshid\ImdbScraper\Base\Config` class.
 You can alter the config by creating the object, modifying its properties then passing it to the constructor for imdb.
+
 ```php
-$config = new \Hooshid\ImdbScraper\Base\Config();
-$config->language = 'de-DE,de,en';
+$config = new \Hooshid\ImdbScraper\Base\Old\Config();
+$config->language = 'de-DE';
 $title = new \Hooshid\ImdbScraper\Title(335266, $config);
 echo $title->title(); // Lost in Translation - Zwischen den Welten
 echo $title->originalTitle(); // Lost in Translation
@@ -84,10 +85,6 @@ echo json_encode($person->full());
 ### Other examples
 just open the example folder, we put all examples and methods demo for you in there!
 
-## Related projects
-* [Rottentomatoes Scraper](https://github.com/hooshid/rottentomatoes-scraper)
-* [Metacritic Scraper](https://github.com/hooshid/metacritic-scraper)
-
 ## Supported pages
 * Search:
   * [ ] title (Movies, Series, Episodes, ...)
@@ -107,6 +104,10 @@ just open the example folder, we put all examples and methods demo for you in th
   * [x] Movie/Series Title
   * [x] Trailers
   * [ ] Series seasons
+
+## Related projects
+* [Rottentomatoes Scraper](https://github.com/hooshid/rottentomatoes-scraper)
+* [Metacritic Scraper](https://github.com/hooshid/metacritic-scraper)
 
 ## License
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

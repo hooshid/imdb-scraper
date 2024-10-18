@@ -1,13 +1,10 @@
 <?php
 
 use Hooshid\ImdbScraper\Chart;
-use Hooshid\ImdbScraper\Base\Config;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-$config = new Config();
-$config->language = 'en-US,en';
-$chart = new Chart($config);
+$chart = new Chart();
 if (isset($_GET["output"])) {
     header("Content-Type: application/json");
     echo json_encode($chart->getBoxOffice());

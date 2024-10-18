@@ -2,84 +2,61 @@
 
 namespace Hooshid\ImdbScraper\Base;
 
-/**
- * The request class
- * Here we emulate a browser accessing the IMDB site. You don't need to
- * call any of its method directly - they are rather used by the IMDB classes.
- */
+use CurlHandle;
+
 class Request
 {
-    private $ch;
-    private $urltoopen;
+    private false|CurlHandle $ch;
     private $page;
-    private $requestHeaders = array();
-    private $responseHeaders = array();
-    private $config;
+    private array $requestHeaders = [];
+    private array $responseHeaders = [];
 
     /**
      * No need to call this.
      * @param string $url URL to open
-     * @param Config $config The Config object to use
      */
-    public function __construct($url, Config $config)
+    public function __construct(string $url)
     {
-        $this->config = $config;
         $this->ch = curl_init($url);
         curl_setopt($this->ch, CURLOPT_ENCODING, "");
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($this->ch, CURLOPT_HEADERFUNCTION, array(&$this, "callback_CURLOPT_HEADERFUNCTION"));
-
-        //use HTTP-Proxy
-        if ($config->useProxy === true) {
-            curl_setopt($this->ch, CURLOPT_PROXY, $config->proxyHost);
-            curl_setopt($this->ch, CURLOPT_PROXYPORT, $config->proxyPort);
-
-            //Login credentials set?
-            if (!empty($config->proxyUser) && !empty($config->proxyPassword)) {
-                curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                curl_setopt($this->ch, CURLOPT_PROXYUSERPWD, $config->proxyUser . ':' . $config->proxyPassword);
-            }
-        }
-
-        $this->urltoopen = $url;
-
-        $this->addHeaderLine('Referer', 'https://' . $config->imdbSiteUrl . '/');
-
-        if ($config->forceAgent) {
-            curl_setopt($this->ch, CURLOPT_USERAGENT, $config->forceAgent);
-        } else {
-            curl_setopt($this->ch, CURLOPT_USERAGENT, $config->defaultAgent);
-        }
-        if ($config->language) {
-            $this->addHeaderLine('Accept-Language', $config->language);
-        }
-        if ($config->ipAddress) {
-            $this->addHeaderLine('X-Forwarded-For', $config->ipAddress);
-        }
+        curl_setopt($this->ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0');
+        curl_setopt($this->ch, CURLOPT_TIMEOUT, 30);
     }
 
-    public function addHeaderLine($name, $value)
+    public function addHeaderLine($name, $value): void
     {
         $this->requestHeaders[] = "$name: $value";
     }
 
     /**
-     * Send a request to the movie site
-     * @return boolean success
-     * @throws Exception\Http
+     * Send a POST request
+     *
+     * @param array|string $content
+     * @return bool
      */
-    public function sendRequest()
+    public function post(array|string $content): bool
     {
-        $this->responseHeaders = array();
+        curl_setopt($this->ch, CURLOPT_POST, true);
+        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $content);
+        return $this->sendRequest();
+    }
+
+    /**
+     * Send a request to the movie site
+     */
+    public function sendRequest(): bool
+    {
+        $this->responseHeaders = [];
         curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->requestHeaders);
         $this->page = curl_exec($this->ch);
         curl_close($this->ch);
+
         if ($this->page !== false) {
             return true;
         }
-        if ($this->config->throwHttpExceptions) {
-            throw new Exception\Http("Failed fetch url [$this->urltoopen] " . curl_error($this->ch));
-        }
+
         return false;
     }
 
@@ -87,43 +64,16 @@ class Request
      * Get the Response body
      * @return string page
      */
-    public function getResponseBody()
+    public function getResponseBody(): string
     {
         return $this->page;
-    }
-
-    /**
-     * Set the URL we need to parse
-     * @param string $url
-     */
-    public function setURL($url)
-    {
-        $this->urltoopen = $url;
-        curl_setopt($this->ch, CURLOPT_URL, $url);
-    }
-
-    /**
-     * Get a header value from the response
-     * @param string $header header field name
-     * @return string header value
-     */
-    public function getResponseHeader($header)
-    {
-        $headers = $this->getLastResponseHeaders();
-        foreach ($headers as $head) {
-            if (is_integer(stripos($head, $header))) {
-                $hstart = strpos($head, ": ");
-                $head = trim(substr($head, $hstart + 2, 100));
-                return $head;
-            }
-        }
     }
 
     /**
      * HTTP status code of the last response
      * @return int|null null if last request failed
      */
-    public function getStatus()
+    public function getStatus(): ?int
     {
         $headers = $this->getLastResponseHeaders();
         if (empty($headers[0])) {
@@ -137,36 +87,12 @@ class Request
         return (int)$matches[1];
     }
 
-    /**
-     * Get the URL to redirect to if a 30* was returned
-     * @return string|null URL to redirect to if 300, otherwise null
-     */
-    public function getRedirect()
-    {
-        $status = $this->getStatus();
-        if ($status == 301 || $status == 302 || $status == 303 || $status == 307 || $status == 308) {
-            foreach ($this->getLastResponseHeaders() as $header) {
-                if (strpos(trim(strtolower($header)), 'location') !== 0) {
-                    continue;
-                }
-                $aline = explode(': ', $header);
-                $target = trim($aline[1]);
-                $urlParts = parse_url($target);
-                if (!isset($urlParts['host'])) {
-                    $initialRequestUrlParts = parse_url($this->urltoopen);
-                    $target = $initialRequestUrlParts['scheme'] . "://" . $initialRequestUrlParts['host'] . $target;
-                }
-                return $target;
-            }
-        }
-    }
-
-    public function getLastResponseHeaders()
+    public function getLastResponseHeaders(): array
     {
         return $this->responseHeaders;
     }
 
-    private function callback_CURLOPT_HEADERFUNCTION($ch, $str)
+    private function callback_CURLOPT_HEADERFUNCTION($ch, $str): int
     {
         $len = strlen($str);
         if ($len) {

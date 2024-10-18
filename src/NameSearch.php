@@ -3,7 +3,7 @@
 namespace Hooshid\ImdbScraper;
 
 use Exception;
-use Hooshid\ImdbScraper\GraphQL\Base;
+use Hooshid\ImdbScraper\Base\Base;
 
 class NameSearch extends Base
 {
@@ -19,7 +19,6 @@ class NameSearch extends Base
      *      'sortOrder' => 'ASC'
      *  ]
      * @return array
-     * @throws Exception
      */
     public function search(array $params = []): array
     {
@@ -52,7 +51,6 @@ class NameSearch extends Base
             $birthDateConstraint = "birthDateConstraint: {birthday: \"--$birthMonthDay\"}";
         }
 
-        $results = [];
         $query = <<<EOF
 query advancedSearch {
   advancedNameSearch(
@@ -93,7 +91,13 @@ query advancedSearch {
   }
 }
 EOF;
-        $data = $this->graphql->query($query, "advancedSearch");
+
+        $results = [];
+        try {
+            $data = $this->graphql->query($query, "advancedSearch");
+        } catch (Exception $e) {
+            return $results;
+        }
 
         $index = 1;
         foreach ($data->advancedNameSearch->edges as $edge) {

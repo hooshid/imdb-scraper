@@ -1,15 +1,12 @@
 <?php
 
 use Hooshid\ImdbScraper\Video;
-use Hooshid\ImdbScraper\Base\Config;
 
 require __DIR__ . "/../vendor/autoload.php";
 
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(vi\d+|\d+)$/', $id)) {
-    $config = new Config();
-    $config->language = 'en-US,en';
-    $baseVideo = new Video($config);
+    $baseVideo = new Video();
     $video = $baseVideo->video($id);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");

@@ -1,15 +1,12 @@
 <?php
 
 use Hooshid\ImdbScraper\Title;
-use Hooshid\ImdbScraper\Base\Config;
 
 require __DIR__ . "/../vendor/autoload.php";
 
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
-    $config = new Config();
-    $config->language = 'en-US,en';
-    $title = new Title($id, $config);
+    $title = new Title($id);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title->full());

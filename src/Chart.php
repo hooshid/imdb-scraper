@@ -2,16 +2,11 @@
 
 namespace Hooshid\ImdbScraper;
 
+use Exception;
 use Hooshid\ImdbScraper\Base\Base;
 
 class Chart extends Base
 {
-    protected $data = [
-        'boxoffice' => [],
-        'top-250-movies' => [],
-        'top-250-tv' => [],
-    ];
-
     /**
      * Get the USA Weekend Box-Office Summary, weekend earnings and all time earnings
      *
@@ -19,107 +14,140 @@ class Chart extends Base
      */
     public function getBoxOffice(): array
     {
-        $dom = $this->getHtmlDomParser("/chart/boxoffice/");
+        $oldBase = new \Hooshid\ImdbScraper\Base\Old\Base();
+        $dom = $oldBase->getHtmlDomParser("/chart/boxoffice/");
 
-        // if result exist
-        if ($this->data['boxoffice']) {
-            return $this->data['boxoffice'];
-        }
-
+        $boxoffice = [];
         $i = 0;
         foreach ($dom->find('[data-testid="chart-layout-main-column"] ul li') as $e) {
-            $id = $this->getImdbId($e->find('.ipc-title a', 0)->getAttribute('href'));
+            $id = $oldBase->getImdbId($e->find('.ipc-title a', 0)->getAttribute('href'));
             if ($id) {
-                $this->data['boxoffice'][$i]['id'] = $id;
+                $boxoffice[$i]['id'] = $id;
                 $title = $this->cleanString($e->find('.ipc-title h3', 0)->innerText());
-                $this->data['boxoffice'][$i]['title'] = preg_replace('/^\d+\.\s/', '', $title);
+                $boxoffice[$i]['title'] = preg_replace('/^\d+\.\s/', '', $title);
 
                 $moneyPattern = "/[\$£]([\d\.]+)(M|K)/";
                 foreach ($e->find('ul[data-testid="title-metadata-box-office-data-container"] li') as $metadata) {
                     $cellTitle = $metadata->find('span', 0)->innerText();
-                    if (strpos($cellTitle, 'Weeks Released') !== false) {
-                        $this->data['boxoffice'][$i]['weeks'] = $this->cleanString($metadata->find('span', 1)->innerText());
-                    } else if (strpos($cellTitle, 'Weekend Gross') !== false) {
+                    if (str_contains($cellTitle, 'Weeks Released')) {
+                        $boxoffice[$i]['weeks'] = $this->cleanString($metadata->find('span', 1)->innerText());
+                    } else if (str_contains($cellTitle, 'Weekend Gross')) {
                         // Weekend
                         $weekend = $this->cleanString($metadata->find('span', 1)->innerText());
                         $weekendMatches = null;
                         preg_match($moneyPattern, $weekend, $weekendMatches, PREG_OFFSET_CAPTURE);
-                        $this->data['boxoffice'][$i]['weekend'] = $weekendMatches[2][0] === 'M' ? $weekendMatches[1][0] : $weekendMatches[1][0] / 1000;
-                    } else if (strpos($cellTitle, 'Total Gross') !== false) {
+                        $boxoffice[$i]['weekend'] = $weekendMatches[2][0] === 'M' ? $weekendMatches[1][0] : $weekendMatches[1][0] / 1000;
+                    } else if (str_contains($cellTitle, 'Total Gross')) {
                         // Gross
                         $gross = $this->cleanString($metadata->find('span', 1)->innerText());
                         $grossMatches = null;
                         preg_match($moneyPattern, $gross, $grossMatches, PREG_OFFSET_CAPTURE);
-                        $this->data['boxoffice'][$i]['gross'] = $grossMatches[2][0] === 'M' ? $grossMatches[1][0] : $grossMatches[1][0] / 1000;
+                        $boxoffice[$i]['gross'] = $grossMatches[2][0] === 'M' ? $grossMatches[1][0] : $grossMatches[1][0] / 1000;
                     }
                 }
                 $i++;
             }
         }
 
-        return $this->data['boxoffice'];
+        return $boxoffice;
     }
 
-    public function getTop250Movies()
+    /**
+     * Get IMDb top lists
+     *
+     * @param string $listType
+     * @return array
+     */
+    public function getList(string $listType = "TOP_250"): array
     {
-        $dom = $this->getHtmlDomParser("/chart/top/");
-
-        // if result exist
-        if ($this->data['top-250-movies']) {
-            return $this->data['top-250-movies'];
+        $types = ['TOP_250', 'TOP_250_TV', 'TOP_250_ENGLISH', 'TOP_250_INDIA', 'TOP_50_TELUGU', 'TOP_50_TAMIL', 'TOP_50_MALAYALAM', 'TOP_50_BENGALI', 'BOTTOM_100'];
+        if (!in_array($listType, $types)) {
+            return [];
         }
 
-        $list = $dom->find('#__NEXT_DATA__', 0);
-        $jsonLD = json_decode($list->innerText());
-
-        foreach ($jsonLD->props->pageProps->pageData->chartTitles->edges as $e) {
-            $id = $this->getImdbId($e->node->id);
-            if ($id) {
-                $this->data['top-250-movies'][] = [
-                    'rank' => (int)$e->currentRank,
-                    'id' => $id,
-                    'title' => $e->node->titleText->text,
-                    'type' => $e->node->titleType->id,
-                    'image' => $e->node->primaryImage->url,
-                    'year' => $e->node->releaseYear->year,
-                    'rating' => $e->node->ratingsSummary->aggregateRating,
-                    'votes' => $e->node->ratingsSummary->voteCount,
-                ];
+        $query = <<<EOF
+query {
+  titleChartRankings(
+    first: 250
+    input: {rankingsChartType: $listType}
+  ) {
+    edges {
+      node{
+        item {
+          id
+          titleText {
+            text
+          }
+          titleType {
+            text
+          }
+          releaseYear {
+            year
+          }
+          ratingsSummary {
+            topRanking {
+              rank
             }
+            aggregateRating
+            voteCount
+          }
+          primaryImage {
+            url
+          }
+          runtime {
+            seconds
+            displayableProperty {
+              value {
+                plainText
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+        $list = [];
+        try {
+            $data = $this->graphql->query($query);
+        } catch (Exception $e) {
+            return $list;
         }
 
-        return $this->data['top-250-movies'];
+        foreach ($data->titleChartRankings->edges as $edge) {
+            $imdbId = $edge->node->item->id ?? '';
+            $title = $edge->node->item->titleText->text ?? '';
+
+            if (empty($imdbId) or empty($title)) {
+                continue;
+            }
+
+            $rank = $edge->node->item->ratingsSummary->topRanking->rank ?? null;
+            $year = $edge->node->item->releaseYear->year ?? null;
+            $rating = $edge->node->item->ratingsSummary->aggregateRating ?? null;
+            $votes = $edge->node->item->ratingsSummary->voteCount ?? null;
+
+            // Image url
+            $imageUrl = null;
+            if (isset($edge->node->item->primaryImage->url) and !empty($edge->node->item->primaryImage->url)) {
+                $imageUrl = $this->imageUrl($edge->node->item->primaryImage->url);
+            }
+
+            $list[] = array(
+                'rank' => (int)$rank,
+                'id' => $imdbId,
+                'title' => $title,
+                'type' => $edge->node->item->titleType->text,
+                'imageUrl' => $imageUrl,
+                'year' => $year,
+                'rating' => $rating,
+                'votes' => $votes
+            );
+        }
+
+        return $list;
     }
 
-    public function getTop250TV()
-    {
-        $dom = $this->getHtmlDomParser("/chart/toptv/");
-
-        // if result exist
-        if ($this->data['top-250-tv']) {
-            return $this->data['top-250-tv'];
-        }
-
-        $list = $dom->find('#__NEXT_DATA__', 0);
-        $jsonLD = json_decode($list->innerText());
-
-        foreach ($jsonLD->props->pageProps->pageData->chartTitles->edges as $e) {
-            $id = $this->getImdbId($e->node->id);
-            if ($id) {
-                $this->data['top-250-tv'][] = [
-                    'rank' => (int)$e->currentRank,
-                    'id' => $id,
-                    'title' => $e->node->titleText->text,
-                    'type' => $e->node->titleType->id,
-                    'image' => $e->node->primaryImage->url,
-                    'year' => $e->node->releaseYear->year,
-                    'rating' => $e->node->ratingsSummary->aggregateRating,
-                    'votes' => $e->node->ratingsSummary->voteCount,
-                ];
-            }
-        }
-
-        return $this->data['top-250-tv'];
-    }
 }
 

@@ -1,7 +1,10 @@
 <?php
 
-namespace Hooshid\ImdbScraper\Base;
+namespace Hooshid\ImdbScraper\Base\Old;
 
+
+use Exception;
+use Hooshid\ImdbScraper\Base\Config;
 
 /**
  * Handles requesting urls, including the caching layer
@@ -49,17 +52,13 @@ class Pages
      * Request the page from IMDb
      * @param $url
      * @return string Page html. Empty string on failure
-     * @throws Exception\Http
+     * @throws Exception
      */
     protected function requestPage($url)
     {
         $req = $this->buildRequest($url);
         if (!$req->sendRequest()) {
-            if ($this->config->throwHttpExceptions) {
-                throw new Exception\Http("Failed to connect to server when requesting url [$url]");
-            } else {
-                return '';
-            }
+            throw new Exception("Failed to connect to server when requesting url [$url]");
         }
 
         if (200 == $req->getStatus()) {
@@ -67,13 +66,7 @@ class Pages
         } elseif ($redirectUrl = $req->getRedirect()) {
             return $this->requestPage($redirectUrl);
         } else {
-            if ($this->config->throwHttpExceptions) {
-                $exception = new Exception\Http("Failed to retrieve url [$url]. Status code [{$req->getStatus()}]");
-                $exception->HTTPStatusCode = $req->getStatus();
-                throw $exception;
-            } else {
-                return '';
-            }
+            throw new Exception("Failed to retrieve url [$url]. Status code [{$req->getStatus()}]");
         }
     }
 
