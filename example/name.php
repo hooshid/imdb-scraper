@@ -65,6 +65,38 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
                         <td><?php echo $name->imdbId(); ?></td>
                     </tr>
 
+                    <!-- Redirect -->
+                    <?php
+                    if (!empty($name->canonicalId())) {
+                        ?>
+                        <tr>
+                            <td><b>new IMDb ID:</b></td>
+                            <td>
+                                <?php echo $name->canonicalId(); ?>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Birth information -->
+                    <?php
+                    if (!empty($rank = $name->rank())) {
+                        ?>
+                        <tr>
+                            <td><b>Rank:</b></td>
+                            <td>
+                                <?php if ($rank["current_rank"]) { ?>
+                                    Current rank: <?php echo $rank["current_rank"]; ?><br>
+                                <?php } ?>
+                                <?php if ($rank["change_direction"]) { ?>
+                                    Change Direction: <?php echo $rank["change_direction"]; ?><br>
+                                <?php } ?>
+                                <?php if ($rank["difference"]) { ?>
+                                    Difference: <?php echo $rank["difference"]; ?><br>
+                                <?php } ?>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
                     <!-- Birth information -->
                     <?php
                     $birth = $name->birth();
@@ -120,12 +152,31 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
 
                     <!-- Nick name(s) -->
                     <?php
-                    $nick_names = $name->nickNames();
-                    if (!empty($nick_names)) {
+                    if (!empty($nick_names = $name->nickNames())) {
                         ?>
                         <tr>
                             <td><b>Nicknames:</b></td>
                             <td><?php echo implode(', ', $nick_names); ?></td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Nick name(s) -->
+                    <?php
+                    if (!empty($aka_names = $name->akaNames())) {
+                        ?>
+                        <tr>
+                            <td><b>AKA Names:</b></td>
+                            <td><?php echo implode(', ', $aka_names); ?></td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Professions -->
+                    <?php
+                    if (!empty($professions = $name->professions())) {
+                        ?>
+                        <tr>
+                            <td><b>Professions:</b></td>
+                            <td><?php echo implode(', ', $professions); ?></td>
                         </tr>
                     <?php } ?>
 

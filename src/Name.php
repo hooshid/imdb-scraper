@@ -2,64 +2,36 @@
 
 namespace Hooshid\ImdbScraper;
 
-use Exception;
-use Hooshid\ImdbScraper\Base\Old\Base;
+use Hooshid\ImdbScraper\Base\Base;
 use Hooshid\ImdbScraper\Base\Config;
 
 class Name extends Base
 {
-    protected $data = [
+    private ?string $imdb_id;
+
+    protected array $data = [
+        'canonical_id' => null,
         'full_name' => null,
         'photo' => [],
+        'rank' => null,
         'birth' => [],
         'death' => [],
         'birth_name' => null,
         'nick_names' => [],
+        'aka_names' => [],
         'body_height' => [],
         'bio' => [],
+        'professions' => [],
     ];
 
     /**
      * @param string $id IMDB ID to use for data retrieval
      * @param Config|null $config OPTIONAL override default config
      */
-    public function __construct($id, Config $config = null)
+    public function __construct(string $id, Config $config = null)
     {
         parent::__construct($config);
-        $this->setid($id);
-    }
-
-    /**
-     * Build imdb url
-     *
-     * @param string|null $page
-     * @return string
-     * @throws \Exception
-     */
-    protected function buildUrl(string $page = null): string
-    {
-        return "https://" . $this->imdbSiteUrl . "/name/nm" . $this->imdb_id . $this->getUrlSuffix($page);
-    }
-
-    /**
-     * Get url suffix
-     *
-     * @param string $pageName
-     * @return string
-     * @throws \Exception
-     */
-    protected function getUrlSuffix(string $pageName): string
-    {
-        $pageUrls = [
-            "name" => "/",
-            "bio" => "/bio/"
-        ];
-
-        if (isset($pageUrls[$pageName])) {
-            return $pageUrls[$pageName];
-        }
-
-        throw new Exception("Could not find URL for page $pageName");
+        $this->imdb_id = $id;
     }
 
     /***************************************[ Main Methods ]***************************************/
@@ -71,7 +43,17 @@ class Name extends Base
      */
     public function mainUrl(): string
     {
-        return "https://" . $this->imdbSiteUrl . "/name/nm" . $this->imdbId() . "/";
+        return "https://" . $this->imdbSiteUrl . "/name/" . $this->imdb_id . "/";
+    }
+
+    /**
+     * Get imdb id
+     *
+     * @return string
+     */
+    public function imdbId(): string
+    {
+        return $this->imdb_id;
     }
 
     /**
@@ -81,19 +63,147 @@ class Name extends Base
      */
     public function full(): array
     {
-        $this->fullName();
-        $this->photo();
-        $this->birth();
-        $this->death();
-        $this->birthName();
-        $this->nickNames();
-        $this->bodyHeight();
-        $this->bio();
+        $query = <<<EOF
+query Name(\$id: ID!) {
+  name(id: \$id) {
+    meta {
+      canonicalId
+    }
+    nameText {
+      text
+    }
+    primaryImage {
+      url
+    }
+    meterRanking {
+      currentRank
+      rankChange {
+        changeDirection
+        difference
+      }
+    }
+    birthDate {
+      dateComponents {
+        day
+        month
+        year
+      }
+    }
+    birthLocation {
+      text
+    }
+    deathDate {
+      dateComponents {
+        day
+        month
+        year
+      }
+    }
+    deathLocation {
+      text
+    }
+    deathCause {
+      text
+    }
+    birthName {
+      text
+    }
+    nickNames {
+      text
+    }
+    akas(first: 9999) {
+      edges {
+        node {
+          text
+        }
+      }
+    }
+    height {
+      displayableProperty {
+        value {
+          plainText
+        }
+      }
+    }
+    bios(first: 9999) {
+      edges {
+        node {
+          text {
+            plainText
+          }
+          author {
+            plainText
+          }
+        }
+      }
+    }
+    primaryProfessions {
+      category {
+        text
+      }
+    }
+  }
+}
+EOF;
+        $data = $this->graphql->query($query, "Name", ["id" => $this->imdb_id]);
+
+        /***************** Parse data *****************/
+        $this->parseCanonicalId($data);
+        $this->fullNameParse($data);
+        $this->photoParse($data);
+        $this->rankParse($data);
+        $this->birthParse($data);
+        $this->deathParse($data);
+        $this->birthNameParse($data);
+        $this->nickNamesParse($data);
+        $this->akaNamesParse($data);
+        $this->bodyHeightParse($data);
+        $this->bioParse($data);
+        $this->professionsParse($data);
 
         return $this->data;
     }
 
-    /***************************************[ Main Page ]***************************************/
+    /***************************************[ Methods ]***************************************/
+
+    /**
+     * Check redirect to another id or not.
+     *
+     * @return string|null
+     */
+    public function canonicalId(): ?string
+    {
+        $query = <<<EOF
+query Redirect(\$id: ID!) {
+  name(id: \$id) {
+    meta {
+      canonicalId
+    }
+  }
+}
+EOF;
+        $data = $this->graphql->query($query, "Redirect", ["id" => $this->imdb_id]);
+        $this->parseCanonicalId($data);
+
+        return $this->data['canonical_id'];
+    }
+
+    /**
+     * Parse redirects
+     *
+     * @param $data
+     * @return void
+     */
+    private function parseCanonicalId($data): void
+    {
+        if (!empty($data->name->meta->canonicalId)) {
+            $nameImdbId = $data->name->meta->canonicalId;
+            if ($nameImdbId != $this->imdb_id) {
+                $this->data['canonical_id'] = $nameImdbId;
+            }
+        }
+    }
+
     /**
      * Get the name of the person
      *
@@ -102,23 +212,31 @@ class Name extends Base
     public function fullName(): ?string
     {
         if (empty($this->data['full_name'])) {
-            // if bio page loaded, we use this page to extract person name
-            if (!empty($this->page['bio'])) {
-                if (preg_match("/<title>(.*?) - Biography - IMDb<\/title>/i", $this->getContentOfPage("bio"), $match)) {
-                    $this->data['full_name'] = $this->cleanString($match[1]);
-                } elseif (preg_match("/<title>IMDb - Biography - (.*?)<\/title>/i", $this->getContentOfPage("bio"), $match)) {
-                    $this->data['full_name'] = $this->cleanString($match[1]);
-                }
-            } else {
-                if (preg_match("/<title>(.*?) - IMDb<\/title>/i", $this->getContentOfPage("name"), $match)) {
-                    $this->data['full_name'] = $this->cleanString($match[1]);
-                } elseif (preg_match("/<title>IMDb - (.*?)<\/title>/i", $this->getContentOfPage("name"), $match)) {
-                    $this->data['full_name'] = $this->cleanString($match[1]);
-                }
-            }
+            $query = <<<EOF
+query Name(\$id: ID!) {
+  name(id: \$id) {
+    nameText {
+      text
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "Name", ["id" => $this->imdb_id]);
+            $this->fullNameParse($data);
         }
 
         return $this->data['full_name'];
+    }
+
+    /**
+     * Parse full name
+     *
+     * @param $data
+     * @return void
+     */
+    private function fullNameParse($data): void
+    {
+        $this->data['full_name'] = $this->cleanString($data->name->nameText->text ?? '');
     }
 
     /**
@@ -129,21 +247,80 @@ class Name extends Base
     public function photo(): array
     {
         if (empty($this->data['photo'])) {
-            $dom = $this->getHtmlDomParser("name");
+            $query = <<<EOF
+query PrimaryImage(\$id: ID!) {
+  name(id: \$id) {
+    primaryImage {
+      url
+    }
+  }
+}
+EOF;
 
-            if ($dom->findOneOrFalse('.ipc-page-background--baseAlt .ipc-page-section--baseAlt .ipc-poster .ipc-poster__poster-image img.ipc-image') == false) {
-                return [];
-            }
-
-            $photo = $dom->find('.ipc-page-background--baseAlt .ipc-page-section--baseAlt .ipc-poster .ipc-poster__poster-image img.ipc-image', 0)->getAttribute('src');
-
-            $this->data['photo'] = $this->photoUrl($photo);
+            $data = $this->graphql->query($query, "PrimaryImage", ["id" => $this->imdb_id]);
+            $this->photoParse($data);
         }
 
         return $this->data['photo'];
     }
 
-    /***************************************[ /bio ]***************************************/
+    /**
+     * Parse photo and image url
+     *
+     * @param $data
+     * @return void
+     */
+    private function photoParse($data): void
+    {
+        if (!empty($data->name->primaryImage->url)) {
+            $this->data['photo'] = $this->imageUrl($data->name->primaryImage->url);
+        }
+    }
+
+    /**
+     * Get current popularity rank of a person
+     *
+     * @return array
+     */
+    public function rank(): array
+    {
+        if (empty($this->data['rank'])) {
+            $query = <<<EOF
+query Rank(\$id: ID!) {
+  name(id: \$id) {
+    meterRanking {
+      currentRank
+      rankChange {
+        changeDirection
+        difference
+      }
+    }
+  }
+}
+EOF;
+
+            $data = $this->graphql->query($query, "Rank", ["id" => $this->imdb_id]);
+            $this->rankParse($data);
+        }
+
+        return $this->data['rank'];
+    }
+
+    /**
+     * Parse rank
+     *
+     * @param $data
+     * @return void
+     */
+    private function rankParse($data): void
+    {
+        if (!empty($data->name->meterRanking)) {
+            $this->data['rank']['current_rank'] = $data->name->meterRanking->currentRank ?? null;
+            $this->data['rank']['change_direction'] = $data->name->meterRanking->rankChange->changeDirection ?? null;
+            $this->data['rank']['difference'] = $data->name->meterRanking->rankChange->difference ?? null;
+        }
+    }
+
     /**
      * Get birth information
      *
@@ -151,63 +328,55 @@ class Name extends Base
      */
     public function birth(): array
     {
-        // new theme
         if (empty($this->data['birth'])) {
-            $dom = $this->getHtmlDomParser("name");
-
-            // check data exist in index page of name
-            if ($dom->findOneOrFalse('[data-testid="nm_pd_bl"]') != false) {
-
-                $html = $dom->find('[data-testid="nm_pd_bl"] ul', 0)->innerhtml;
-
-                preg_match('/\/search\/name\/\?birth_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<\/a>/im', $html, $day_mon);
-                preg_match('/\/search\/name\/\?birth_year=(\d{4})/im', $html, $year);
-                preg_match('/\/search\/name\/\?birth_place=.*?"\s*>(.*?)<\/a>/im', $html, $place);
-
-                if (!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
-                    $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
-                    $full_date = date("Y-m-d", $date_normalize);
-                } else {
-                    $full_date = null;
-                }
-
-                $this->data['birth'] = [
-                    "day" => @$day_mon[2],
-                    "month" => @$day_mon[3],
-                    "mon" => @$day_mon[1],
-                    "year" => @$year[1],
-                    "date" => @$full_date,
-                    "place" => @$this->cleanString($place[1])
-                ];
-            }
-        }
-
-        // old theme
-        if (empty($this->data['birth'])) {
-            if (preg_match('|Born</td>(.*)</td|iUms', $this->getContentOfPage("bio"), $match)) {
-                preg_match('|/search/name\?birth_monthday=(\d+)-(\d+).*?\n?>(.*?) \d+<|', $match[1], $day_mon);
-                preg_match('|/search/name\?birth_year=(\d{4})|ims', $match[1], $year);
-                preg_match('|/search/name\?birth_place=.*?"\s*>(.*?)<|ims', $match[1], $place);
-
-                if (!empty($day_mon[1]) and !empty($day_mon[2]) and !empty($year[1])) {
-                    $date_normalize = mktime(00, 00, 00, $day_mon[1], @$day_mon[2], $year[1]);
-                    $full_date = date("Y-m-d", $date_normalize);
-                } else {
-                    $full_date = null;
-                }
-
-                $this->data['birth'] = [
-                    "day" => @$day_mon[2],
-                    "month" => @$day_mon[3],
-                    "mon" => @$day_mon[1],
-                    "year" => @$year[1],
-                    "date" => @$full_date,
-                    "place" => @$this->cleanString($place[1])
-                ];
-            }
+            $query = <<<EOF
+query BirthDate(\$id: ID!) {
+  name(id: \$id) {
+    birthDate {
+      dateComponents {
+        day
+        month
+        year
+      }
+    }
+    birthLocation {
+      text
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "BirthDate", ["id" => $this->imdb_id]);
+            $this->birthParse($data);
         }
 
         return $this->data['birth'];
+    }
+
+    /**
+     * Parse birth
+     * @param $data
+     * @return void
+     */
+    private function birthParse($data): void
+    {
+        $birthDate = $data->name->birthDate->dateComponents ?? null;
+        if ($birthDate) {
+            $day = $birthDate->day ?? null;
+            $monthInt = $birthDate->month ?? null;
+            $year = $birthDate->year ?? null;
+            $monthName = $monthInt ? date("F", mktime(0, 0, 0, $monthInt, 10)) : null;
+            $full_date = (!empty($day) && !empty($monthInt) && !empty($year)) ? date("Y-m-d", mktime(0, 0, 0, $monthInt, $day, $year)) : null;
+            $place = $this->cleanString($data->name->birthLocation->text ?? '');
+
+            $this->data['birth'] = [
+                "day" => $day,
+                "month" => $monthName,
+                "mon" => $monthInt,
+                "year" => $year,
+                "date" => $full_date,
+                "place" => $place
+            ];
+        }
     }
 
     /**
@@ -218,71 +387,60 @@ class Name extends Base
     public function death(): array
     {
         if (empty($this->data['death'])) {
-            $dom = $this->getHtmlDomParser("name");
-
-            // check data exist in index page of name
-            if ($dom->findOneOrFalse('[data-testid="nm_pd_dl"]') != false) {
-                $html = $dom->find('[data-testid="nm_pd_dl"] ul', 0)->innerhtml;
-
-                // date of death
-                preg_match('/\/search\/name\/\?death_date=(\d{4}-\d{1,2}-\d{1,2}).*"\n?>(\w+)\s(\d+)<\/a>/im', $html, $death_date_regx);
-                if (!empty($death_date_regx)) {
-                    $death_date = explode("-", $death_date_regx[1]);
-                    // place of death
-                    preg_match('/\/search\/name\/\?death_place=.*?"\s*>(.*?)<\/a>/im', $html, $place);
-                    // cause of death
-                    preg_match('/\(([^)]+)\)/im', $html, $cause);
-
-                    if (!empty($death_date[0]) and !empty($death_date[1]) and !empty($death_date[2])) {
-                        $date_normalize = mktime(00, 00, 00, $death_date[1], @$death_date[2], $death_date[0]);
-                        $full_date = date("Y-m-d", $date_normalize);
-                    } else {
-                        $full_date = null;
-                    }
-
-                    $this->data['death'] = [
-                        "day" => @$death_date[2],
-                        "month" => @$death_date_regx[2],
-                        "mon" => @$death_date[1],
-                        "year" => @$death_date[0],
-                        "date" => @$full_date,
-                        "place" => @$this->cleanString($place[1]),
-                        "cause" => @$this->cleanString($cause[1])
-                    ];
-                }
-            }
-        }
-
-        if (empty($this->data['death'])) {
-            if (preg_match('|Died</td>(.*?)</td|ims', $this->getContentOfPage("bio"), $match)) {
-                preg_match('<time datetime="(.*)">', $match[1], $death_date_regx);
-                $death_date = explode("-", $death_date_regx[1]);
-
-                preg_match('/<a href="\/search\/name\?death_date=\d{4}-\d{1,2}-\d{1,2}.*"\n?>(\w+)\s(\d+)/', $match[1], $day_mon);
-
-                preg_match('|/search/name\?death_place=.*?"\s*>(.*?)<|ims', $match[1], $place); // place of death
-                preg_match('/\(([^)]+)\)/ims', $match[1], $cause); // cause of death
-
-                if (!empty($death_date[0]) and !empty($death_date[1]) and !empty($death_date[2])) {
-                    $date_normalize = mktime(00, 00, 00, $death_date[1], @$death_date[2], $death_date[0]);
-                    $full_date = date("Y-m-d", $date_normalize);
-                } else {
-                    $full_date = null;
-                }
-
-                $this->data['death'] = [
-                    "day" => @$death_date[2],
-                    "month" => @$day_mon[1],
-                    "mon" => @$death_date[1],
-                    "year" => @$death_date[0],
-                    "date" => @$full_date,
-                    "place" => @$this->cleanString($place[1]),
-                    "cause" => @$this->cleanString($cause[1])
-                ];
-            }
+            $query = <<<EOF
+query DeathDate(\$id: ID!) {
+  name(id: \$id) {
+    deathDate {
+      dateComponents {
+        day
+        month
+        year
+      }
+    }
+    deathLocation {
+      text
+    }
+    deathCause {
+      text
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "DeathDate", ["id" => $this->imdb_id]);
+            $this->deathParse($data);
         }
 
         return $this->data['death'];
+    }
+
+    /**
+     * Parse death
+     *
+     * @param $data
+     * @return void
+     */
+    private function deathParse($data): void
+    {
+        $deathDate = $data->name->deathDate->dateComponents ?? null;
+        if ($deathDate) {
+            $day = $deathDate->day ?? null;
+            $monthInt = $deathDate->month ?? null;
+            $year = $deathDate->year ?? null;
+            $monthName = $monthInt ? date("F", mktime(0, 0, 0, $monthInt, 10)) : null;
+            $full_date = (!empty($day) && !empty($monthInt) && !empty($year)) ? date("Y-m-d", mktime(0, 0, 0, $monthInt, $day, $year)) : null;
+            $place = $this->cleanString($data->name->deathLocation->text ?? '');
+            $cause = $this->cleanString($data->name->deathCause->text ?? '');
+
+            $this->data['death'] = [
+                "day" => $day,
+                "month" => $monthName,
+                "mon" => $monthInt,
+                "year" => $year,
+                "date" => $full_date,
+                "place" => $place,
+                "cause" => $cause,
+            ];
+        }
     }
 
     /**
@@ -292,75 +450,122 @@ class Name extends Base
      */
     public function birthName(): ?string
     {
-        // new theme
         if (empty($this->data['birth_name'])) {
-            $dom = $this->getHtmlDomParser("bio");
-
-            // check exist in bio page
-            if ($dom->findOneOrFalse('[data-testid="sub-section-overview"]') != false) {
-                foreach ($dom->find('[data-testid="sub-section-overview"] ul li') as $row) {
-                    $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
-                    if ($label == "Birth name") {
-                        $this->data['birth_name'] = $this->cleanString($row->find('.ipc-metadata-list-item__content-container .ipc-html-content-inner-div', 0)->text());
-                    }
-                }
-            }
-        }
-
-        if (empty($this->data['birth_name'])) {
-            if (preg_match("!Birth Name</td>\s*<td>(.*?)</td>\n!m", $this->getContentOfPage("bio"), $match)) {
-                $this->data['birth_name'] = $this->cleanString($match[1]);
-            }
+            $query = <<<EOF
+query BirthName(\$id: ID!) {
+  name(id: \$id) {
+    birthName {
+      text
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "BirthName", ["id" => $this->imdb_id]);
+            $this->birthNameParse($data);
         }
 
         return $this->data['birth_name'];
     }
 
     /**
-     * Get the nick names
+     * Parse birth name
+     *
+     * @param $data
+     * @return void
+     */
+    private function birthNameParse($data): void
+    {
+        $this->data['birth_name'] = $data->name->birthName->text ?? null;
+    }
+
+    /**
+     * Get the nicknames
      *
      * @return array
      */
     public function nickNames(): array
     {
-        // new theme
         if (empty($this->data['nick_names'])) {
-            $dom = $this->getHtmlDomParser("name");
-
-            // check exist in index page
-            if ($dom->findOneOrFalse('[data-testid="DidYouKnow"]') != false) {
-
-                foreach ($dom->find('[data-testid="DidYouKnow"] div') as $row) {
-                    $label = $this->cleanString($row->find('.ipc-metadata-list-item__label', 0)->innerText());
-                    if ($label == "Nicknames" or $label == "Nickname") {
-                        foreach ($row->find('.ipc-metadata-list-item__content-container ul li span')->text() as $nick_name) {
-                            $nick_name = $this->cleanString($nick_name);
-                            if (!empty($nick_name)) {
-                                $this->data['nick_names'][] = $nick_name;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // old theme
-        if (empty($this->data['nick_names'])) {
-            $source = $this->getContentOfPage("bio");
-            if (preg_match("!Nicknames</td>\s*<td>\s*(.*?)</td>\s*</tr>!ms", $source, $match)) {
-                $nick_names = explode("<br>", $match[1]);
-                foreach ($nick_names as $nick_name) {
-                    $nick_name = $this->cleanString($nick_name);
-                    if (!empty($nick_name)) {
-                        $this->data['nick_names'][] = $nick_name;
-                    }
-                }
-            } elseif (preg_match('!Nickname</td><td>\s*([^<]+)\s*</td>!', $source, $match)) {
-                $this->data['nick_names'][] = $this->cleanString($match[1]);
+            if (empty($this->nickName)) {
+                $query = <<<EOF
+query NickName(\$id: ID!) {
+  name(id: \$id) {
+    nickNames {
+      text
+    }
+  }
+}
+EOF;
+                $data = $this->graphql->query($query, "NickName", ["id" => $this->imdb_id]);
+                $this->nickNamesParse($data);
             }
         }
 
         return $this->data['nick_names'];
+    }
+
+    /**
+     * Parse nicknames
+     *
+     * @param $data
+     * @return void
+     */
+    private function nickNamesParse($data): void
+    {
+        if (!empty($data->name->nickNames)) {
+            foreach ($data->name->nickNames as $nickName) {
+                if (!empty($nickName->text)) {
+                    $this->data['nick_names'][] = $nickName->text;
+                }
+            }
+        }
+    }
+
+    /**
+     * Get alternative names for a person
+     *
+     * @return array
+     */
+    public function akaNames(): array
+    {
+        if (empty($this->data['aka_names'])) {
+            if (empty($this->professions)) {
+                $query = <<<EOF
+query AkaName(\$id: ID!) {
+  name(id: \$id) {
+    akas(first: 9999) {
+      edges {
+        node {
+          text
+        }
+      }
+    }
+  }
+}
+EOF;
+                $data = $this->graphql->query($query, "AkaName", ["id" => $this->imdb_id]);
+                $this->akaNamesParse($data);
+            }
+        }
+
+        return $this->data['aka_names'];
+    }
+
+    /**
+     * Parse aka names
+     *
+     * @param $data
+     * @return void
+     */
+    private function akaNamesParse($data): void
+    {
+        if (!empty($data->name->akas->edges)) {
+            foreach ($data->name->akas->edges as $edge) {
+                if (isset($edge->node->text)) {
+                    $this->data['aka_names'][] = $edge->node->text;
+                }
+            }
+        }
     }
 
     /**
@@ -370,80 +575,54 @@ class Name extends Base
      */
     public function bodyHeight(): array
     {
-        // new theme
         if (empty($this->data['body_height'])) {
-            $dom = $this->getHtmlDomParser("name");
-
-            // check exist in index page
-            if ($dom->findOneOrFalse('[data-testid="nm_pd_he"]') != false) {
-                $html = $dom->find('[data-testid="nm_pd_he"] .ipc-metadata-list-item__content-container span', 0)->innerText();
-                preg_match("/(?<imperial>.*?)\((?<metric>.*?)\)/im", $html, $match);
-
-                if (empty($match['imperial']) or empty($match['metric'])) {
-                    return [];
-                }
-
-                $imperial = str_replace("″", '"', $match['imperial']);
-                $imperial = str_replace("′", "'", $imperial);
-                $this->data['body_height']["imperial"] = trim($imperial);
-                $this->data['body_height']["metric"] = trim($match['metric']);
-
-                // change to centimeter
-                $height = $this->data['body_height']["metric"];
-                $height = str_replace(["m", ".", " "], "", $height);
-                if (strlen($height) == '2') {
-                    $height = $height . '0';
-                }
-                $this->data['body_height']["metric_cm"] = (int)$height;
-            }
+            $query = <<<EOF
+query BodyHeight(\$id: ID!) {
+  name(id: \$id) {
+    height {
+      displayableProperty {
+        value {
+          plainText
         }
-
-
-        if (empty($this->data['body_height'])) {
-            if (preg_match("!Height</td>\s*<td>\s*(?<imperial>.*?)\s*(&nbsp;)?\((?<metric>.*?)\)!m", $this->getContentOfPage("bio"), $match)) {
-                $this->data['body_height']["imperial"] = str_replace('&nbsp;', ' ', trim($match['imperial']));
-                $this->data['body_height']["metric"] = str_replace('&nbsp;', ' ', trim($match['metric']));
-
-                // change to centimeter
-                $height = $this->data['body_height']["metric"];
-                $height = str_replace(["m", ".", " "], "", $height);
-                if (strlen($height) == '2') {
-                    $height = $height . '0';
-                }
-                $this->data['body_height']["metric_cm"] = (int)$height;
-            }
-
-            if (empty($this->data['body_height'])) {
-                $dom = $this->getHtmlDomParser("name");
-
-                if ($dom->findOneOrFalse('#details-height') == false) {
-                    return [];
-                }
-
-                $height = $dom->find('#details-height', 0)->text();
-                $height = str_replace('&nbsp;', ' ', trim($height));
-                $height = str_replace('Height:', '', trim($height));
-
-                preg_match("!(?<imperial>.*?)\((?<metric>.*?)\)!m", $height, $match);
-
-                if (empty($match['imperial']) or empty($match['metric'])) {
-                    return [];
-                }
-
-                $this->data['body_height']["imperial"] = trim($match['imperial']);
-                $this->data['body_height']["metric"] = trim($match['metric']);
-
-                // change to centimeter
-                $height = $this->data['body_height']["metric"];
-                $height = str_replace(["m", ".", " "], "", $height);
-                if (strlen($height) == '2') {
-                    $height = $height . '0';
-                }
-                $this->data['body_height']["metric_cm"] = (int)$height;
-            }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "BodyHeight", ["id" => $this->imdb_id]);
+            $this->bodyHeightParse($data);
         }
 
         return $this->data['body_height'];
+    }
+
+    /**
+     * Parse body height
+     *
+     * @param $data
+     * @return void
+     */
+    private function bodyHeightParse($data): void
+    {
+        if (!empty($data->name->height->displayableProperty->value->plainText)) {
+            $heightParts = explode("(", $data->name->height->displayableProperty->value->plainText);
+            $imperial = str_replace("″", '"', $heightParts[0]);
+            $imperial = str_replace("′", "'", $imperial);
+            $this->data['body_height']["imperial"] = trim($imperial);
+            if (!empty($heightParts[1])) {
+                $this->data['body_height']["metric"] = trim($heightParts[1], ")");
+            } else {
+                $this->data['body_height']["metric"] = null;
+            }
+
+            // change to centimeter
+            $height = $this->data['body_height']["metric"];
+            $height = str_replace(["m", ".", " "], "", $height);
+            if (strlen($height) == '2') {
+                $height = $height . '0';
+            }
+            $this->data['body_height']["metric_cm"] = (int)$height;
+        }
     }
 
     /**
@@ -453,66 +632,100 @@ class Name extends Base
      */
     public function bio(): array
     {
-        // new theme
         if (empty($this->data['bio'])) {
-            $dom = $this->getHtmlDomParser("bio");
-
-            // check exist
-            if ($dom->findOneOrFalse('[data-testid="sub-section-mini_bio"]') != false) {
-                $text = $dom->find('[data-testid="sub-section-mini_bio"] .ipc-metadata-list-item__content-container .ipc-html-content-inner-div', 0)->innerText();
-                $text = str_replace("class=\"ipc-md-link ipc-md-link--entity\"", "", $text);
-                $text = str_replace("/?ref_=nmbio_mbio", "", $text);
-                $text = str_replace("?ref_=nmbio_mbio", "", $text);
-                $bio["text"] = str_replace("href=\"/name/nm", "href=\"https://" . $this->imdbSiteUrl . "/name/nm",
-                    str_replace("href=\"/title/tt", "href=\"https://" . $this->imdbSiteUrl . "/title/tt",
-                        str_replace('/search/name', 'https://' . $this->imdbSiteUrl . '/search/name',
-                            $text)));
-
-                $author = $dom->find('[data-testid="sub-section-mini_bio"] .ipc-metadata-list-item-html-item--subtext div', 0)->innerText();
-                $author = str_replace("- IMDb Mini Biography By:", "", $author);
-                if ($author) {
-                    $bio["author"]["url"] = '';
-                    $bio["author"]["name"] = trim($author);
-                } else {
-                    $bio["author"]["url"] = null;
-                    $bio["author"]["name"] = null;
-                }
-
-                $this->data['bio'][] = $bio;
-            }
+            $query = <<<EOF
+query MiniBio(\$id: ID!) {
+  name(id: \$id) {
+    bios(first: 9999) {
+      edges {
+        node {
+          text {
+            plainText
+          }
+          author {
+            plainText
+          }
         }
-
-        // old theme
-        if (empty($this->data['bio'])) {
-            $this->getContentOfPage("bio");
-            // no such page
-            if ($this->page["bio"] == "cannot open page") {
-                return [];
-            }
-
-            if (preg_match('!<h4 class="li_group">Mini Bio[^>]+?>(.+?)<(h4 class="li_group"|div class="article")!ims', $this->page["bio"], $block)) {
-                preg_match_all('!<div class="soda.*?\s*<p>\s*(?<bio>.+?)\s</p>\s*<p><em>- IMDb Mini Biography By:\s*(?<author>.+?)\s*</em>!ims', $block[1], $matches);
-                for ($i = 0; $i < count($matches[0]); ++$i) {
-                    $bio["text"] = str_replace("href=\"/name/nm", "href=\"https://" . $this->imdbSiteUrl . "/name/nm",
-                        str_replace("href=\"/title/tt", "href=\"https://" . $this->imdbSiteUrl . "/title/tt",
-                            str_replace('/search/name', 'https://' . $this->imdbSiteUrl . '/search/name',
-                                $matches['bio'][$i])));
-                    $author = 'Written by ' . (str_replace('/search/name',
-                            'https://' . $this->imdbSiteUrl . '/search/name', $matches['author'][$i]));
-                    if (@preg_match('!href="(.+?)"[^>]*>\s*(.*?)\s*</a>!', $author, $match)) {
-                        $bio["author"]["url"] = $match[1];
-                        $bio["author"]["name"] = $match[2];
-                    } else {
-                        $bio["author"]["url"] = '';
-                        $bio["author"]["name"] = trim($matches['author'][$i]);
-                    }
-
-                    $this->data['bio'][] = $bio;
-                }
-            }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "MiniBio", ["id" => $this->imdb_id]);
+            $this->bioParse($data);
         }
 
         return $this->data['bio'];
     }
+
+    /**
+     * Parse bio
+     *
+     * @param $data
+     * @return void
+     */
+    private function bioParse($data): void
+    {
+        if (!empty($data->name->bios->edges)) {
+            foreach ($data->name->bios->edges as $edge) {
+                $bio["text"] = $edge->node->text->plainText ?? null;
+                $bioAuthor = '';
+                if (!empty($edge->node->author) and !empty($edge->node->author->plainText)) {
+                    $bioAuthor = $edge->node->author->plainText;
+                }
+                $bio["author"]["url"] = '';
+                $bio["author"]["name"] = $bioAuthor;
+
+                $this->data['bio'][] = $bio;
+            }
+        }
+    }
+
+    /**
+     * Get primary professions of this person
+     *
+     * @return array
+     */
+    public function professions(): array
+    {
+        if (empty($this->data['professions'])) {
+            if (empty($this->professions)) {
+                $query = <<<EOF
+query Professions(\$id: ID!) {
+  name(id: \$id) {
+    primaryProfessions {
+      category {
+        text
+      }
+    }
+  }
+}
+EOF;
+                $data = $this->graphql->query($query, "Professions", ["id" => $this->imdb_id]);
+                $this->professionsParse($data);
+            }
+        }
+
+        return $this->data['professions'];
+    }
+
+    /**
+     * Parse professions
+     *
+     * @param $data
+     * @return void
+     */
+    private function professionsParse($data): void
+    {
+        if (!empty($data->name->primaryProfessions)) {
+            foreach ($data->name->primaryProfessions as $primaryProfession) {
+                if (!empty($primaryProfession->category->text)) {
+                    $this->data['professions'][] = $primaryProfession->category->text;
+                }
+            }
+        }
+    }
+
+
 }
 
