@@ -58,7 +58,7 @@ class Chart extends Base
      * @param string $listType
      * @return array
      */
-    public function getList(string $listType = "TOP_250"): array
+    public function getList(string $listType): array
     {
         $types = ['TOP_250', 'TOP_250_TV', 'TOP_250_ENGLISH', 'TOP_250_INDIA', 'TOP_50_TELUGU', 'TOP_50_TAMIL', 'TOP_50_MALAYALAM', 'TOP_50_BENGALI', 'BOTTOM_100'];
         if (!in_array($listType, $types)) {
