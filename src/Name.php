@@ -9,6 +9,8 @@ class Name extends Base
 {
     private ?string $imdb_id;
 
+    private bool $isFullCalled = false;
+
     protected array $data = [
         'canonical_id' => null,
         'full_name' => null,
@@ -57,12 +59,30 @@ class Name extends Base
     }
 
     /**
-     * this function return full extracted data in single json
+     * This function returns the full extracted data in a single JSON-compatible array.
      *
-     * @return array
+     * @return array{
+     *     canonical_id: mixed,
+     *     full_name: mixed,
+     *     photo: array,
+     *     rank: mixed,
+     *     birth: array,
+     *     death: array,
+     *     birth_name: mixed,
+     *     nick_names: array,
+     *     aka_names: array,
+     *     body_height: array,
+     *     bio: array,
+     *     professions: array
+     * }
      */
     public function full(): array
     {
+        if ($this->isFullCalled) {
+            return $this->data;
+        }
+        $this->isFullCalled = true;
+
         $query = <<<EOF
 query Name(\$id: ID!) {
   name(id: \$id) {
@@ -173,7 +193,8 @@ EOF;
      */
     public function canonicalId(): ?string
     {
-        $query = <<<EOF
+        if (!$this->isFullCalled) {
+            $query = <<<EOF
 query Redirect(\$id: ID!) {
   name(id: \$id) {
     meta {
@@ -182,8 +203,9 @@ query Redirect(\$id: ID!) {
   }
 }
 EOF;
-        $data = $this->graphql->query($query, "Redirect", ["id" => $this->imdb_id]);
-        $this->parseCanonicalId($data);
+            $data = $this->graphql->query($query, "Redirect", ["id" => $this->imdb_id]);
+            $this->parseCanonicalId($data);
+        }
 
         return $this->data['canonical_id'];
     }
@@ -211,7 +233,7 @@ EOF;
      */
     public function fullName(): ?string
     {
-        if (empty($this->data['full_name'])) {
+        if (!$this->isFullCalled && empty($this->data['full_name'])) {
             $query = <<<EOF
 query Name(\$id: ID!) {
   name(id: \$id) {
@@ -246,7 +268,7 @@ EOF;
      */
     public function photo(): array
     {
-        if (empty($this->data['photo'])) {
+        if (!$this->isFullCalled && empty($this->data['photo'])) {
             $query = <<<EOF
 query PrimaryImage(\$id: ID!) {
   name(id: \$id) {
@@ -284,7 +306,7 @@ EOF;
      */
     public function rank(): array
     {
-        if (empty($this->data['rank'])) {
+        if (!$this->isFullCalled && empty($this->data['rank'])) {
             $query = <<<EOF
 query Rank(\$id: ID!) {
   name(id: \$id) {
@@ -328,7 +350,7 @@ EOF;
      */
     public function birth(): array
     {
-        if (empty($this->data['birth'])) {
+        if (!$this->isFullCalled && empty($this->data['birth'])) {
             $query = <<<EOF
 query BirthDate(\$id: ID!) {
   name(id: \$id) {
@@ -386,7 +408,7 @@ EOF;
      */
     public function death(): array
     {
-        if (empty($this->data['death'])) {
+        if (!$this->isFullCalled && empty($this->data['death'])) {
             $query = <<<EOF
 query DeathDate(\$id: ID!) {
   name(id: \$id) {
@@ -450,7 +472,7 @@ EOF;
      */
     public function birthName(): ?string
     {
-        if (empty($this->data['birth_name'])) {
+        if (!$this->isFullCalled && empty($this->data['birth_name'])) {
             $query = <<<EOF
 query BirthName(\$id: ID!) {
   name(id: \$id) {
@@ -485,7 +507,7 @@ EOF;
      */
     public function nickNames(): array
     {
-        if (empty($this->data['nick_names'])) {
+        if (!$this->isFullCalled && empty($this->data['nick_names'])) {
             if (empty($this->nickName)) {
                 $query = <<<EOF
 query NickName(\$id: ID!) {
@@ -528,7 +550,7 @@ EOF;
      */
     public function akaNames(): array
     {
-        if (empty($this->data['aka_names'])) {
+        if (!$this->isFullCalled && empty($this->data['aka_names'])) {
             if (empty($this->professions)) {
                 $query = <<<EOF
 query AkaName(\$id: ID!) {
@@ -575,7 +597,7 @@ EOF;
      */
     public function bodyHeight(): array
     {
-        if (empty($this->data['body_height'])) {
+        if (!$this->isFullCalled && empty($this->data['body_height'])) {
             $query = <<<EOF
 query BodyHeight(\$id: ID!) {
   name(id: \$id) {
@@ -632,7 +654,7 @@ EOF;
      */
     public function bio(): array
     {
-        if (empty($this->data['bio'])) {
+        if (!$this->isFullCalled && empty($this->data['bio'])) {
             $query = <<<EOF
 query MiniBio(\$id: ID!) {
   name(id: \$id) {
@@ -688,7 +710,7 @@ EOF;
      */
     public function professions(): array
     {
-        if (empty($this->data['professions'])) {
+        if (!$this->isFullCalled && empty($this->data['professions'])) {
             if (empty($this->professions)) {
                 $query = <<<EOF
 query Professions(\$id: ID!) {
@@ -725,7 +747,6 @@ EOF;
             }
         }
     }
-
 
 }
 
