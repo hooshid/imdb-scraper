@@ -37,6 +37,7 @@ class Title extends Base
 
     protected $jsonLD = null;
 
+
     /**
      * @param string $id IMDB ID to use for data retrieval
      * @param Config|null $config OPTIONAL override default config
