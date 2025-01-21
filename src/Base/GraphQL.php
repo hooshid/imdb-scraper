@@ -54,7 +54,7 @@ class GraphQL
             [
                 'operationName' => $queryName,
                 'query' => $query,
-                'variables' => $variables
+                'variables' => (object) $variables
             ]
         );
 

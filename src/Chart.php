@@ -66,7 +66,7 @@ class Chart extends Base
         }
 
         $query = <<<EOF
-query {
+query Top250Title {
   titleChartRankings(
     first: 250
     input: {rankingsChartType: $listType}
@@ -110,7 +110,7 @@ query {
 EOF;
         $list = [];
         try {
-            $data = $this->graphql->query($query);
+            $data = $this->graphql->query($query, "Top250Title");
         } catch (Exception $e) {
             return $list;
         }
