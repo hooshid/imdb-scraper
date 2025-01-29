@@ -54,6 +54,7 @@
 
             <a class="badge badge-purple" href="/example/name-search.php?name=Emma">Search name: Emma</a>
             <a class="badge badge-purple" href="/example/name-search.php?birth_monthday=<?php echo date("m-d"); ?>">Search name: Born today</a>
+            <a class="badge badge-purple" href="/example/name-search.php?death_date_start=<?php echo date("Y-m-d",time()-86400); ?>&death_date_end=<?php echo date("Y-m-d"); ?>">Search name: Died yesterday</a>
 
             <a class="badge badge-orange" href="/example/title.php?id=tt0133093">Movie: The Matrix (1999)</a>
             <a class="badge badge-orange" href="/example/title.php?id=tt6723592">Movie: Tenet (2020)</a>

@@ -9,6 +9,11 @@ if (count($_GET) > 0) {
     $results = $nameSearch->search([
         'name' => $_GET['name'] ?? '',
         'birthMonthDay' => $_GET['birth_monthday'] ?? '',
+        'birthDateRangeStart' => $_GET['birth_date_start'] ?? '',
+        'birthDateRangeEnd' => $_GET['birth_date_end'] ?? '',
+        'deathDateRangeStart' => $_GET['death_date_start'] ?? '',
+        'deathDateRangeEnd' => $_GET['death_date_end'] ?? '',
+        'birthPlace' => $_GET['birth_place'] ?? '',
         'gender' => $_GET['gender'] ?? '',
         'adult' => $_GET['adult'] ?? 'EXCLUDE_ADULT',
     ]);
@@ -57,6 +62,36 @@ if (count($_GET) > 0) {
             </div>
 
             <div class="form-group">
+                <label for="birth_date_start">Birth Date Range Start:</label>
+                <input class="form-field" type="text" id="birth_date_start" name="birth_date_start" maxlength="50"
+                       placeholder="Format: YYYY-MM-DD" value="<?php echo @strip_tags($_GET['birth_date_start']); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="birth_date_end">Birth Date Range End:</label>
+                <input class="form-field" type="text" id="birth_date_end" name="birth_date_end" maxlength="50"
+                       placeholder="Format: YYYY-MM-DD" value="<?php echo @strip_tags($_GET['birth_date_end']); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="death_date_start">Death Date Range Start:</label>
+                <input class="form-field" type="text" id="death_date_start" name="death_date_start" maxlength="50"
+                       placeholder="Format: YYYY-MM-DD" value="<?php echo @strip_tags($_GET['death_date_start']); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="death_date_end">Death Date Range End:</label>
+                <input class="form-field" type="text" id="death_date_end" name="death_date_end" maxlength="50"
+                       placeholder="Format: YYYY-MM-DD" value="<?php echo @strip_tags($_GET['death_date_end']); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="birth_place">Birth Place:</label>
+                <input class="form-field" type="text" id="birth_place" name="birth_place" maxlength="50"
+                       placeholder="City or Country name: Amsterdam" value="<?php echo @strip_tags($_GET['birth_place']); ?>">
+            </div>
+
+            <div class="form-group">
                 <label for="gender">Gender:</label>
                 <select id="gender" name="gender" class="form-field">
                     <option value="">All</option>
@@ -101,7 +136,7 @@ if (count($_GET) > 0) {
                     <th>Image</th>
                     <th>Name</th>
                     <th>Id</th>
-                    <th>Job</th>
+                    <th>Professions</th>
                     <th>Bio</th>
                 </tr>
                 <?php foreach ($results as $result) { ?>
@@ -115,7 +150,7 @@ if (count($_GET) > 0) {
                         </td>
                         <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a></td>
                         <td><?php echo $result['id']; ?></td>
-                        <td><?php echo $result['job']; ?></td>
+                        <td><?php echo implode(", ", $result['professions']); ?></td>
                         <td><?php echo $result['bio']; ?></td>
                     </tr>
                 <?php } ?>

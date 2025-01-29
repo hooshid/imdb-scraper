@@ -2,6 +2,8 @@
 
 namespace Hooshid\ImdbScraper\Base;
 
+use DateTime;
+
 class Base extends Config
 {
 
@@ -50,4 +52,17 @@ class Base extends Config
             "140" => @str_replace(".jpg", "UX140_.jpg", $url),
         ];
     }
+
+    /**
+     * Check if provided date is valid
+     *
+     * @param string $date
+     * @return bool
+     */
+    protected function validateDate(string $date): bool
+    {
+        $d = DateTime::createFromFormat('Y-m-d', $date);
+        return $d && $d->format('Y-m-d') === $date;
+    }
+
 }

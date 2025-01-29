@@ -7,7 +7,7 @@ use CurlHandle;
 class Request
 {
     private false|CurlHandle $ch;
-    private $page;
+    private bool|string $page;
     private array $requestHeaders = [];
     private array $responseHeaders = [];
 
@@ -22,10 +22,16 @@ class Request
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($this->ch, CURLOPT_HEADERFUNCTION, array(&$this, "callback_CURLOPT_HEADERFUNCTION"));
         curl_setopt($this->ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0');
-        curl_setopt($this->ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($this->ch, CURLOPT_TIMEOUT, 45);
     }
 
-    public function addHeaderLine($name, $value): void
+    /**
+     * Add key & value to header
+     * @param string $name
+     * @param string $value
+     * @return void
+     */
+    public function addHeaderLine(string $name, string $value): void
     {
         $this->requestHeaders[] = "$name: $value";
     }
@@ -44,7 +50,7 @@ class Request
     }
 
     /**
-     * Send a request to the movie site
+     * Send a request
      */
     public function sendRequest(): bool
     {

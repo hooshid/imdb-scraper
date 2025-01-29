@@ -18,7 +18,7 @@ class NameSearchTest extends TestCase
         $this->assertEquals(1, $result[0]['index']);
         $this->assertEquals('nm6675440', $result[0]['id']);
         $this->assertEquals('Lily-Rose Depp', $result[0]['name']);
-        $this->assertEquals('Actress, Composer, Soundtrack', $result[0]['job']);
+        $this->assertEquals('Actress, Composer, Soundtrack', implode(", ", $result[0]['professions']));
         $this->assertGreaterThan(250, strlen($result[0]['bio']));
 
         // 2. Johnny Depp
@@ -26,7 +26,7 @@ class NameSearchTest extends TestCase
         $this->assertEquals(2, $result[1]['index']);
         $this->assertEquals('nm0000136', $result[1]['id']);
         $this->assertEquals('Johnny Depp', $result[1]['name']);
-        $this->assertEquals('Actor, Producer, Director', $result[1]['job']);
+        $this->assertEquals('Actor, Producer, Director', implode(", ", $result[1]['professions']));
         $this->assertGreaterThan(250, strlen($result[1]['bio']));
     }
 
@@ -43,7 +43,24 @@ class NameSearchTest extends TestCase
         $this->assertNotNull($result[0]['id']);
         $this->assertNotNull($result[0]['name']);
         $this->assertIsArray($result[0]['imageUrl']);
-        $this->assertNotNull($result[0]['job']);
+        $this->assertNotNull($result[0]['professions']);
         $this->assertNotNull($result[0]['bio']);
+    }
+
+    public function testDied()
+    {
+        $name = new NameSearch();
+        $result = $name->search(['deathDateRangeStart' => '2025-01-15','deathDateRangeEnd' => '2025-01-15']);
+
+        $this->assertIsArray($result);
+        $this->assertCount(19, $result);
+
+        // 1. David Lynch
+        $this->assertIsArray($result[0]['imageUrl']);
+        $this->assertEquals(1, $result[0]['index']);
+        $this->assertEquals('nm0000186', $result[0]['id']);
+        $this->assertEquals('David Lynch', $result[0]['name']);
+        $this->assertEquals('Writer, Director, Producer', implode(", ", $result[0]['professions']));
+        $this->assertGreaterThan(250, strlen($result[0]['bio']));
     }
 }

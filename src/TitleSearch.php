@@ -214,18 +214,6 @@ EOF;
     }
 
     /**
-     * Check if provided date is valid
-     *
-     * @param string $date
-     * @return bool
-     */
-    private function validateDate(string $date): bool
-    {
-        $d = DateTime::createFromFormat('Y-m-d', $date);
-        return $d && $d->format('Y-m-d') === $date;
-    }
-
-    /**
      * Check if input date is not empty and valid
      *
      * @param string|null $startDate
