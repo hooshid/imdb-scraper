@@ -68,8 +68,8 @@ class GraphQL
                 array('queryName' => $queryName, 'headers' => $request->getLastResponseHeaders(), 'body' => $request->getResponseBody())
             );
             */
-            $errorId = $variables['id'];
-            throw new Exception("Failed to retrieve query [$queryName] , IMDb id [$errorId]");
+            $errorId = !isset($variables['id']) ? 'n/a' : $variables['id'];
+            throw new Exception("Failed to retrieve query [$queryName], IMDb id [$errorId]");
         }
     }
 }

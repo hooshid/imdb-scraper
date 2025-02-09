@@ -53,7 +53,7 @@ class NameSearchTest extends TestCase
         $result = $name->search(['deathDateRangeStart' => '2025-01-15','deathDateRangeEnd' => '2025-01-15']);
 
         $this->assertIsArray($result);
-        $this->assertCount(19, $result);
+        $this->assertCount(20, $result);
 
         // 1. David Lynch
         $this->assertIsArray($result[0]['imageUrl']);
