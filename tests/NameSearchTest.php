@@ -8,18 +8,29 @@ class NameSearchTest extends TestCase
     public function testSearch()
     {
         $name = new NameSearch();
-        $result = $name->search(['name' => 'Johnny Depp']);
+        $result = $name->search(['name' => 'Depp']);
 
         $this->assertIsArray($result);
-        $this->assertCount(1, $result);
+        $this->assertCount(37, $result);
 
         // Johnny Depp
-        $this->assertIsArray($result[0]['imageUrl']);
-        $this->assertEquals(2, $result[0]['index']);
-        $this->assertEquals('nm0000136', $result[0]['id']);
-        $this->assertEquals('Johnny Depp', $result[0]['name']);
-        $this->assertEquals('Actor, Producer, Director', implode(", ", $result[0]['professions']));
-        $this->assertGreaterThan(250, strlen($result[0]['bio']));
+        $johnny = $result[0];
+        $this->assertIsArray($johnny['imageUrl']);
+        $this->assertEquals(1, $johnny['index']);
+        $this->assertEquals('nm0000136', $johnny['id']);
+        $this->assertEquals('Johnny Depp', $johnny['name']);
+        $this->assertEquals('Actor, Producer, Director', implode(", ", $johnny['professions']));
+        $this->assertGreaterThan(250, strlen($johnny['bio']));
+
+        // Lily-Rose Depp
+        $lily = $result[1];
+        $this->assertIsArray($lily['imageUrl']);
+        $this->assertEquals(2, $lily['index']);
+        $this->assertEquals('nm6675440', $lily['id']);
+        $this->assertEquals('Lily-Rose Depp', $lily['name']);
+        $this->assertEquals('Actress, Composer, Soundtrack', implode(", ", $lily['professions']));
+        $this->assertGreaterThan(250, strlen($lily['bio']));
+
     }
 
     public function testBornToday()
