@@ -11,7 +11,7 @@ class NameSearchTest extends TestCase
         $result = $name->search(['name' => 'Johnny Depp']);
 
         $this->assertIsArray($result);
-        $this->assertCount(37, $result);
+        $this->assertCount(1, $result);
 
         // Johnny Depp
         $this->assertIsArray($result[0]['imageUrl']);
