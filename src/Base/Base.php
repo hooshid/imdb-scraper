@@ -3,46 +3,78 @@
 namespace Hooshid\ImdbScraper\Base;
 
 use DateTime;
+use InvalidArgumentException;
 
+/**
+ * Base class for IMDb Scraper functionality
+ *
+ * Provides common utility methods and configuration for all IMDb scraper classes.
+ */
 class Base extends Config
 {
-
-    /**
-     * @var Config
-     */
+    /** @var Config Configuration object */
     protected Config $config;
 
-    /**
-     * @var GraphQL
-     */
+    /** @var GraphQL GraphQL client instance */
     protected GraphQL $graphql;
 
     /**
-     * @param Config|null $config OPTIONAL override default config
+     * Constructor
+     *
+     * @param Config|null $config Optional configuration override
      */
-    public function __construct(Config $config = null)
+    public function __construct(?Config $config = null)
     {
         $this->config = $config ?: $this;
         $this->graphql = new GraphQL($this->config);
     }
 
-    protected function cleanString($str, $remove = null): ?string
+    /**
+     * Clean and sanitize a string
+     *
+     * @param string|null $str The string to clean
+     * @param array|string|null $remove Strings to remove
+     * @return string|null Cleaned string or null if empty
+     */
+    protected function cleanString(?string $str, array|string $remove = null): ?string
     {
-        if (!empty($remove)) {
-            $str = str_replace($remove, "", $str);
+        if (empty($str)) {
+            return null;
         }
 
-        $str = str_replace("&amp;", "&", $str);
-        $str = str_replace("&nbsp;", " ", $str);
-        $str = html_entity_decode($str);
+        // Remove specified strings
+        if (!empty($remove)) {
+            $str = str_replace((array)$remove, '', $str);
+        }
 
-        return ($str ? trim(strip_tags($str)) : null);
+        // Replace common HTML entities
+        $replacements = [
+            '&amp;' => '&',
+            '&nbsp;' => ' ',
+            '&quot;' => '"',
+            '&apos;' => "'"
+        ];
+
+        $str = strtr($str, $replacements);
+        $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5);
+
+        return trim(strip_tags($str)) ?: null;
     }
 
-    protected function imageUrl(string $url = null): ?array
+    /**
+     * Generate image URLs in various sizes from original URL
+     *
+     * @param string|null $url Original image URL
+     * @return array|null Array of image URLs or null if no URL provided
+     */
+    protected function imageUrl(?string $url = null): ?array
     {
         if (!$url) {
             return null;
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException('Invalid image URL provided');
         }
 
         return [
@@ -54,15 +86,14 @@ class Base extends Config
     }
 
     /**
-     * Check if provided date is valid
+     * Validate a date string in Y-m-d format
      *
-     * @param string $date
-     * @return bool
+     * @param string $date Date string to validate
+     * @return bool True if valid, false otherwise
      */
     protected function validateDate(string $date): bool
     {
         $d = DateTime::createFromFormat('Y-m-d', $date);
         return $d && $d->format('Y-m-d') === $date;
     }
-
 }

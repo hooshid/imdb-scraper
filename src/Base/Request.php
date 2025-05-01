@@ -3,32 +3,64 @@
 namespace Hooshid\ImdbScraper\Base;
 
 use CurlHandle;
+use RuntimeException;
 
+/**
+ * Handles HTTP requests for IMDb scraping
+ *
+ * This class provides a wrapper around cURL functionality for making HTTP requests,
+ * with support for custom headers, POST requests, and response handling.
+ */
 class Request
 {
+    /** @var CurlHandle|false cURL handle */
     private false|CurlHandle $ch;
+
+    /** @var string|bool Response body or false on failure */
     private bool|string $page;
+
+    /** @var array Request headers to be sent */
     private array $requestHeaders = [];
+
+    /** @var array Response headers received */
     private array $responseHeaders = [];
 
     /**
-     * No need to call this.
-     * @param string $url URL to open
+     * Initialize a new request
+     *
+     * @param string $url URL to request
+     * @throws RuntimeException If cURL initialization fails
      */
     public function __construct(string $url)
     {
         $this->ch = curl_init($url);
-        curl_setopt($this->ch, CURLOPT_ENCODING, "");
-        curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($this->ch, CURLOPT_HEADERFUNCTION, array(&$this, "callback_CURLOPT_HEADERFUNCTION"));
-        curl_setopt($this->ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0');
-        curl_setopt($this->ch, CURLOPT_TIMEOUT, 45);
+
+        if ($this->ch === false) {
+            throw new RuntimeException('Failed to initialize cURL handle');
+        }
+
+        $this->configureDefaultCurlOptions();
     }
 
     /**
-     * Add key & value to header
-     * @param string $name
-     * @param string $value
+     * Configure default cURL options
+     */
+    private function configureDefaultCurlOptions(): void
+    {
+        curl_setopt_array($this->ch, [
+            CURLOPT_ENCODING => "",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADERFUNCTION => [$this, "headerCallback"],
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
+            CURLOPT_TIMEOUT => 45,
+        ]);
+    }
+
+    /**
+     * Add a header to the request
+     *
+     * @param string $name Header name
+     * @param string $value Header value
      * @return void
      */
     public function addHeaderLine(string $name, string $value): void
@@ -39,25 +71,33 @@ class Request
     /**
      * Send a POST request
      *
-     * @param array|string $content
-     * @return bool
+     * @param array|string $content POST data
+     * @return bool True on success, false on failure
      */
     public function post(array|string $content): bool
     {
-        curl_setopt($this->ch, CURLOPT_POST, true);
-        curl_setopt($this->ch, CURLOPT_POSTFIELDS, $content);
+        curl_setopt_array($this->ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $content
+        ]);
+
         return $this->sendRequest();
     }
 
     /**
-     * Send a request
+     * Send the HTTP request
+     *
+     * @return bool True on success, false on failure
      */
     public function sendRequest(): bool
     {
         $this->responseHeaders = [];
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->requestHeaders);
+
+        if (!empty($this->requestHeaders)) {
+            curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->requestHeaders);
+        }
+
         $this->page = curl_exec($this->ch);
-        curl_close($this->ch);
 
         if ($this->page !== false) {
             return true;
@@ -67,21 +107,29 @@ class Request
     }
 
     /**
-     * Get the Response body
-     * @return string page
+     * Get the response body
+     *
+     * @return string Response content
+     * @throws RuntimeException If no response is available
      */
     public function getResponseBody(): string
     {
+        if ($this->page === false) {
+            throw new RuntimeException('No response available');
+        }
+
         return $this->page;
     }
 
     /**
-     * HTTP status code of the last response
-     * @return int|null null if last request failed
+     * Get the HTTP status code of the last response
+     *
+     * @return int|null HTTP status code or null if unavailable
      */
     public function getStatus(): ?int
     {
         $headers = $this->getLastResponseHeaders();
+
         if (empty($headers[0])) {
             return null;
         }
@@ -93,17 +141,41 @@ class Request
         return (int)$matches[1];
     }
 
+    /**
+     * Get all response headers from the last request
+     *
+     * @return array Response headers
+     */
     public function getLastResponseHeaders(): array
     {
         return $this->responseHeaders;
     }
 
-    private function callback_CURLOPT_HEADERFUNCTION($ch, $str): int
+    /**
+     * cURL header callback function
+     *
+     * @param CurlHandle $ch cURL handle
+     * @param string $str Header line
+     * @return int Length of the header line
+     */
+    private function headerCallback(CurlHandle $ch, string $str): int
     {
-        $len = strlen($str);
-        if ($len) {
+        $length = strlen($str);
+
+        if ($length > 0) {
             $this->responseHeaders[] = $str;
         }
-        return $len;
+
+        return $length;
+    }
+
+    /**
+     * Close the cURL handle when object is destroyed
+     */
+    public function __destruct()
+    {
+        if (is_resource($this->ch)) {
+            curl_close($this->ch);
+        }
     }
 }

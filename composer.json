@@ -3,14 +3,18 @@
   "description": "Library for retrieving movie, tv series information from imdb.com",
   "keywords": [
     "php",
+    "IMDb",
     "imdb",
     "imdb.com",
     "scraping",
     "scraper",
+    "GraphQL",
     "imdb-webscrapping",
     "imdb-scraping",
     "imdb-scraper",
-    "imdb-metadata"
+    "imdb-metadata",
+    "Movie",
+    "Series"
   ],
   "homepage": "https://github.com/hooshid/imdb-scraper",
   "type": "library",
