@@ -86,6 +86,33 @@ class Base extends Config
     }
 
     /**
+     * Generate image URLs in various sizes from original URL
+     *
+     * @param object|null $obj
+     * @return array|null Array of image URLs or null if no URL provided
+     */
+    protected function image(?object $obj = null): ?array
+    {
+        if (!$obj) {
+            return null;
+        }
+
+        $url = $obj->url ?? null;
+        $width = $obj->width ?? null;
+        $height = $obj->height ?? null;
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException('Invalid image URL provided');
+        }
+
+        return [
+            "url" => $url,
+            "width" => $width,
+            "height" => $height
+        ];
+    }
+
+    /**
      * Validate a date string in Y-m-d format
      *
      * @param string $date Date string to validate

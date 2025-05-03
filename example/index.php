@@ -69,6 +69,10 @@
 
             <a class="badge badge-yellow" href="/example/video.php?id=vi2051194393">Video: Tenet - Final Trailer</a>
             <a class="badge badge-yellow" href="/example/video.php?id=vi1032782617">Video: The Matrix - Theatrical Trailer</a>
+
+            <a class="badge badge-orange" href="/example/news.php?type=CELEBRITY">Celebrity news</a>
+            <a class="badge badge-orange" href="/example/news.php?type=MOVIE">Movie news</a>
+            <a class="badge badge-orange" href="/example/news.php?type=TV">TV news</a>
         </div>
     </div>
 

@@ -374,6 +374,56 @@ h2 {
     min-width: 100%;
 }
 
+.grid-box-4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.news-box {
+    display: inline-block;
+    margin-bottom: 15px;
+    text-decoration: none;
+}
+.news-box .thumbnail {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 5px;
+    width: 100%;
+    box-shadow: 1px 1px 3px 0 #c7c7c7;
+}
+.news-box .thumbnail img {
+    width: 100%;
+    min-height: 140px;
+}
+.news-box .date,
+.news-box .sourceLabel {
+    background: rgba(0, 0, 0, 0.73);
+    display: inline-block;
+    border-radius: 5px;
+    color: #fff;
+    padding: 4px 8px;
+    position: absolute;
+    font-size: 80%;
+}
+.news-box .date {
+    right: 6px;
+    top: 6px;
+}
+.news-box .sourceLabel {
+    left: 6px;
+    bottom: 6px;
+}
+.news-box .title {
+    padding: 2px;
+    margin: 6px 0;
+    font-size: 90%;
+    text-decoration: none;
+    display: block;
+}
+
+
 /*
 h2 span {
     text-decoration: underline;
