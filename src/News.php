@@ -81,7 +81,7 @@ GRAPHQL;
             $newsListItems[] = [
                 'id' => $edge->node->id,
                 'title' => $edge->node->articleTitle->plainText,
-                'author' => $edge->node->date ?? null,
+                'author' => $edge->node->byline ?? null,
                 'date' => $edge->node->date ?? null,
                 'sourceUrl' => $edge->node->externalUrl ?? null,
                 'sourceLabel' => $edge->node->source->homepage->label ?? null,

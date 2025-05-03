@@ -1,5 +1,6 @@
 <?php
 
+use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\News;
 
 require __DIR__ . "/../vendor/autoload.php";
@@ -12,6 +13,8 @@ if (isset($_GET["output"])) {
     echo json_encode($list);
     exit();
 }
+
+$image = new Image();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,36 +36,33 @@ if (isset($_GET["output"])) {
         <!-- Name -->
         <h2 class="text-center pb-30">News - <?php echo ucfirst(strtolower($type)) ?></h2>
 
-        <div class="-">
-            <!-- Trailers -->
-            <?php if (!empty($list)) { ?>
+        <?php if (!empty($list)) { ?>
+            <div class="grid-box-4">
+                <?php foreach ($list as $item) { ?>
+                    <div class="news-box">
+                        <div class="thumbnail">
+                            <?php if ($item['image']) { ?>
+                                <img src="<?php
+                                echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 500, 281);
+                                ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
+                            <?php } ?>
 
-                <div class="grid-box-4">
-                    <?php foreach ($list as $item) { ?>
-                        <div class="news-box">
-                            <div class="thumbnail">
-                                <?php if ($item['image']) { ?>
-                                    <img src="<?php echo $item['image']['url']; ?>"
-                                         alt="<?php echo $item['title']; ?>" loading="lazy">
-                                <?php } ?>
-
-                                <div class="date">
-                                    <?php echo date('Y-m-d H:i', strtotime($item['date'])); ?>
-                                </div>
-
-                                <div class="sourceLabel">
-                                    <?php echo $item['sourceLabel']; ?>
-                                </div>
+                            <div class="date">
+                                <?php echo date('Y-m-d H:i', strtotime($item['date'])); ?>
                             </div>
 
-                            <a href="<?php echo $item['sourceUrl']; ?>" target="_blank" class="title">
-                                <?php echo $item['title']; ?>
-                            </a>
+                            <div class="sourceLabel">
+                                <?php echo $item['sourceLabel']; ?>
+                            </div>
                         </div>
-                    <?php } ?>
-                </div>
-            <?php } ?>
-        </div>
+
+                        <a href="<?php echo $item['sourceUrl']; ?>" target="_blank" class="title">
+                            <?php echo $item['title']; ?>
+                        </a>
+                    </div>
+                <?php } ?>
+            </div>
+        <?php } ?>
     </div>
 </div>
 
