@@ -6,7 +6,7 @@ require __DIR__ . "/../vendor/autoload.php";
 
 $type = $_GET["type"];
 $news = new News();
-$list = $news->newsList($type, 25);
+$list = $news->newsList($type, 12);
 if (isset($_GET["output"])) {
     header("Content-Type: application/json");
     echo json_encode($list);
