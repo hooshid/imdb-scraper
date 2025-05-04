@@ -237,6 +237,10 @@ h2 {
     font-size: 50px;
 }
 
+hr {
+    border-top: 1px solid #ddd;
+    margin-top: 14px;
+}
 
 .back-page,
 .output-json-link {

@@ -4,10 +4,13 @@ namespace Hooshid\ImdbScraper;
 
 use Exception;
 use Hooshid\ImdbScraper\Base\Base;
+use stdClass;
 
 class NameSearch extends Base
 {
     /**
+     * Search for names on IMDb
+     *
      * @param array $params
      *  Example: [
      *      'name' => '',
@@ -24,8 +27,26 @@ class NameSearch extends Base
      *      'sortOrder' => 'ASC'
      *  ]
      * @return array
+     * @throws Exception
      */
     public function search(array $params = []): array
+    {
+        $params = $this->normalizeParameters($params);
+        $constraints = $this->buildConstraints($params);
+
+        $query = $this->buildGraphQLQuery($params, $constraints);
+        $data = $this->graphql->query($query, "AdvancedNameSearch");
+
+        return $this->processSearchResults($data);
+    }
+
+    /**
+     * Normalize and validate search parameters
+     *
+     * @param array $params
+     * @return array
+     */
+    private function normalizeParameters(array $params): array
     {
         // Define default values for the parameters
         $defaults = [
@@ -44,63 +65,119 @@ class NameSearch extends Base
         ];
 
         // Merge the defaults with the incoming parameters
-        $params = array_merge($defaults, $params);
+        $normalized = array_merge($defaults, $params);
 
         // Extract the parameters
-        $searchTerm = trim($params['name']);
-        $birthMonthDay = $params['birthMonthDay'];
-        $birthDateRangeStart = $params['birthDateRangeStart'];
-        $birthDateRangeEnd = $params['birthDateRangeEnd'];
-        $deathDateRangeStart = $params['deathDateRangeStart'];
-        $deathDateRangeEnd = $params['deathDateRangeEnd'];
-        $birthPlace = trim($params['birthPlace']);
-        $gender = strtoupper($params['gender']);
-        $adult = strtoupper($params['adult']);
+        return [
+            'name' => trim($normalized['name']),
+            'birthMonthDay' => $normalized['birthMonthDay'],
+            'birthDateRangeStart' => $normalized['birthDateRangeStart'],
+            'birthDateRangeEnd' => $normalized['birthDateRangeEnd'],
+            'deathDateRangeStart' => $normalized['deathDateRangeStart'],
+            'deathDateRangeEnd' => $normalized['deathDateRangeEnd'],
+            'birthPlace' => trim($normalized['birthPlace']),
+            'gender' => strtoupper($normalized['gender']),
+            'adult' => strtoupper($normalized['adult']),
+            'limit' => (int)$normalized['limit'],
+            'sortBy' => strtoupper($normalized['sortBy']),
+            'sortOrder' => strtoupper($normalized['sortOrder'])
+        ];
+    }
 
-        $limit = (int)$params['limit'];
-        $sortBy = strtoupper($params['sortBy']);
-        $sortOrder = strtoupper($params['sortOrder']);
-
-        $constraint = "";
+    /**
+     * Build GraphQL constraints from parameters
+     *
+     * @param array $params
+     * @return string
+     */
+    private function buildConstraints(array $params): string
+    {
+        $constraints = [];
 
         // Search Name
-        if ($searchTerm) {
-            $constraint .= "nameTextConstraint: {searchTerm: \"$searchTerm\"}";
+        if ($params['name']) {
+            $constraints[] = sprintf('nameTextConstraint: {searchTerm: "%s"}', addslashes($params['name']));
         }
 
         // Birth Day Month
-        if ($birthMonthDay) {
-            $constraint .= "birthDateConstraint: {birthday: \"--$birthMonthDay\"}";
+        if ($params['birthMonthDay']) {
+            $constraints[] = sprintf('birthDateConstraint: {birthday: "--%s"}', $params['birthMonthDay']);
         }
 
         // Birth Date Range
-        $birthDateRange = $this->checkBirthDates($birthDateRangeStart, $birthDateRangeEnd);
-        if ($birthDateRange !== false) {
-            $constraint .= $birthDateRange;
+        if ($birthDateConstraint = $this->buildDateConstraint('birthDate', $params['birthDateRangeStart'], $params['birthDateRangeEnd'])) {
+            $constraints[] = $birthDateConstraint;
         }
 
         // Death Date Range
-        $deathDateRange = $this->checkDeathDates($deathDateRangeStart, $deathDateRangeEnd);
-        if ($deathDateRange !== false) {
-            $constraint .= $deathDateRange;
+        if ($deathDateConstraint = $this->buildDateConstraint('deathDate', $params['deathDateRangeStart'], $params['deathDateRangeEnd'])) {
+            $constraints[] = $deathDateConstraint;
         }
 
         // Birthplace
-        if (!empty($birthPlace)) {
-            $constraint .= ' birthPlaceConstraint: {birthPlace: "' . $birthPlace . '"}';
+        if ($params['birthPlace']) {
+            $constraints[] = sprintf('birthPlaceConstraint: {birthPlace: "%s"}', addslashes($params['birthPlace']));
         }
 
-        $query = <<<EOF
+        // Gender
+        if ($params['gender']) {
+            $constraints[] = sprintf('genderIdentityConstraint: {anyGender: ["%s"]}', $params['gender']);
+        }
+
+        return implode(' ', $constraints);
+    }
+
+    /**
+     * Generic date constraint builder
+     *
+     * @param string $type (birthDate, deathDate)
+     * @param string|null $startDate (searches between startDate and present date) iso date string ('1975-01-01')
+     * @param string|null $endDate (searches between endDate and earlier) iso date string ('1975-01-01')
+     * @return string|null
+     */
+    private function buildDateConstraint(string $type, ?string $startDate, ?string $endDate): ?string
+    {
+        if (empty($startDate) && empty($endDate)) {
+            return null;
+        }
+
+        $range = [];
+
+        if (!empty($startDate) && $this->validateDate($startDate)) {
+            $range[] = sprintf('start: "%s"', $startDate);
+        }
+
+        if (!empty($endDate) && $this->validateDate($endDate)) {
+            $range[] = sprintf('end: "%s"', $endDate);
+        }
+
+        if (empty($range)) {
+            return null;
+        }
+
+        return sprintf('%sConstraint: {%sRange: {%s}}', $type, $type, implode(', ', $range));
+    }
+
+    /**
+     * Build the GraphQL query
+     *
+     * @param array $params
+     * @param string $constraints
+     * @return string
+     */
+    private function buildGraphQLQuery(array $params, string $constraints): string
+    {
+        return <<<GRAPHQL
 query AdvancedNameSearch {
   advancedNameSearch(
-    first: $limit,
-    sort: {sortBy: $sortBy sortOrder: $sortOrder}
+    first: {$params['limit']},
+    sort: {sortBy: {$params['sortBy']} sortOrder: {$params['sortOrder']}}
     constraints: {
-        $constraint
-        genderIdentityConstraint: {anyGender: [$gender]}
-        explicitContentConstraint: {explicitContentFilter: $adult}
+        $constraints
+        explicitContentConstraint: {explicitContentFilter: {$params['adult']}}
     }
   ) {
+    total
     edges {
       node {
         name {
@@ -114,11 +191,31 @@ query AdvancedNameSearch {
             }
           }
           primaryImage {
-             url
+            url
+            width
+            height
           }
           primaryProfessions {
             category {
                 text
+            }
+          }
+          knownFor(first: 5) {
+            edges {
+              node {
+                credit {
+                  title {
+                    id
+                    titleText {
+                      text
+                    }
+                    releaseYear {
+                      year
+                      endYear
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -126,36 +223,29 @@ query AdvancedNameSearch {
     }
   }
 }
-EOF;
+GRAPHQL;
+    }
 
+    /**
+     * Process GraphQL response into standardized results
+     *
+     * @param stdClass $data
+     * @return array
+     */
+    private function processSearchResults(stdClass $data): array
+    {
         $results = [];
-        try {
-            $data = $this->graphql->query($query, "AdvancedNameSearch");
-        } catch (Exception $e) {
-            return $results;
-        }
-
-        if (!isset($data->advancedNameSearch) ||
-            empty($data->advancedNameSearch->edges) ||
-            !is_array($data->advancedNameSearch->edges) ||
-            count($data->advancedNameSearch->edges) == 0
-        ) {
+        if (!isset($data->advancedNameSearch->edges) || !is_array($data->advancedNameSearch->edges)) {
             return $results;
         }
 
         $index = 1;
         foreach ($data->advancedNameSearch->edges as $edge) {
-            $imdbId = $edge->node->name->id ?? '';
-            $name = $edge->node->name->nameText->text ?? '';
+            $id = $edge->node->name->id ?? null;
+            $name = $edge->node->name->nameText->text ?? null;
 
-            if (empty($imdbId) or empty($name)) {
+            if (empty($id) or empty($name)) {
                 continue;
-            }
-
-            // Image url
-            $imageUrl = null;
-            if (isset($edge->node->name->primaryImage->url) and !empty($edge->node->name->primaryImage->url)) {
-                $imageUrl = $this->imageUrl($edge->node->name->primaryImage->url);
             }
 
             // Professions
@@ -172,88 +262,32 @@ EOF;
                 $bio = nl2br($edge->node->name->bio->text->plainText);
             }
 
+            // knownFor
+            $knownFor = [];
+            if (!empty($edge->node->name->knownFor->edges)) {
+                foreach ($edge->node->name->knownFor->edges as $known) {
+                    $knownFor[] = [
+                        'id' => $known->node->credit->title->id ?? null,
+                        'title' => $known->node->credit->title->titleText->text ?? null,
+                        'year' => $known->node->credit->title->releaseYear->year ?? null,
+                        'end_year' => $known->node->credit->title->releaseYear->endYear ?? null
+                    ];
+                }
+            }
+
             $results[] = [
                 'index' => $index,
-                'id' => $imdbId,
-                'url' => $this->baseUrl . "/name/" . $imdbId,
+                'id' => $id,
+                'url' => $this->getBaseUrl() . "/name/" . $id,
                 'name' => $this->cleanString($name),
-                'imageUrl' => $imageUrl,
+                'image' => $this->image($edge->node->name->primaryImage),
                 'professions' => $professions,
                 'bio' => $bio,
+                'known_for' => $knownFor,
             ];
             $index++;
         }
 
         return $results;
     }
-
-    /**
-     * Check if input birthdates are not empty and valid
-     * @param string|null $startDate (searches between startDate and present date) iso date string ('1975-01-01')
-     * @param string|null $endDate (searches between endDate and earlier) iso date string ('1975-01-01')
-     * @return string|false Returns the constraints string or false if validation fails
-     */
-    private function checkBirthDates(?string $startDate, ?string $endDate): bool|string
-    {
-        if (empty($startDate) && empty($endDate)) {
-            return false;
-        }
-
-        $constraint = 'birthDateConstraint: {';
-
-        if (!empty($startDate) && !empty($endDate)) {
-            if ($this->validateDate($startDate) === false || $this->validateDate($endDate) === false) {
-                return false;
-            }
-            $constraint .= 'birthDateRange: {start:"' . $startDate . '", end:"' . $endDate . '"}';
-        } elseif (!empty($startDate)) {
-            if ($this->validateDate($startDate) === false) {
-                return false;
-            }
-            $constraint .= 'birthDateRange: {start:"' . $startDate . '"}';
-        } elseif (!empty($endDate)) {
-            if ($this->validateDate($endDate) === false) {
-                return false;
-            }
-            $constraint .= 'birthDateRange: {end:"' . $endDate . '"}';
-        }
-
-        $constraint .= '}';
-        return $constraint;
-    }
-
-    /**
-     * Check if input death dates are not empty and valid
-     * @param string|null $startDate (searches between startDate and present date) iso date string ('1975-01-01')
-     * @param string|null $endDate (searches between endDate and earlier) iso date string ('1975-01-01')
-     * @return string|false Returns the constraints string or false if validation fails
-     */
-    private function checkDeathDates(?string $startDate, ?string $endDate): string|false
-    {
-        if (empty($startDate) && empty($endDate)) {
-            return false;
-        }
-
-        $constraint = 'deathDateConstraint: {';
-
-        if (!empty($startDate) && !empty($endDate)) {
-            if ($this->validateDate($startDate) === false || $this->validateDate($endDate) === false) {
-                return false;
-            }
-            $constraint .= 'deathDateRange: {start:"' . $startDate . '", end:"' . $endDate . '"}}';
-        } elseif (!empty($startDate)) {
-            if ($this->validateDate($startDate) === false) {
-                return false;
-            }
-            $constraint .= 'deathDateRange: {start:"' . $startDate . '"}}';
-        } elseif (!empty($endDate)) {
-            if ($this->validateDate($endDate) === false) {
-                return false;
-            }
-            $constraint .= 'deathDateRange: {end:"' . $endDate . '"}}';
-        }
-
-        return $constraint;
-    }
 }
-

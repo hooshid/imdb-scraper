@@ -1,5 +1,6 @@
 <?php
 
+use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\NameSearch;
 
 require __DIR__ . "/../vendor/autoload.php";
@@ -27,6 +28,8 @@ if (count($_GET) > 0) {
     header("Location: /example");
     exit;
 }
+
+$image = new Image();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -88,7 +91,8 @@ if (count($_GET) > 0) {
             <div class="form-group">
                 <label for="birth_place">Birth Place:</label>
                 <input class="form-field" type="text" id="birth_place" name="birth_place" maxlength="50"
-                       placeholder="City or Country name: Amsterdam" value="<?php echo @strip_tags($_GET['birth_place']); ?>">
+                       placeholder="City or Country name: Amsterdam"
+                       value="<?php echo @strip_tags($_GET['birth_place']); ?>">
             </div>
 
             <div class="form-group">
@@ -135,7 +139,6 @@ if (count($_GET) > 0) {
                     <th>Index</th>
                     <th>Image</th>
                     <th>Name</th>
-                    <th>Id</th>
                     <th>Professions</th>
                     <th>Bio</th>
                 </tr>
@@ -143,22 +146,31 @@ if (count($_GET) > 0) {
                     <tr>
                         <td><?php echo $result['index']; ?></td>
                         <td>
-                            <?php if (!empty($result['imageUrl']['120x120'])) { ?>
-                                <img class="name-image" src="<?php echo $result['imageUrl']['120x120']; ?>"
-                                     alt="<?php echo $result['name']; ?>" loading="lazy">
+                            <?php if ($result['image']) { ?>
+                                <img class="name-image" src="<?php
+                                echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 120, 120);
+                                ?>" alt="<?php echo $result['name']; ?>" loading="lazy">
                             <?php } ?>
                         </td>
                         <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a></td>
-                        <td><?php echo $result['id']; ?></td>
                         <td><?php echo implode(", ", $result['professions']); ?></td>
-                        <td><?php echo $result['bio']; ?></td>
+                        <td>
+                            <b>Bio:</b><br>
+                            <?php echo $result['bio']; ?>
+                            <br>
+                            <hr>
+                            <br>
+                            <b>Known For:</b><br>
+                            <?php foreach ($result['known_for'] as $known) { ?>
+                                <a href="title.php?id=<?php echo $known['id']; ?>"><?php echo $known['title']; ?>
+                                    (<?php echo $known['year']; ?>)</a>,
+                            <?php } ?>
+                        </td>
                     </tr>
                 <?php } ?>
             </table>
         </div>
-
     </div>
 </div>
-
 </body>
 </html>
