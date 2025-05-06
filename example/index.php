@@ -43,6 +43,8 @@
             <a class="badge badge-red" href="/example/chart-list.php?type=TOP_250">Chart: Top 250 Movies</a>
             <a class="badge badge-red" href="/example/chart-list.php?type=TOP_250_TV">Chart: Top 250 TV Shows</a>
             <a class="badge badge-red" href="/example/chart-list.php?type=BOTTOM_100">Chart: Bottom 100 Movies</a>
+            <a class="badge badge-red" href="/example/chart-most-popular-titles.php?type=MOST_POPULAR_MOVIES">Chart: Most Popular Movies</a>
+            <a class="badge badge-red" href="/example/chart-most-popular-titles.php?type=MOST_POPULAR_TV_SHOWS">Chart: Most Popular TV Series</a>
             <a class="badge badge-red" href="/example/chart-most-popular-names.php">Chart: Most Popular Names</a>
 
             <a class="badge badge-green" href="/example/calendar.php?type=MOVIE">Calendar: Upcoming Movies</a>

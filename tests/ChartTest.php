@@ -22,7 +22,7 @@ class ChartTest extends TestCase
             $this->assertStringStartsWith("tt", $row['id']);
             $this->assertNotNull($row['rating']);
             $this->assertNotNull($row['votes']);
-            $this->assertIsInt(is_numeric($row['lifetime_gross_amount']));
+            $this->assertIsInt($row['lifetime_gross_amount']);
             $this->assertEquals("USD", $row['lifetime_gross_currency']);
             $this->assertIsInt($row['weekend_gross_amount']);
             $this->assertEquals("USD", $row['weekend_gross_currency']);
@@ -69,6 +69,26 @@ class ChartTest extends TestCase
         $this->assertGreaterThan(2300000, $result[0]['votes']);
         $this->assertIsArray($result[0]['image']);
         $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_.jpg", $result[0]['image']['url']);
+    }
+
+    public function testMostPopularTitles()
+    {
+        $chart = new Chart();
+        $result = $chart->getMostPopularTitles("MOST_POPULAR_MOVIES");
+
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+
+        $this->assertStringStartsWith("tt", $result[0]['id']);
+        $this->assertNotNull($result[0]['title']);
+        $this->assertEquals(1, $result[0]['rank']);
+        $this->assertEquals("Movie", $result[0]['type']);
+        $this->assertIsInt($result[0]['runtime']);
+        $this->assertIsArray($result[0]['genres']);
+        $this->assertIsInt($result[0]['year']);
+        $this->assertIsFloat($result[0]['rating']);
+        $this->assertIsInt($result[0]['votes']);
+        $this->assertIsArray($result[0]['image']);
     }
 
     public function testMostPopularNames()

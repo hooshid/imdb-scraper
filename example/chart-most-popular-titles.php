@@ -1,6 +1,5 @@
 <?php
 
-
 use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\Chart;
 
@@ -13,7 +12,8 @@ if (empty($type)) {
 }
 
 $chart = new Chart();
-$list = $chart->getList($type);
+$list = $chart->getMostPopularTitles($type);
+
 if (isset($_GET["output"])) {
     header("Content-Type: application/json");
     echo json_encode($list);
@@ -29,18 +29,18 @@ $image = new Image();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="googlebot" content="noindex">
-    <title>Charts</title>
+    <title>Chart - Most Popular Titles</title>
     <link rel="stylesheet" href="/example/style.css">
 </head>
 <body>
 
 <a href="/example" class="back-page">Go back</a>
-<a href="/example/chart-list.php?type=<?php echo $type; ?>&output=json" class="output-json-link">JSON Format</a>
+<a href="/example/chart-most-popular-titles.php?type=<?php echo $type; ?>&output=json" class="output-json-link">JSON Format</a>
 
 <div class="container">
     <div class="boxed">
         <!-- Title -->
-        <h2 class="text-center pb-30"><?php echo str_replace('_', ' ', $type); ?></h2>
+        <h2 class="text-center pb-30">Most Popular Titles</h2>
 
         <div class="flex-container">
             <table class="table">

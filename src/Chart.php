@@ -202,6 +202,119 @@ GRAPHQL;
     }
 
     /**
+     * Get most popular Titles lists as seen on https://imdb.com/chart/moviemeter
+     *
+     * @param string $listType This defines different kind of lists like Movie or TV
+     * @param string|null $genreId This filters the results on a genreId like "Horror"
+     * GenreIDs: Action, Adult, Adventure, Animation, Biography, Comedy, Crime,
+     *           Documentary, Drama, Family, Fantasy, Film-Noir, Game-Show,
+     *           History, Horror, Music, Musical, Mystery, News, Reality-TV,
+     *           Romance, Sci-Fi, Short, Sport, Talk-Show, Thriller, War, Western
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function getMostPopularTitles(string $listType, string $genreId = null): array
+    {
+        $types = ['MOST_POPULAR_MOVIES', 'TOP_RATED_MOVIES', 'LOWEST_RATED_MOVIES', 'TOP_RATED_ENGLISH_MOVIES', 'MOST_POPULAR_TV_SHOWS', 'TOP_RATED_TV_SHOWS'];
+        if (!in_array($listType, $types)) {
+            return [];
+        }
+
+        $filter = '';
+        if (!empty($genreId)) {
+            $filter = 'genreConstraint:{allGenreIds:["' . $genreId . '"]}';
+        }
+
+        $query = <<<GRAPHQL
+query MostPopularTitle {
+  chartTitles(
+    first: 9999
+    chart: {chartType: $listType}
+    sort: {sortBy: RANKING, sortOrder: ASC}
+    filter:{explicitContentConstraint:{explicitContentFilter:INCLUDE_ADULT}$filter}
+  ) {
+    edges {
+      currentRank
+      node {
+        id
+        titleGenres {
+          genres {
+            genre {
+              text
+            }
+          }
+        }
+        titleText {
+          text
+        }
+        titleType {
+          text
+        }
+        releaseYear {
+          year
+        }
+        runtime {
+          seconds
+        }
+        ratingsSummary {
+          aggregateRating
+          voteCount
+        }
+        primaryImage {
+          url
+          width
+          height
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+        $data = $this->graphql->query($query, "MostPopularTitle");
+
+        $list = [];
+        if (!isset($data->chartTitles->edges) || !is_array($data->chartTitles->edges)) {
+            return $list;
+        }
+
+        foreach ($data->chartTitles->edges as $edge) {
+            if (empty($edge->node->id) or empty($edge->node->titleText->text)) {
+                continue;
+            }
+
+            $runtime = null;
+            if (!empty($edge->node->runtime->seconds)) {
+                $runtime = $edge->node->runtime->seconds / 60;
+            }
+
+            $genres = [];
+            if (!empty($edge->node->titleGenres->genres)) {
+                foreach ($edge->node->titleGenres->genres as $genre) {
+                    if (!empty($genre->genre->text)) {
+                        $genres[] = $genre->genre->text;
+                    }
+                }
+            }
+
+            $list[] = [
+                'id' => $edge->node->id,
+                'title' => $edge->node->titleText->text,
+                'rank' => $edge->currentRank ?? 0,
+                'type' => $edge->node->titleType->text ?? null,
+                'runtime' => $runtime,
+                'genres' => $genres,
+                'year' => $edge->node->releaseYear->year ?? null,
+                'rating' => $edge->node->ratingsSummary->aggregateRating ?? null,
+                'votes' => $edge->node->ratingsSummary->voteCount ?? null,
+                'image' => $this->image($edge->node->primaryImage)
+            ];
+        }
+
+        return $list;
+    }
+
+    /**
      * Get most popular Names lists as seen on https://imdb.com/chart/starmeter
      *
      * @return array
