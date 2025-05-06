@@ -30,7 +30,6 @@ if (count($_GET) > 0) {
 }
 
 $image = new Image();
-$total = $nameSearch->total();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -132,7 +131,7 @@ $total = $nameSearch->total();
     </div>
 
     <div class="boxed">
-        <h2 class="text-center pb-30">Result (<?php echo number_format($total); ?>)</h2>
+        <h2 class="text-center pb-30">Result (<?php echo number_format($results['total']); ?>)</h2>
 
         <div class="flex-container">
             <table class="table">
@@ -143,7 +142,7 @@ $total = $nameSearch->total();
                     <th>Professions</th>
                     <th>Bio</th>
                 </tr>
-                <?php foreach ($results as $result) { ?>
+                <?php foreach ($results['results'] as $result) { ?>
                     <tr>
                         <td><?php echo $result['index']; ?></td>
                         <td>

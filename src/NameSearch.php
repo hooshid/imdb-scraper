@@ -9,11 +9,6 @@ use stdClass;
 class NameSearch extends Base
 {
     /**
-     * @var int total result from last search
-     */
-    private int $total = 0;
-
-    /**
      * Search for names on IMDb
      *
      * @param array $params
@@ -38,6 +33,10 @@ class NameSearch extends Base
     {
         $params = $this->normalizeParameters($params);
         $constraints = $this->buildConstraints($params);
+
+        if (empty($constraints)) {
+            return [];
+        }
 
         $query = $this->buildGraphQLQuery($params, $constraints);
         $data = $this->graphql->query($query, "AdvancedNameSearch");
@@ -129,6 +128,13 @@ class NameSearch extends Base
             $constraints[] = sprintf('genderIdentityConstraint: {anyGender: ["%s"]}', $params['gender']);
         }
 
+        if (empty($constraints)) {
+            return '';
+        }
+
+        // Adult filter
+        $constraints[] = sprintf('explicitContentConstraint: {explicitContentFilter: %s}', $params['adult']);
+
         return implode(' ', $constraints);
     }
 
@@ -179,7 +185,6 @@ query AdvancedNameSearch {
     sort: {sortBy: {$params['sortBy']} sortOrder: {$params['sortOrder']}}
     constraints: {
         $constraints
-        explicitContentConstraint: {explicitContentFilter: {$params['adult']}}
     }
   ) {
     total
@@ -243,7 +248,6 @@ GRAPHQL;
             return [];
         }
 
-        $this->total = $data->advancedNameSearch->total;
         $results = [];
 
         $index = 1;
@@ -295,16 +299,9 @@ GRAPHQL;
             $index++;
         }
 
-        return $results;
-    }
-
-    /**
-     * Total results
-     *
-     * @return int
-     */
-    public function total(): int
-    {
-        return $this->total;
+        return [
+            'results' => $results,
+            'total' => $data->advancedNameSearch->total
+        ];
     }
 }

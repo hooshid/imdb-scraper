@@ -81,7 +81,6 @@ $genreIDs = [
 $selectedGenre = @$_GET['genres'];
 
 $image = new Image();
-$total = $titleSearch->total();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -191,7 +190,7 @@ $total = $titleSearch->total();
     </div>
 
     <div class="boxed">
-        <h2 class="text-center pb-30">Result (<?php echo number_format($total); ?>)</h2>
+        <h2 class="text-center pb-30">Result (<?php echo number_format($results['total']); ?>)</h2>
 
         <div class="flex-container">
             <table class="table">
@@ -202,7 +201,7 @@ $total = $titleSearch->total();
                     <th>Year</th>
                     <th>Type</th>
                 </tr>
-                <?php foreach ($results as $result) { ?>
+                <?php foreach ($results['results'] as $result) { ?>
                     <tr>
                         <td>
                             <?php if ($result['image']) { ?>

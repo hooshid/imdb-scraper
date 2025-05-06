@@ -8,11 +8,6 @@ use Hooshid\ImdbScraper\Base\Base;
 class TitleSearch extends Base
 {
     /**
-     * @var int total result from last search
-     */
-    private int $total = 0;
-
-    /**
      * @param array $params
      *  Example: [
      *      'searchTerm' => '',
@@ -146,6 +141,7 @@ class TitleSearch extends Base
             return '';
         }
 
+        // Adult filter
         $constraints[] = sprintf('explicitContentConstraint: {explicitContentFilter: %s}', $params['adult']);
 
         return implode(' ', $constraints);
@@ -271,7 +267,6 @@ GRAPHQL;
             return [];
         }
 
-        $this->total = $data->advancedTitleSearch->total;
         $results = [];
 
         foreach ($data->advancedTitleSearch->edges as $edge) {
@@ -309,17 +304,10 @@ GRAPHQL;
             ];
         }
 
-        return $results;
-    }
-
-    /**
-     * Total results
-     *
-     * @return int
-     */
-    public function total(): int
-    {
-        return $this->total;
+        return [
+            'results' => $results,
+            'total' => $data->advancedTitleSearch->total
+        ];
     }
 }
 

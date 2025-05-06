@@ -8,13 +8,17 @@ class NameSearchTest extends TestCase
     public function testSearch()
     {
         $name = new NameSearch();
-        $result = $name->search(['name' => 'Depp']);
+        $data = $name->search(['name' => 'Depp']);
+        $results = $data['results'];
 
-        $this->assertIsArray($result);
-        $this->assertCount(37, $result);
+        // Total result
+        $this->assertEquals(37, $data['total']);
+
+        $this->assertIsArray($results);
+        $this->assertCount(37, $results);
 
         // Johnny Depp
-        $johnny = $result[0];
+        $johnny = $results[0];
         $this->assertIsArray($johnny['image']);
         $this->assertEquals(1, $johnny['index']);
         $this->assertEquals('nm0000136', $johnny['id']);
@@ -25,7 +29,7 @@ class NameSearchTest extends TestCase
         $this->assertCount(5, $johnny['known_for']);
 
         // Lily-Rose Depp
-        $lily = $result[1];
+        $lily = $results[1];
         $this->assertIsArray($lily['image']);
         $this->assertEquals(2, $lily['index']);
         $this->assertEquals('nm6675440', $lily['id']);
@@ -39,40 +43,42 @@ class NameSearchTest extends TestCase
     public function testBornToday()
     {
         $name = new NameSearch();
-        $result = $name->search(['birthMonthDay' => date("m-d")]);
+        $data = $name->search(['birthMonthDay' => date("m-d")]);
+        $results = $data['results'];
 
-        $this->assertIsArray($result);
-        $this->assertCount(50, $result);
+        $this->assertIsArray($results);
+        $this->assertCount(50, $results);
 
         // 1. First result
-        $this->assertEquals(1, $result[0]['index']);
-        $this->assertNotNull($result[0]['id']);
-        $this->assertNotNull($result[0]['name']);
-        $this->assertIsArray($result[0]['image']);
-        $this->assertNotNull($result[0]['professions']);
-        $this->assertNotNull($result[0]['bio']);
-        $this->assertIsArray($result[0]['known_for']);
+        $this->assertEquals(1, $results[0]['index']);
+        $this->assertNotNull($results[0]['id']);
+        $this->assertNotNull($results[0]['name']);
+        $this->assertIsArray($results[0]['image']);
+        $this->assertNotNull($results[0]['professions']);
+        $this->assertNotNull($results[0]['bio']);
+        $this->assertIsArray($results[0]['known_for']);
     }
 
     public function testDied()
     {
         $name = new NameSearch();
-        $result = $name->search(['deathDateRangeStart' => '2025-01-15','deathDateRangeEnd' => '2025-01-15']);
+        $data = $name->search(['deathDateRangeStart' => '2025-01-15','deathDateRangeEnd' => '2025-01-15']);
+        $results = $data['results'];
 
-        $this->assertIsArray($result);
-        $this->assertCount(23, $result);
+        $this->assertIsArray($results);
+        $this->assertCount(23, $results);
 
         // 1. David Lynch
-        $this->assertIsArray($result[0]['image']);
-        $this->assertEquals(1, $result[0]['index']);
-        $this->assertEquals('nm0000186', $result[0]['id']);
-        $this->assertEquals('David Lynch', $result[0]['name']);
-        $this->assertEquals('Writer, Director, Producer', implode(", ", $result[0]['professions']));
-        $this->assertGreaterThan(250, strlen($result[0]['bio']));
+        $this->assertIsArray($results[0]['image']);
+        $this->assertEquals(1, $results[0]['index']);
+        $this->assertEquals('nm0000186', $results[0]['id']);
+        $this->assertEquals('David Lynch', $results[0]['name']);
+        $this->assertEquals('Writer, Director, Producer', implode(", ", $results[0]['professions']));
+        $this->assertGreaterThan(250, strlen($results[0]['bio']));
 
-        $this->assertEquals('tt0098936', $result[0]['known_for'][0]['id']);
-        $this->assertEquals('Twin Peaks', $result[0]['known_for'][0]['title']);
-        $this->assertEquals('1990', $result[0]['known_for'][0]['year']);
-        $this->assertEquals('1991', $result[0]['known_for'][0]['end_year']);
+        $this->assertEquals('tt0098936', $results[0]['known_for'][0]['id']);
+        $this->assertEquals('Twin Peaks', $results[0]['known_for'][0]['title']);
+        $this->assertEquals('1990', $results[0]['known_for'][0]['year']);
+        $this->assertEquals('1991', $results[0]['known_for'][0]['end_year']);
     }
 }
