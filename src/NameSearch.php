@@ -9,6 +9,11 @@ use stdClass;
 class NameSearch extends Base
 {
     /**
+     * @var int total result from last search
+     */
+    private int $total = 0;
+
+    /**
      * Search for names on IMDb
      *
      * @param array $params
@@ -234,10 +239,12 @@ GRAPHQL;
      */
     private function processSearchResults(stdClass $data): array
     {
-        $results = [];
         if (!isset($data->advancedNameSearch->edges) || !is_array($data->advancedNameSearch->edges)) {
-            return $results;
+            return [];
         }
+
+        $this->total = $data->advancedNameSearch->total;
+        $results = [];
 
         $index = 1;
         foreach ($data->advancedNameSearch->edges as $edge) {
@@ -289,5 +296,15 @@ GRAPHQL;
         }
 
         return $results;
+    }
+
+    /**
+     * Total results
+     *
+     * @return int
+     */
+    public function total(): int
+    {
+        return $this->total;
     }
 }

@@ -30,6 +30,7 @@ if (count($_GET) > 0) {
 }
 
 $image = new Image();
+$total = $nameSearch->total();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -131,7 +132,7 @@ $image = new Image();
     </div>
 
     <div class="boxed">
-        <h2 class="text-center pb-30">Result</h2>
+        <h2 class="text-center pb-30">Result (<?php echo number_format($total); ?>)</h2>
 
         <div class="flex-container">
             <table class="table">
@@ -155,15 +156,19 @@ $image = new Image();
                         <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a></td>
                         <td><?php echo implode(", ", $result['professions']); ?></td>
                         <td>
-                            <b>Bio:</b><br>
-                            <?php echo $result['bio']; ?>
-                            <br>
-                            <hr>
-                            <br>
-                            <b>Known For:</b><br>
-                            <?php foreach ($result['known_for'] as $known) { ?>
-                                <a href="title.php?id=<?php echo $known['id']; ?>"><?php echo $known['title']; ?>
-                                    (<?php echo $known['year']; ?>)</a>,
+                            <?php if (!empty($result['bio'])) { ?>
+                                <b>Bio:</b><br>
+                                <?php echo $result['bio']; ?>
+                                <br>
+                                <hr>
+                            <?php } ?>
+                            <?php if (!empty($result['known_for'])) { ?>
+                                <br>
+                                <b>Known For:</b><br>
+                                <?php foreach ($result['known_for'] as $known) { ?>
+                                    <a href="title.php?id=<?php echo $known['id']; ?>"><?php echo $known['title']; ?>
+                                        (<?php echo $known['year']; ?>)</a>,
+                                <?php } ?>
                             <?php } ?>
                         </td>
                     </tr>
