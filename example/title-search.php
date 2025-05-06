@@ -1,16 +1,22 @@
 <?php
 
+use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\TitleSearch;
 
 require __DIR__ . "/../vendor/autoload.php";
 
 $limit = $_GET['limit'] ?? '50';
+$selectedStartYear = @$_GET['startYear'];
+$selectedEndYear = @$_GET['endYear'];
 if (count($_GET) > 0) {
     $titleSearch = new TitleSearch();
     $results = $titleSearch->search([
         'searchTerm' => $_GET['searchTerm'] ?? '',
         'types' => $_GET['types'] ?? '',
         'genres' => $_GET['genres'] ?? '',
+        'startDate' => $selectedStartYear ? $selectedStartYear . '-01-01' : '',
+        'endDate' => $selectedEndYear ? $selectedEndYear . '-12-29' : '',
+        'keywords' => $_GET['keywords'] ?? '',
         'adult' => $_GET['adult'] ?? 'EXCLUDE_ADULT',
         'limit' => $limit,
     ]);
@@ -73,6 +79,9 @@ $genreIDs = [
     "Western"
 ];
 $selectedGenre = @$_GET['genres'];
+
+$image = new Image();
+$total = $titleSearch->total();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,6 +111,12 @@ $selectedGenre = @$_GET['genres'];
             </div>
 
             <div class="form-group">
+                <label for="keywords">Title:</label>
+                <input class="form-field" type="text" id="keywords" name="keywords" maxlength="50"
+                       placeholder="Keywords" value="<?php echo @strip_tags($_GET['keywords']); ?>">
+            </div>
+
+            <div class="form-group">
                 <label for="types">Type:</label>
                 <select id="types" name="types" class="form-field">
                     <option value="">All</option>
@@ -110,6 +125,30 @@ $selectedGenre = @$_GET['genres'];
                             <?= htmlspecialchars($label) ?>
                         </option>
                     <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="startYear">Start Date:</label>
+                <select id="startYear" name="startYear" class="form-field">
+                    <option value="">All</option>
+                    <?php for ($startYear = 2030; $startYear >= 1900; $startYear--) { ?>
+                        <option value="<?php echo $startYear; ?>" <?php echo $selectedStartYear == $startYear ? "selected" : "" ?>>
+                            <?php echo $startYear; ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="endYear">End Date:</label>
+                <select id="endYear" name="endYear" class="form-field">
+                    <option value="">All</option>
+                    <?php for ($endYear = 2030; $endYear >= 1900; $endYear--) { ?>
+                        <option value="<?php echo $endYear; ?>" <?php echo $selectedEndYear == $endYear ? "selected" : "" ?>>
+                            <?php echo $endYear; ?>
+                        </option>
+                    <?php } ?>
                 </select>
             </div>
 
@@ -152,7 +191,7 @@ $selectedGenre = @$_GET['genres'];
     </div>
 
     <div class="boxed">
-        <h2 class="text-center pb-30">Result</h2>
+        <h2 class="text-center pb-30">Result (<?php echo number_format($total); ?>)</h2>
 
         <div class="flex-container">
             <table class="table">
@@ -166,9 +205,10 @@ $selectedGenre = @$_GET['genres'];
                 <?php foreach ($results as $result) { ?>
                     <tr>
                         <td>
-                            <?php if (!empty($result['imageUrl']['140'])) { ?>
-                                <img class="medium-image" src="<?php echo $result['imageUrl']['140']; ?>"
-                                     alt="<?php echo $result['title']; ?>" loading="lazy">
+                            <?php if ($result['image']) { ?>
+                                <img class="medium-image" src="<?php
+                                echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 140, 207);
+                                ?>" alt="<?php echo $result['title']; ?>" loading="lazy">
                             <?php } ?>
                         </td>
                         <td><a href="title.php?id=<?php echo $result['id']; ?>"><?php echo $result['title']; ?></a></td>

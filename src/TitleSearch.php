@@ -2,12 +2,16 @@
 
 namespace Hooshid\ImdbScraper;
 
-use DateTime;
 use Exception;
 use Hooshid\ImdbScraper\Base\Base;
 
 class TitleSearch extends Base
 {
+    /**
+     * @var int total result from last search
+     */
+    private int $total = 0;
+
     /**
      * @param array $params
      *  Example: [
@@ -19,14 +23,38 @@ class TitleSearch extends Base
      *      'endDate' => '',
      *      'countries' => '',
      *      'languages' => '',
+     *      'companies' => '',
+     *      'keywords' => '',
      *      'adult' => 'EXCLUDE_ADULT',
      *      'limit' => 50,
      *      'sortBy' => 'POPULARITY',
      *      'sortOrder' => 'ASC'
      *  ]
      * @return array
+     * @throws Exception
      */
     public function search(array $params = []): array
+    {
+        $params = $this->normalizeParameters($params);
+        $constraints = $this->buildConstraints($params);
+
+        if (empty($constraints)) {
+            return [];
+        }
+
+        $query = $this->buildGraphQLQuery($params, $constraints);
+        $data = $this->graphql->query($query, "advancedSearch");
+
+        return $this->processSearchResults($data);
+    }
+
+    /**
+     * Normalize and validate search parameters
+     *
+     * @param array $params
+     * @return array
+     */
+    private function normalizeParameters(array $params): array
     {
         // Define default values for the parameters
         $defaults = [
@@ -38,66 +66,157 @@ class TitleSearch extends Base
             'endDate' => '',
             'countries' => '',
             'languages' => '',
+            'companies' => '',
+            'keywords' => '',
             'adult' => 'EXCLUDE_ADULT',
             'limit' => 50,
-            'sortBy' => 'POPULARITY',
-            'sortOrder' => 'ASC'
+            'sortBy' => 'POPULARITY', // POPULARITY, RANKING, RELEASE_DATE, YEAR, RUNTIME, BOX_OFFICE_GROSS_DOMESTIC, METACRITIC_SCORE
+            'sortOrder' => 'ASC' // ASC, DESC
         ];
 
         // Merge the defaults with the incoming parameters
-        $params = array_merge($defaults, $params);
+        $normalized = array_merge($defaults, $params);
 
-        $results = [];
+        // Extract the parameters
+        return [
+            'searchTerm' => trim($normalized['searchTerm']),
+            'types' => trim($normalized['types']),
+            'genres' => trim($normalized['genres']),
+            'creditId' => trim($normalized['creditId']),
+            'startDate' => trim($normalized['startDate']),
+            'endDate' => trim($normalized['endDate']),
+            'countries' => trim($normalized['countries']),
+            'languages' => trim($normalized['languages']),
+            'companies' => trim($normalized['companies']),
+            'keywords' => trim($normalized['keywords']),
+            'adult' => strtoupper($normalized['adult']),
+            'limit' => (int)$normalized['limit'],
+            'sortBy' => strtoupper($normalized['sortBy']),
+            'sortOrder' => strtoupper($normalized['sortOrder'])
+        ];
+    }
 
-        // Extract the parameters & check and validate input parameters
-        $inputSearchTerm = $this->checkSearchTerm($params['searchTerm']);
-        $inputGenres = $this->checkItems($params['genres']);
-        $inputTypes = $this->checkItems($params['types']);
-        $inputCreditId = $this->checkItems($params['creditId']);
-        $inputReleaseDates = $this->checkReleaseDates($params['startDate'], $params['endDate']);
-        $inputCountries = $this->checkItems($params['countries']);
-        $inputLanguages = $this->checkItems($params['languages']);
-        $adult = strtoupper($params['adult']);
-        // check releasedate valid or not, array() otherwise
-        if ($inputReleaseDates === false) {
-            return $results;
+    /**
+     * Build GraphQL constraints from parameters
+     *
+     * @param array $params
+     * @return string
+     */
+    private function buildConstraints(array $params): string
+    {
+        $constraints = [];
+
+        if (!empty($params['searchTerm'])) {
+            $constraints[] = sprintf('titleTextConstraint: {searchTerm: "%s"}', addslashes($params['searchTerm']));
         }
 
-        // check if there is at least one valid input parameter, array() otherwise
-        if ($inputSearchTerm == "null" &&
-            empty($inputGenres) &&
-            empty($inputTypes) &&
-            empty($inputCreditId) &&
-            $inputReleaseDates["startDate"] == "null" &&
-            $inputReleaseDates["endDate"] == "null" &&
-            empty($inputCountries) &&
-            empty($inputLanguages)
-        ) {
-            return $results;
+        if (!empty($params['genres'])) {
+            $constraints[] = sprintf('genreConstraint: {allGenreIds: [%s]}', $this->formatList($params['genres']));
         }
 
-        $limit = (int)$params['limit'];
-        $sortBy = strtoupper($params['sortBy']);
-        $sortOrder = strtoupper($params['sortOrder']);
+        if (!empty($params['types'])) {
+            $constraints[] = sprintf('titleTypeConstraint: {anyTitleTypeIds: [%s]}', $this->formatList($params['types']));
+        }
 
+        if (!empty($params['creditId'])) {
+            $constraints[] = sprintf('creditedNameConstraint: {anyNameIds: [%s]}', $this->formatList($params['creditId']));
+        }
 
-        $query = <<<EOF
-query advancedSearch{
+        if ($releaseDates = $this->buildReleaseDateConstraint($params['startDate'], $params['endDate'])) {
+            $constraints[] = $releaseDates;
+        }
+
+        if (!empty($params['countries'])) {
+            $constraints[] = sprintf('originCountryConstraint: {anyCountries: [%s]}', $this->formatList($params['countries']));
+        }
+
+        if (!empty($params['languages'])) {
+            $constraints[] = sprintf('languageConstraint: {anyLanguages: [%s]}', $this->formatList($params['languages']));
+        }
+
+        if (!empty($params['companies'])) {
+            $constraints[] = sprintf('creditedCompanyConstraint: {anyCompanyIds: [%s]}', $this->formatList($params['companies']));
+        }
+
+        if (!empty($params['keywords'])) {
+            $constraints[] = sprintf('keywordConstraint: {anyKeywords: [%s]}', $this->formatList($params['keywords']));
+        }
+
+        if (empty($constraints)) {
+            return '';
+        }
+
+        $constraints[] = sprintf('explicitContentConstraint: {explicitContentFilter: %s}', $params['adult']);
+
+        return implode(' ', $constraints);
+    }
+
+    /**
+     * Format comma-separated list into quoted values
+     *
+     * @param string $items
+     * @return string
+     */
+    private function formatList(string $items): string
+    {
+        if (empty($items)) {
+            return '';
+        }
+
+        return '"' . implode('","', array_map('trim', explode(',', $items))) . '"';
+    }
+
+    /**
+     * Build release date constraint
+     *
+     * @param string $startDate
+     * @param string $endDate
+     * @return string|null
+     */
+    private function buildReleaseDateConstraint(string $startDate, string $endDate): ?string
+    {
+        if (empty($startDate) && empty($endDate)) {
+            return null;
+        }
+
+        $range = [];
+
+        if (!empty($startDate) && $this->validateDate($startDate)) {
+            $range[] = sprintf('start: "%s"', $startDate);
+        }
+
+        if (!empty($endDate) && $this->validateDate($endDate)) {
+            $range[] = sprintf('end: "%s"', $endDate);
+        }
+
+        if (empty($range)) {
+            return null;
+        }
+
+        return sprintf('releaseDateConstraint: {releaseDateRange: {%s}}', implode(', ', $range));
+    }
+
+    /**
+     * Build the GraphQL query
+     *
+     * @param array $params
+     * @param string $constraints
+     * @return string
+     */
+    private function buildGraphQLQuery(array $params, string $constraints): string
+    {
+        return <<<GRAPHQL
+query advancedSearch {
   advancedTitleSearch(
-    first: $limit, sort: {sortBy: $sortBy sortOrder: $sortOrder}
+    first: {$params['limit']},
+    sort: {sortBy: {$params['sortBy']}, sortOrder: {$params['sortOrder']}}
     constraints: {
-      titleTextConstraint: {searchTerm: $inputSearchTerm}
-      genreConstraint: {allGenreIds: [$inputGenres]}
-      titleTypeConstraint: {anyTitleTypeIds: [$inputTypes]}
-      releaseDateConstraint: {releaseDateRange: {start: $inputReleaseDates[startDate] end: $inputReleaseDates[endDate]}}
-      creditedNameConstraint: {anyNameIds: [$inputCreditId]}
-      originCountryConstraint: {anyCountries: [$inputCountries]}
-      languageConstraint: {anyLanguages: [$inputLanguages]}
-      explicitContentConstraint: {explicitContentFilter: $adult}
+      $constraints
     }
   ) {
+    total
     edges {
-      node{
+      node {
         title {
           id
           originalTitleText {
@@ -114,33 +233,54 @@ query advancedSearch{
             endYear
           }
           primaryImage {
-             url
+            url
+            width
+            height
+          }
+          runtime {
+            seconds
+          }
+          ratingsSummary {
+            aggregateRating
+            voteCount
+          }
+          plot {
+            plotText {
+              plainText
+            }
+          }
+          metacritic {
+            metascore {
+              score
+            }
           }
         }
       }
     }
   }
 }
-EOF;
+GRAPHQL;
+    }
 
-        try {
-            $data = $this->graphql->query($query, "advancedSearch");
-        } catch (Exception $e) {
-            return $results;
+    /**
+     * Process GraphQL response into standardized results
+     */
+    private function processSearchResults(\stdClass $data): array
+    {
+        if (!isset($data->advancedTitleSearch->edges) || !is_array($data->advancedTitleSearch->edges)) {
+            return [];
         }
 
-        foreach ($data->advancedTitleSearch->edges as $edge) {
-            $imdbId = $edge->node->title->id ?? '';
-            $originalTitle = $edge->node->title->titleText->text ?? '';
+        $this->total = $data->advancedTitleSearch->total;
+        $results = [];
 
-            if (empty($imdbId) or empty($originalTitle)) {
+        foreach ($data->advancedTitleSearch->edges as $edge) {
+            if (empty($edge->node->title->id)) {
                 continue;
             }
 
-            $title = $edge->node->title->titleText->text ?? '';
-            $type = $edge->node->title->titleType->text ?? '';
-
-            $yearRange = '';
+            $imdbId = $edge->node->title->id;
+            $yearRange = null;
             if (isset($edge->node->title->releaseYear->year)) {
                 $yearRange .= $edge->node->title->releaseYear->year;
                 if (isset($edge->node->title->releaseYear->endYear)) {
@@ -148,20 +288,24 @@ EOF;
                 }
             }
 
-            // Image url
-            $imageUrl = null;
-            if (isset($edge->node->title->primaryImage->url) and !empty($edge->node->title->primaryImage->url)) {
-                $imageUrl = $this->imageUrl($edge->node->title->primaryImage->url);
+            $runtime = null;
+            if (!empty($edge->node->title->runtime->seconds)) {
+                $runtime = $edge->node->title->runtime->seconds / 60;
             }
 
             $results[] = [
                 'id' => $imdbId,
-                'url' => $this->baseUrl . "/title/" . $imdbId,
-                'originalTitle' => $originalTitle,
-                'title' => $title,
-                'type' => $type,
+                'url' => $this->getBaseUrl() . "/title/" . $imdbId,
+                'originalTitle' => $edge->node->title->titleText->text ?? null,
+                'title' => $edge->node->title->titleText->text ?? null,
+                'type' => $edge->node->title->titleType->text ?? null,
                 'year' => $yearRange,
-                'imageUrl' => $imageUrl
+                'plot' => $edge->node->title->plot->plotText->plainText ?? null,
+                'runtime' => $runtime,
+                'rating' => $edge->node->title->ratingsSummary->aggregateRating ?? null,
+                'votes' => $edge->node->title->ratingsSummary->voteCount ?? null,
+                'metacritic' => $edge->node->title->metacritic->metascore->score ?? null,
+                'image' => $this->image($edge->node->title->primaryImage)
             ];
         }
 
@@ -169,84 +313,13 @@ EOF;
     }
 
     /**
-     * Check if there is at least one, possible more input items
+     * Total results
      *
-     * @param string $items
-     * @return string
+     * @return int
      */
-    private function checkItems(string $items): string
+    public function total(): int
     {
-        if (empty(trim($items))) {
-            return '';
-        }
-        if (stripos($items, ',') !== false) {
-            $itemsParts = explode(",", $items);
-            $itemsOutput = '"';
-            foreach ($itemsParts as $key => $value) {
-                $itemsOutput .= trim($value);
-                end($itemsParts);
-                if ($key !== key($itemsParts)) {
-                    $itemsOutput .= '","';
-                } else {
-                    $itemsOutput .= '"';
-                }
-
-            }
-            return $itemsOutput;
-        } else {
-            return '"' . trim($items) . '"';
-        }
+        return $this->total;
     }
-
-    /**
-     * Check searchTerm
-     *
-     * @param string $searchTerm
-     * @return string
-     */
-    private function checkSearchTerm(string $searchTerm): string
-    {
-        if (empty(trim($searchTerm))) {
-            return "null";
-        } else {
-            return '"' . trim($searchTerm) . '"';
-        }
-    }
-
-    /**
-     * Check if input date is not empty and valid
-     *
-     * @param string|null $startDate
-     * @param string|null $endDate
-     * @return array|bool
-     */
-    private function checkReleaseDates(?string $startDate, ?string $endDate): array|bool
-    {
-        $startDate = trim($startDate);
-        $endDate = trim($endDate);
-
-        // Both dates are empty
-        if (empty($startDate) && empty($endDate)) {
-            return [
-                'startDate' => "null",
-                'endDate' => "null"
-            ];
-        }
-
-        // Validate date if not empty
-        $validStart = empty($startDate) || $this->validateDate($startDate) !== false;
-        $validEnd = empty($endDate) || $this->validateDate($endDate) !== false;
-
-        if (!$validStart || !$validEnd) {
-            return false;
-        }
-
-        // Return formatted dates
-        return [
-            'startDate' => empty($startDate) ? "null" : '"' . $startDate . '"',
-            'endDate' => empty($endDate) ? "null" : '"' . $endDate . '"'
-        ];
-    }
-
 }
 
