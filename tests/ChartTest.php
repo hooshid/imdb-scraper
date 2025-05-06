@@ -13,12 +13,21 @@ class ChartTest extends TestCase
         $this->assertIsArray($boxOffice);
         $this->assertNotEmpty($boxOffice);
 
-        foreach ($boxOffice as $film) {
-            $this->assertIsArray($film);
-            $this->assertCount(5, $film);
-            $this->assertTrue(strlen($film['id']) >= 9 and strlen($film['id']) <= 10);
-            $this->assertTrue(is_numeric($film['weekend']));
-            $this->assertTrue(is_numeric($film['gross']));
+        $this->assertIsString($boxOffice['weekend_start_date']);
+        $this->assertIsString($boxOffice['weekend_end_date']);
+
+        foreach ($boxOffice['list'] as $row) {
+            $this->assertIsArray($row);
+            $this->assertCount(10, $row);
+            $this->assertStringStartsWith("tt", $row['id']);
+            $this->assertNotNull($row['rating']);
+            $this->assertNotNull($row['votes']);
+            $this->assertIsInt(is_numeric($row['lifetime_gross_amount']));
+            $this->assertEquals("USD", $row['lifetime_gross_currency']);
+            $this->assertIsInt($row['weekend_gross_amount']);
+            $this->assertEquals("USD", $row['weekend_gross_currency']);
+            $this->assertIsInt($row['weeks_released']);
+            $this->assertIsArray($row['image']);
         }
     }
 

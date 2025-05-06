@@ -1,15 +1,19 @@
 <?php
 
+use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\Chart;
 
 require __DIR__ . "/../vendor/autoload.php";
 
 $chart = new Chart();
+$boxOffice = $chart->getBoxOffice();
 if (isset($_GET["output"])) {
     header("Content-Type: application/json");
-    echo json_encode($chart->getBoxOffice());
+    echo json_encode($boxOffice);
     exit();
 }
+
+$image = new Image();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -29,24 +33,32 @@ if (isset($_GET["output"])) {
 <div class="container">
     <div class="boxed">
         <!-- Title -->
-        <h2 class="text-center pb-30">Box office</h2>
+        <h2 class="text-center pb-30">Box office - (<?php echo $boxOffice['weekend_start_date']; ?>-<?php echo $boxOffice['weekend_end_date']; ?>)</h2>
 
         <div class="flex-container">
             <table class="table">
                 <tr>
-                    <th>Id</th>
+                    <th>Poster</th>
                     <th>Title</th>
-                    <th>Weekend</th>
-                    <th>Gross</th>
-                    <th>Weeks</th>
+                    <th>Rating/Votes</th>
+                    <th>Weekend Gross</th>
+                    <th>Lifetime Gross</th>
+                    <th>Weeks Released</th>
                 </tr>
-                <?php foreach ($chart->getBoxOffice() as $row) { ?>
+                <?php foreach ($boxOffice['list'] as $row) { ?>
                 <tr>
-                    <td><a href="title.php?id=<?php echo $row['id']; ?>"><?php echo $row['id']; ?></a></td>
-                    <td><?php echo $row['title']; ?></td>
-                    <td><?php echo $row['weekend']; ?></td>
-                    <td><?php echo $row['gross']; ?></td>
-                    <td><?php echo $row['weeks']; ?></td>
+                    <td>
+                        <?php if ($row['image']) { ?>
+                            <img class="small-image" src="<?php
+                            echo $image->makeThumbnail($row['image']['url'], $row['image']['width'], $row['image']['height'], 140, 207);
+                            ?>" alt="<?php echo $row['title']; ?>" loading="lazy">
+                        <?php } ?>
+                    </td>
+                    <td><a href="title.php?id=<?php echo $row['id']; ?>"><?php echo $row['title']; ?></a></td>
+                    <td><?php echo $row['rating']; ?> / <?php echo number_format($row['votes']); ?></td>
+                    <td><?php echo number_format($row['weekend_gross_amount']); ?> (<?php echo $row['weekend_gross_currency']; ?>)</td>
+                    <td><?php echo number_format($row['lifetime_gross_amount']); ?> (<?php echo $row['lifetime_gross_currency']; ?>)</td>
+                    <td><?php echo $row['weeks_released']; ?></td>
                 </tr>
                 <?php } ?>
             </table>

@@ -2,6 +2,7 @@
 
 namespace Hooshid\ImdbScraper;
 
+use DateTime;
 use Exception;
 use Hooshid\ImdbScraper\Base\Base;
 
@@ -11,45 +12,106 @@ class Chart extends Base
      * Get the USA Weekend Box-Office Summary, weekend earnings and all time earnings
      *
      * @return array
+     * @throws Exception
      */
     public function getBoxOffice(): array
     {
-        $oldBase = new \Hooshid\ImdbScraper\Base\Old\Base();
-        $dom = $oldBase->getHtmlDomParser("/chart/boxoffice/");
+        $query = <<<GRAPHQL
+query BoxOffice {
+  boxOfficeWeekendChart(limit: 10) {
+    entries {
+      title {
+        id
+        titleText {
+          text
+        }
+        releaseDate {
+          day
+          month
+          year
+        }
+        ratingsSummary {
+          aggregateRating
+          voteCount
+        }
+        primaryImage {
+          url
+          width
+          height
+        }
+        lifetimeGross(boxOfficeArea: DOMESTIC) {
+          total {
+            amount
+            currency
+          }
+        }
+      }
+      weekendGross {
+        total {
+          amount
+          currency
+        }
+      }
+    }
+    weekendEndDate
+    weekendStartDate
+  }
+}
+GRAPHQL;
+        $data = $this->graphql->query($query, "BoxOffice");
 
-        $boxoffice = [];
-        $i = 0;
-        foreach ($dom->find('[data-testid="chart-layout-main-column"] ul li') as $e) {
-            $id = $oldBase->getImdbId($e->find('.ipc-title a', 0)->getAttribute('href'));
-            if ($id) {
-                $boxoffice[$i]['id'] = $id;
-                $title = $this->cleanString($e->find('.ipc-title h3', 0)->innerText());
-                $boxoffice[$i]['title'] = preg_replace('/^\d+\.\s/', '', $title);
-
-                $moneyPattern = "/[\$£]([\d\.]+)(M|K)/";
-                foreach ($e->find('ul[data-testid="title-metadata-box-office-data-container"] li') as $metadata) {
-                    $cellTitle = $metadata->find('span', 0)->innerText();
-                    if (str_contains($cellTitle, 'Weeks Released')) {
-                        $boxoffice[$i]['weeks'] = $this->cleanString($metadata->find('span', 1)->innerText());
-                    } else if (str_contains($cellTitle, 'Weekend Gross')) {
-                        // Weekend
-                        $weekend = $this->cleanString($metadata->find('span', 1)->innerText());
-                        $weekendMatches = null;
-                        preg_match($moneyPattern, $weekend, $weekendMatches, PREG_OFFSET_CAPTURE);
-                        $boxoffice[$i]['weekend'] = $weekendMatches[2][0] === 'M' ? $weekendMatches[1][0] : $weekendMatches[1][0] / 1000;
-                    } else if (str_contains($cellTitle, 'Total Gross')) {
-                        // Gross
-                        $gross = $this->cleanString($metadata->find('span', 1)->innerText());
-                        $grossMatches = null;
-                        preg_match($moneyPattern, $gross, $grossMatches, PREG_OFFSET_CAPTURE);
-                        $boxoffice[$i]['gross'] = $grossMatches[2][0] === 'M' ? $grossMatches[1][0] : $grossMatches[1][0] / 1000;
-                    }
-                }
-                $i++;
-            }
+        $list = [];
+        if (!isset($data->boxOfficeWeekendChart->entries) || !is_array($data->boxOfficeWeekendChart->entries)) {
+            return $list;
         }
 
-        return $boxoffice;
+        foreach ($data->boxOfficeWeekendChart->entries as $edge) {
+            if (empty($edge->title->id) or empty($edge->title->titleText->text)) {
+                continue;
+            }
+
+            $weeks = null;
+            if (!empty($edge->title->releaseDate->day) && !empty($edge->title->releaseDate->month) && !empty($edge->title->releaseDate->year)) {
+                $startDate = $edge->title->releaseDate->month . '/' .
+                    $edge->title->releaseDate->day . '/' .
+                    $edge->title->releaseDate->year;
+                $weeks = $this->datediffInWeeks($startDate, date('m/d/Y'));
+            }
+
+            $list[] = array(
+                'id' => $edge->title->id,
+                'title' => $edge->title->titleText->text,
+                'rating' => $edge->title->ratingsSummary->aggregateRating ?? null,
+                'votes' => $edge->title->ratingsSummary->voteCount ?? null,
+                'lifetime_gross_amount' => $edge->title->lifetimeGross->total->amount ?? null,
+                'lifetime_gross_currency' => $edge->title->lifetimeGross->total->currency ?? null,
+                'weekend_gross_amount' => $edge->weekendGross->total->amount ?? null,
+                'weekend_gross_currency' => $edge->weekendGross->total->currency ?? null,
+                'weeks_released' => $weeks,
+                'image' => $this->image($edge->title->primaryImage)
+            );
+        }
+
+        return [
+            'weekend_start_date' => $data->boxOfficeWeekendChart->weekendStartDate ?? null,
+            'weekend_end_date' => $data->boxOfficeWeekendChart->weekendEndDate ?? null,
+            'list' => $list
+        ];
+    }
+
+    /**
+     * Get amount of weeks between input date and current date
+     *
+     * @param string $startDate like '1/2/2013' (month/day/year)
+     * @param string $endDate current date! like '1/2/2013' (month/day/year)
+     * @return int number of weeks
+     */
+    private function dateDiffInWeeks(string $startDate, string $endDate): int
+    {
+        if ($startDate > $endDate) return $this->dateDiffInWeeks($endDate, $startDate);
+        $first = DateTime::createFromFormat('m/d/Y', $startDate);
+        $second = DateTime::createFromFormat('m/d/Y', $endDate);
+        return ceil($first->diff($second)->days / 7);
     }
 
     /**
