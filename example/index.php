@@ -43,6 +43,7 @@
             <a class="badge badge-red" href="/example/chart-list.php?type=TOP_250">Chart: Top 250 Movies</a>
             <a class="badge badge-red" href="/example/chart-list.php?type=TOP_250_TV">Chart: Top 250 TV Shows</a>
             <a class="badge badge-red" href="/example/chart-list.php?type=BOTTOM_100">Chart: Bottom 100 Movies</a>
+            <a class="badge badge-red" href="/example/chart-most-popular-names.php">Chart: Most Popular Names</a>
 
             <a class="badge badge-green" href="/example/calendar.php?type=MOVIE">Calendar: Upcoming Movies</a>
             <a class="badge badge-green" href="/example/calendar.php?type=TV">Calendar: Upcoming TV Series</a>
@@ -63,6 +64,7 @@
 
             <a class="badge badge-purple" href="/example/title-search.php?searchTerm=Harry Potter">Search title: Harry Potter</a>
             <a class="badge badge-purple" href="/example/title-search.php?searchTerm=Saw&types=movie">Search title: Saw</a>
+            <a class="badge badge-purple" href="/example/title-search.php?types=movie&startYear=2020&endYear=2020&genres=Action">Search title: Action movies from 2020</a>
 
             <a class="badge badge-pink" href="/example/title.php?id=tt0944947">TV Series: Game of Thrones (2011-2019)</a>
             <a class="badge badge-pink" href="/example/title.php?id=tt10048342">TV Mini Series: The Queen's Gambit (2020)</a>

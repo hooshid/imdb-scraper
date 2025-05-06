@@ -65,7 +65,7 @@ class Chart extends Base
             return [];
         }
 
-        $query = <<<EOF
+        $query = <<<GRAPHQL
 query Top250Title {
   titleChartRankings(
     first: 250
@@ -107,7 +107,7 @@ query Top250Title {
     }
   }
 }
-EOF;
+GRAPHQL;
         $list = [];
         try {
             $data = $this->graphql->query($query, "Top250Title");
@@ -147,6 +147,111 @@ EOF;
         }
 
         return $list;
+    }
+
+    /**
+     * Get most popular Names lists as seen on https://imdb.com/chart/starmeter
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function getMostPopularNames(): array
+    {
+        $query = <<<GRAPHQL
+query MostPopularName {
+  chartNames(
+    first: 100
+    chart: {chartType: MOST_POPULAR_NAMES}
+    sort: {sortBy: POPULARITY, sortOrder: ASC}
+  ) {
+    edges {
+      node {
+        id
+        nameText {
+          text
+        }
+        creditCategories {
+          category {
+            text
+          }
+        }
+        knownFor(first: 5) {
+          edges {
+            node {
+              title {
+                id
+                titleText {
+                  text
+                }
+                releaseYear{
+                  year
+                  endYear
+                }
+              }
+            }
+          }
+        }
+        primaryImage {
+          url
+          width
+          height
+        }
+        meterRanking {
+          currentRank
+          rankChange {
+            difference
+            changeDirection
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+        $data = $this->graphql->query($query, "MostPopularName");
+
+        $items = [];
+        if (!isset($data->chartNames->edges) || !is_array($data->chartNames->edges)) {
+            return $items;
+        }
+
+        foreach ($data->chartNames->edges as $edge) {
+            if (empty($edge->node->id) or empty($edge->node->nameText->text)) {
+                continue;
+            }
+
+            // knownFor
+            $knownFor = [];
+            if (!empty($edge->node->knownFor->edges)) {
+                foreach ($edge->node->knownFor->edges as $known) {
+                    $knownFor[] = [
+                        'id' => $known->node->title->id ?? null,
+                        'title' => $known->node->title->titleText->text ?? null,
+                        'year' => $known->node->title->releaseYear->year ?? null,
+                        'end_year' => $known->node->title->releaseYear->endYear ?? null
+                    ];
+                }
+            }
+
+            // Professions
+            $professions = [];
+            if (isset($edge->node->creditCategories)) {
+                foreach ($edge->node->creditCategories as $profession) {
+                    $professions[] = $profession->category->text;
+                }
+            }
+
+            $items[] = [
+                'id' => $edge->node->id,
+                'name' => $edge->node->nameText->text,
+                'rank' => $edge->node->meterRanking->currentRank ?? null,
+                'professions' => $professions,
+                'known_for' => $knownFor,
+                'image' => $this->image($edge->node->primaryImage)
+            ];
+        }
+
+        return $items;
     }
 
 }

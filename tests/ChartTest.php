@@ -58,4 +58,20 @@ class ChartTest extends TestCase
         $this->assertGreaterThan(2150000, $result[0]['votes']);
     }
 
+    public function testMostPopularNames()
+    {
+        $chart = new Chart();
+        $result = $chart->getMostPopularNames();
+
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+
+        $this->assertStringStartsWith('nm', $result[0]['id']);
+        $this->assertIsString($result[0]['name']);
+        $this->assertEquals(1, $result[0]['rank']);
+        $this->assertIsArray($result[0]['professions']);
+        $this->assertIsArray($result[0]['known_for']);
+        $this->assertIsArray($result[0]['image']);
+    }
+
 }
