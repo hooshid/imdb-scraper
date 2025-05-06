@@ -1,11 +1,18 @@
 <?php
 
 
+use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\Chart;
 
 require __DIR__ . "/../vendor/autoload.php";
 
 $type = $_GET["type"];
+
+if (empty($type)) {
+    header("Location: /example");
+    exit;
+}
+
 $chart = new Chart();
 $list = $chart->getList($type);
 if (isset($_GET["output"])) {
@@ -13,6 +20,8 @@ if (isset($_GET["output"])) {
     echo json_encode($list);
     exit();
 }
+
+$image = new Image();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,7 +41,7 @@ if (isset($_GET["output"])) {
 <div class="container">
     <div class="boxed">
         <!-- Title -->
-        <h2 class="text-center pb-30"><?php echo $type; ?></h2>
+        <h2 class="text-center pb-30"><?php echo str_replace('_', ' ', $type); ?></h2>
 
         <div class="flex-container">
             <table class="table">
@@ -40,24 +49,27 @@ if (isset($_GET["output"])) {
                     <th>Rank</th>
                     <th>Poster</th>
                     <th>Title</th>
+                    <th>Runtime</th>
                     <th>Year</th>
                     <th>Rating</th>
                     <th>Votes</th>
                 </tr>
                 <?php foreach ($list as $row) { ?>
-                <tr>
-                    <td><?php echo $row['rank']; ?></td>
-                    <td>
-                        <?php if (!empty($row['imageUrl']['140'])) { ?>
-                            <img class="small-image" src="<?php echo $row['imageUrl']['140']; ?>"
-                                 alt="<?php echo $row['title']; ?>" loading="lazy">
-                        <?php } ?>
-                    </td>
-                    <td><a href="title.php?id=<?php echo $row['id']; ?>"><?php echo $row['title']; ?></a></td>
-                    <td><?php echo $row['year']; ?></td>
-                    <td><?php echo $row['rating']; ?></td>
-                    <td><?php echo $row['votes']; ?></td>
-                </tr>
+                    <tr>
+                        <td><?php echo $row['rank']; ?></td>
+                        <td>
+                            <?php if ($row['image']) { ?>
+                                <img class="small-image" src="<?php
+                                echo $image->makeThumbnail($row['image']['url'], $row['image']['width'], $row['image']['height'], 140, 207);
+                                ?>" alt="<?php echo $row['title']; ?>" loading="lazy">
+                            <?php } ?>
+                        </td>
+                        <td><a href="title.php?id=<?php echo $row['id']; ?>"><?php echo $row['title']; ?></a></td>
+                        <td><?php echo $row['runtime']; ?>m</td>
+                        <td><?php echo $row['year']; ?></td>
+                        <td><?php echo $row['rating']; ?></td>
+                        <td><?php echo $row['votes']; ?></td>
+                    </tr>
                 <?php } ?>
             </table>
         </div>

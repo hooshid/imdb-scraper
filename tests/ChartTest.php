@@ -30,14 +30,16 @@ class ChartTest extends TestCase
         $this->assertIsArray($result);
         $this->assertNotEmpty($result);
 
-        $this->assertEquals(1, $result[0]['rank']);
         $this->assertEquals("tt0111161", $result[0]['id']);
         $this->assertEquals("The Shawshank Redemption", $result[0]['title']);
+        $this->assertEquals(1, $result[0]['rank']);
         $this->assertEquals("Movie", $result[0]['type']);
-        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMDAyY2FhYjctNDc5OS00MDNlLThiMGUtY2UxYWVkNGY2ZjljXkEyXkFqcGc@._V1_.jpg", $result[0]['imageUrl']['original']);
+        $this->assertEquals(142, $result[0]['runtime']);
         $this->assertEquals(1994, $result[0]['year']);
         $this->assertGreaterThan(9, $result[0]['rating']);
-        $this->assertGreaterThan(2916000, $result[0]['votes']);
+        $this->assertGreaterThan(3000000, $result[0]['votes']);
+        $this->assertIsArray($result[0]['image']);
+        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMDAyY2FhYjctNDc5OS00MDNlLThiMGUtY2UxYWVkNGY2ZjljXkEyXkFqcGc@._V1_.jpg", $result[0]['image']['url']);
     }
 
     public function testTop250TV()
@@ -48,14 +50,16 @@ class ChartTest extends TestCase
         $this->assertIsArray($result);
         $this->assertNotEmpty($result);
 
-        $this->assertEquals(1, $result[0]['rank']);
         $this->assertEquals("tt0903747", $result[0]['id']);
         $this->assertEquals("Breaking Bad", $result[0]['title']);
+        $this->assertEquals(1, $result[0]['rank']);
         $this->assertEquals("TV Series", $result[0]['type']);
-        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_.jpg", $result[0]['imageUrl']['original']);
+        $this->assertEquals(45, $result[0]['runtime']);
         $this->assertEquals(2008, $result[0]['year']);
         $this->assertGreaterThan(9, $result[0]['rating']);
-        $this->assertGreaterThan(2150000, $result[0]['votes']);
+        $this->assertGreaterThan(2300000, $result[0]['votes']);
+        $this->assertIsArray($result[0]['image']);
+        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_.jpg", $result[0]['image']['url']);
     }
 
     public function testMostPopularNames()

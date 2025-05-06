@@ -57,6 +57,7 @@ class Chart extends Base
      *
      * @param string $listType
      * @return array
+     * @throws Exception
      */
     public function getList(string $listType): array
     {
@@ -93,14 +94,11 @@ query Top250Title {
           }
           primaryImage {
             url
+            width
+            height
           }
           runtime {
             seconds
-            displayableProperty {
-              value {
-                plainText
-              }
-            }
           }
         }
       }
@@ -108,41 +106,33 @@ query Top250Title {
   }
 }
 GRAPHQL;
+        $data = $this->graphql->query($query, "Top250Title");
+
         $list = [];
-        try {
-            $data = $this->graphql->query($query, "Top250Title");
-        } catch (Exception $e) {
+        if (!isset($data->titleChartRankings->edges) || !is_array($data->titleChartRankings->edges)) {
             return $list;
         }
 
         foreach ($data->titleChartRankings->edges as $edge) {
-            $imdbId = $edge->node->item->id ?? '';
-            $title = $edge->node->item->titleText->text ?? '';
-
-            if (empty($imdbId) or empty($title)) {
+            if (empty($edge->node->item->id) or empty($edge->node->item->titleText->text)) {
                 continue;
             }
 
-            $rank = $edge->node->item->ratingsSummary->topRanking->rank ?? null;
-            $year = $edge->node->item->releaseYear->year ?? null;
-            $rating = $edge->node->item->ratingsSummary->aggregateRating ?? null;
-            $votes = $edge->node->item->ratingsSummary->voteCount ?? null;
-
-            // Image url
-            $imageUrl = null;
-            if (isset($edge->node->item->primaryImage->url) and !empty($edge->node->item->primaryImage->url)) {
-                $imageUrl = $this->imageUrl($edge->node->item->primaryImage->url);
+            $runtime = null;
+            if (!empty($edge->node->item->runtime->seconds)) {
+                $runtime = $edge->node->item->runtime->seconds / 60;
             }
 
             $list[] = array(
-                'rank' => (int)$rank,
-                'id' => $imdbId,
-                'title' => $title,
-                'type' => $edge->node->item->titleType->text,
-                'imageUrl' => $imageUrl,
-                'year' => $year,
-                'rating' => $rating,
-                'votes' => $votes
+                'id' => $edge->node->item->id,
+                'title' => $edge->node->item->titleText->text,
+                'rank' => $edge->node->item->ratingsSummary->topRanking->rank ?? 0,
+                'type' => $edge->node->item->titleType->text ?? null,
+                'runtime' => $runtime,
+                'year' => $edge->node->item->releaseYear->year ?? null,
+                'rating' => $edge->node->item->ratingsSummary->aggregateRating ?? null,
+                'votes' => $edge->node->item->ratingsSummary->voteCount ?? null,
+                'image' => $this->image($edge->node->item->primaryImage)
             );
         }
 
