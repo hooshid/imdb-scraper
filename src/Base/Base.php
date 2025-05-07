@@ -123,4 +123,21 @@ class Base extends Config
         $d = DateTime::createFromFormat('Y-m-d', $date);
         return $d && $d->format('Y-m-d') === $date;
     }
+
+    /**
+     * build date string in Y-m-d format
+     *
+     * @param $day
+     * @param $month
+     * @param $year
+     * @return null|string
+     */
+    protected function buildDate($day, $month, $year): ?string
+    {
+        if (!empty($day) && !empty($month) && !empty($year)) {
+            return $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($day, 2, '0', STR_PAD_LEFT);
+        } else {
+            return null;
+        }
+    }
 }

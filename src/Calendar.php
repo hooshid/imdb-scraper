@@ -8,6 +8,8 @@ use Hooshid\ImdbScraper\Base\Base;
 class Calendar extends Base
 {
     /**
+     * Get upcoming movie releases
+     *
      * @param array $params
      *  Example: [
      *      'type' => 'MOVIE',
@@ -43,8 +45,13 @@ class Calendar extends Base
         $startDate = date('Y-m-d', strtotime($startDateOverride . ' day', time()));
         $futureDate = date('Y-m-d', strtotime($endDateOverride . ' day', time()));
 
-        $query = <<<EOF
-query {
+        $types = ['MOVIE', 'TV', 'TV_EPISODE'];
+        if (!in_array($type, $types)) {
+            return [];
+        }
+
+        $query = <<<GRAPHQL
+query ComingSoon {
     comingSoon(
       first: 9999
       comingSoonType: $type
@@ -55,10 +62,10 @@ query {
       sort: {sortBy: RELEASE_DATE, sortOrder: ASC}) {
     edges {
       node {
+        id
         titleText {
           text
         }
-        id
         releaseDate {
           day
           month
@@ -82,29 +89,31 @@ query {
         }
         primaryImage {
           url
+          width
+          height
         }
       }
     }
   }
 }
-EOF;
-        $data = $this->graphql->query($query);
+GRAPHQL;
+        $data = $this->graphql->query($query, "ComingSoon");
 
-        $calendar = [];
+        $list = [];
+        if (!isset($data->comingSoon->edges) || !is_array($data->comingSoon->edges)) {
+            return $list;
+        }
+
         foreach ($data->comingSoon->edges as $edge) {
-            $imdbId = $edge->node->id ?? '';
-            $title = $edge->node->titleText->text ?? '';
-
-            if (empty($imdbId) or empty($title)) {
+            if (empty($edge->node->id) or empty($edge->node->titleText->text)) {
                 continue;
             }
 
             // Release date
-            $releaseDate = [
-                "day" => $edge->node->releaseDate->day ?? null,
-                "month" => $edge->node->releaseDate->month ?? null,
-                "year" => $edge->node->releaseDate->year ?? null
-            ];
+            $releaseDate = $this->buildDate($edge->node->releaseDate->day, $edge->node->releaseDate->month, $edge->node->releaseDate->year);
+            if (empty($releaseDate)) {
+                continue;
+            }
 
             // Genres
             $genres = [];
@@ -122,22 +131,16 @@ EOF;
                 }
             }
 
-            // Image url
-            $imageUrl = null;
-            if (isset($edge->node->primaryImage->url) and !empty($edge->node->primaryImage->url)) {
-                $imageUrl = $this->imageUrl($edge->node->primaryImage->url);
-            }
-
-            $calendar[] = [
-                "id" => $imdbId,
-                "title" => $title,
-                "releaseDate" => $releaseDate,
+            $list[] = [
+                "id" => $edge->node->id,
+                "title" => $edge->node->titleText->text,
+                "release_date" => $releaseDate,
                 "genres" => $genres,
                 "cast" => $cast,
-                "imageUrl" => $imageUrl
+                "image" => $this->image($edge->node->primaryImage)
             ];
         }
 
-        return $calendar;
+        return $list;
     }
 }

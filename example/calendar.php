@@ -1,5 +1,6 @@
 <?php
 
+use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\Calendar;
 
 require __DIR__ . "/../vendor/autoload.php";
@@ -16,6 +17,8 @@ if (isset($_GET["output"])) {
     echo json_encode($comingSoon);
     exit();
 }
+
+$image = new Image();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -35,7 +38,7 @@ if (isset($_GET["output"])) {
 <div class="container">
     <div class="boxed">
         <!-- Title -->
-        <h2 class="text-center pb-30">Upcoming release - <?php echo $type; ?></h2>
+        <h2 class="text-center pb-30">Upcoming release - <?php echo ucfirst(strtolower($type)) ?></h2>
 
         <div class="flex-container">
             <table class="table">
@@ -49,12 +52,13 @@ if (isset($_GET["output"])) {
                 <?php foreach ($comingSoon as $row) { ?>
                     <tr>
                         <td>
-                            <?php if (!empty($row['imageUrl'])) { ?>
-                                <img class="small-image" src="<?php echo $row['imageUrl']['small']; ?>" alt=""
-                                     loading="lazy">
+                            <?php if ($row['image']) { ?>
+                                <img class="small-image" src="<?php
+                                echo $image->makeThumbnail($row['image']['url'], $row['image']['width'], $row['image']['height'], 140, 207);
+                                ?>" alt="<?php echo $row['title']; ?>" loading="lazy">
                             <?php } ?>
                         </td>
-                        <td><?php echo $row['releaseDate']['year'] . "/" . $row['releaseDate']['month'] . "/" . $row['releaseDate']['day']; ?></td>
+                        <td><?php echo $row['release_date']; ?></td>
                         <td><a href="title.php?id=<?php echo $row['id']; ?>"><?php echo $row['title']; ?></a></td>
                         <td><?php echo join(", ", $row['genres']); ?></td>
                         <td><?php echo join(", ", $row['cast']); ?></td>
