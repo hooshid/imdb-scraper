@@ -110,7 +110,7 @@ $image = new Image();
             </div>
 
             <div class="form-group">
-                <label for="keywords">Title:</label>
+                <label for="keywords">Keywords:</label>
                 <input class="form-field" type="text" id="keywords" name="keywords" maxlength="50"
                        placeholder="Keywords" value="<?php echo @strip_tags($_GET['keywords']); ?>">
             </div>
@@ -190,35 +190,39 @@ $image = new Image();
     </div>
 
     <div class="boxed">
-        <h2 class="text-center pb-30">Result (<?php echo number_format($results['total']); ?>)</h2>
+        <?php if (empty($results)) { ?>
+            <div class="alert">No results!</div>
+        <?php } else { ?>
+            <h2 class="text-center pb-30">Result (<?php echo number_format($results['total']); ?>)</h2>
 
-        <div class="flex-container">
-            <table class="table">
-                <tr>
-                    <th>Image</th>
-                    <th>Title</th>
-                    <th>Original Title</th>
-                    <th>Year</th>
-                    <th>Type</th>
-                </tr>
-                <?php foreach ($results['results'] as $result) { ?>
+            <div class="flex-container">
+                <table class="table">
                     <tr>
-                        <td>
-                            <?php if ($result['image']) { ?>
-                                <img class="medium-image" src="<?php
-                                echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 140, 207);
-                                ?>" alt="<?php echo $result['title']; ?>" loading="lazy">
-                            <?php } ?>
-                        </td>
-                        <td><a href="title.php?id=<?php echo $result['id']; ?>"><?php echo $result['title']; ?></a></td>
-                        <td><?php echo $result['originalTitle']; ?></td>
-                        <td><?php echo $result['year']; ?></td>
-                        <td><?php echo $result['type']; ?></td>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Original Title</th>
+                        <th>Year</th>
+                        <th>Type</th>
                     </tr>
-                <?php } ?>
-            </table>
-        </div>
-
+                    <?php foreach ($results['results'] as $result) { ?>
+                        <tr>
+                            <td>
+                                <?php if ($result['image']) { ?>
+                                    <img class="medium-image" src="<?php
+                                    echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 140, 207);
+                                    ?>" alt="<?php echo $result['title']; ?>" loading="lazy">
+                                <?php } ?>
+                            </td>
+                            <td><a href="title.php?id=<?php echo $result['id']; ?>"><?php echo $result['title']; ?></a>
+                            </td>
+                            <td><?php echo $result['originalTitle']; ?></td>
+                            <td><?php echo $result['year']; ?></td>
+                            <td><?php echo $result['type']; ?></td>
+                        </tr>
+                    <?php } ?>
+                </table>
+            </div>
+        <?php } ?>
     </div>
 </div>
 

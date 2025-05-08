@@ -131,49 +131,54 @@ $image = new Image();
     </div>
 
     <div class="boxed">
-        <h2 class="text-center pb-30">Result (<?php echo number_format($results['total']); ?>)</h2>
+        <?php if (empty($results)) { ?>
+            <div class="alert">No results!</div>
+        <?php } else { ?>
+            <h2 class="text-center pb-30">Result (<?php echo number_format($results['total']); ?>)</h2>
 
-        <div class="flex-container">
-            <table class="table">
-                <tr>
-                    <th>Index</th>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Professions</th>
-                    <th>Bio</th>
-                </tr>
-                <?php foreach ($results['results'] as $result) { ?>
+            <div class="flex-container">
+                <table class="table">
                     <tr>
-                        <td><?php echo $result['index']; ?></td>
-                        <td>
-                            <?php if ($result['image']) { ?>
-                                <img class="name-image" src="<?php
-                                echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 120, 120);
-                                ?>" alt="<?php echo $result['name']; ?>" loading="lazy">
-                            <?php } ?>
-                        </td>
-                        <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a></td>
-                        <td><?php echo implode(", ", $result['professions']); ?></td>
-                        <td>
-                            <?php if (!empty($result['bio'])) { ?>
-                                <b>Bio:</b><br>
-                                <?php echo $result['bio']; ?>
-                                <br>
-                                <hr>
-                            <?php } ?>
-                            <?php if (!empty($result['known_for'])) { ?>
-                                <br>
-                                <b>Known For:</b><br>
-                                <?php foreach ($result['known_for'] as $known) { ?>
-                                    <a href="title.php?id=<?php echo $known['id']; ?>"><?php echo $known['title']; ?>
-                                        (<?php echo $known['year']; ?>)</a>,
-                                <?php } ?>
-                            <?php } ?>
-                        </td>
+                        <th>Index</th>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Professions</th>
+                        <th>Bio</th>
                     </tr>
-                <?php } ?>
-            </table>
-        </div>
+                    <?php foreach ($results['results'] as $result) { ?>
+                        <tr>
+                            <td><?php echo $result['index']; ?></td>
+                            <td>
+                                <?php if ($result['image']) { ?>
+                                    <img class="name-image" src="<?php
+                                    echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 120, 120);
+                                    ?>" alt="<?php echo $result['name']; ?>" loading="lazy">
+                                <?php } ?>
+                            </td>
+                            <td><a href="name.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a>
+                            </td>
+                            <td><?php echo implode(", ", $result['professions']); ?></td>
+                            <td>
+                                <?php if (!empty($result['bio'])) { ?>
+                                    <b>Bio:</b><br>
+                                    <?php echo $result['bio']; ?>
+                                    <br>
+                                    <hr>
+                                <?php } ?>
+                                <?php if (!empty($result['known_for'])) { ?>
+                                    <br>
+                                    <b>Known For:</b><br>
+                                    <?php foreach ($result['known_for'] as $known) { ?>
+                                        <a href="title.php?id=<?php echo $known['id']; ?>"><?php echo $known['title']; ?>
+                                            (<?php echo $known['year']; ?>)</a>,
+                                    <?php } ?>
+                                <?php } ?>
+                            </td>
+                        </tr>
+                    <?php } ?>
+                </table>
+            </div>
+        <?php } ?>
     </div>
 </div>
 </body>
