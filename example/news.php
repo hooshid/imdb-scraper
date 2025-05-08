@@ -36,7 +36,9 @@ $image = new Image();
         <!-- Name -->
         <h2 class="text-center pb-30">News - <?php echo ucfirst(strtolower($type)) ?></h2>
 
-        <?php if (!empty($list)) { ?>
+        <?php if (empty($list)) { ?>
+            <div class="alert">No results!</div>
+        <?php } else { ?>
             <div class="grid-box-4">
                 <?php foreach ($list as $item) { ?>
                     <div class="news-box">

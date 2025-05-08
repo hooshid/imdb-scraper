@@ -36,6 +36,9 @@ if (!empty($_GET['keyword'])) {
 
 <div class="container">
     <div class="boxed">
+        <?php if (empty($results)) { ?>
+            <div class="alert">No results!</div>
+        <?php } else { ?>
         <h2 class="text-center pb-30">Result (<?php echo ucwords($_GET['keyword'], ' '); ?>)</h2>
 
         <div class="flex-container">
@@ -56,6 +59,7 @@ if (!empty($_GET['keyword'])) {
                 <?php } ?>
             </table>
         </div>
+        <?php } ?>
     </div>
 </div>
 </body>
