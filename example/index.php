@@ -26,7 +26,8 @@
                     <option value="title">Movie</option>
                     <option value="name">Name</option>
                     <option value="episode">Episode</option>
-                    <option value="keyword">Keywords</option>
+                    <option value="company">Company</option>
+                    <option value="keyword">Keyword</option>
                 </select>
             </div>
 
@@ -82,6 +83,10 @@
             <a class="badge badge-orange" href="/example/news.php?type=CELEBRITY">Celebrity news</a>
             <a class="badge badge-orange" href="/example/news.php?type=MOVIE">Movie news</a>
             <a class="badge badge-orange" href="/example/news.php?type=TV">TV news</a>
+
+            <a class="badge badge-purple" href="/example/company-search.php?company=Warner Brothers">Search company: Warner Brothers</a>
+            <a class="badge badge-purple" href="/example/company-search.php?company=Netflix">Search company: Netflix</a>
+            <a class="badge badge-purple" href="/example/company-search.php?company=HBO">Search company: HBO</a>
         </div>
     </div>
 

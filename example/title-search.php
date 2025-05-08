@@ -17,6 +17,7 @@ if (count($_GET) > 0) {
         'startDate' => $selectedStartYear ? $selectedStartYear . '-01-01' : '',
         'endDate' => $selectedEndYear ? $selectedEndYear . '-12-29' : '',
         'keywords' => $_GET['keywords'] ?? '',
+        'companies' => $_GET['companies'] ?? '',
         'adult' => $_GET['adult'] ?? 'EXCLUDE_ADULT',
         'limit' => $limit,
     ]);
