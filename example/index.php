@@ -73,9 +73,9 @@
             <a class="badge badge-pink" href="/example/title.php?id=tt0944947">TV Series: Game of Thrones (2011-2019)</a>
             <a class="badge badge-pink" href="/example/title.php?id=tt10048342">TV Mini Series: The Queen's Gambit (2020)</a>
 
-            <a class="badge badge-light-green" href="/example/keyword-search.php?keyword=Gold">Search keyword: Gold</a>
-            <a class="badge badge-light-green" href="/example/keyword-search.php?keyword=Gun">Search keyword: Gun</a>
-            <a class="badge badge-light-green" href="/example/keyword-search.php?keyword=Love">Search keyword: Love</a>
+            <a class="badge badge-purple" href="/example/keyword-search.php?keyword=Gold">Search keyword: Gold</a>
+            <a class="badge badge-purple" href="/example/keyword-search.php?keyword=Gun">Search keyword: Gun</a>
+            <a class="badge badge-purple" href="/example/keyword-search.php?keyword=Love">Search keyword: Love</a>
 
             <a class="badge badge-yellow" href="/example/video.php?id=vi2051194393">Video: Tenet - Final Trailer</a>
             <a class="badge badge-yellow" href="/example/video.php?id=vi1032782617">Video: The Matrix - Theatrical Trailer</a>
@@ -87,6 +87,9 @@
             <a class="badge badge-purple" href="/example/company-search.php?company=Warner Brothers">Search company: Warner Brothers</a>
             <a class="badge badge-purple" href="/example/company-search.php?company=Netflix">Search company: Netflix</a>
             <a class="badge badge-purple" href="/example/company-search.php?company=HBO">Search company: HBO</a>
+
+            <a class="badge badge-light-green" href="/example/company.php?id=co0144901">Company profile: Netflix</a>
+            <a class="badge badge-light-green" href="/example/company.php?id=co0754095">Company profile: HBO Max</a>
         </div>
     </div>
 
