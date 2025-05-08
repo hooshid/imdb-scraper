@@ -134,7 +134,8 @@ class TitleSearch extends Base
         }
 
         if (!empty($params['keywords'])) {
-            $constraints[] = sprintf('keywordConstraint: {anyKeywords: [%s]}', $this->formatList($params['keywords']));
+            $keywords = strtolower(str_replace(" ","-",$params['keywords']));
+            $constraints[] = sprintf('keywordConstraint: {anyKeywords: [%s]}', $this->formatList($keywords));
         }
 
         if (empty($constraints)) {
