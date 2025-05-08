@@ -37,10 +37,10 @@ query CompanySearch {
         entity {
           ... on Company {
             id
-            country {
+            companyText {
               text
             }
-            companyText {
+            country {
               text
             }
             companyTypes {
@@ -48,6 +48,10 @@ query CompanySearch {
             }
             meterRanking {
               currentRank
+              rankChange {
+                changeDirection
+                difference
+              }
             }
           }
         }
@@ -81,7 +85,11 @@ GRAPHQL;
             $results[] = [
                 'id' => $edge->node->entity->id,
                 'name' => $edge->node->entity->companyText->text,
-                'rank' => $edge->node->entity->meterRanking->currentRank ?? null,
+                'rank' => [
+                    'current_rank' => $edge->node->entity->meterRanking->currentRank ?? null,
+                    'change_direction' => $edge->node->entity->meterRanking->rankChange->changeDirection ?? null,
+                    'difference' => $edge->node->entity->meterRanking->rankChange->difference ?? null,
+                ],
                 'country' => $edge->node->entity->country->text ?? null,
                 'types' => $types
             ];

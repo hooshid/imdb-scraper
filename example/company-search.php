@@ -50,7 +50,7 @@ if (!empty($_GET['company'])) {
                 <?php foreach ($results as $result) { ?>
                     <tr>
                         <td><?php echo $result['id']; ?></td>
-                        <td><?php echo $result['rank']; ?></td>
+                        <td><?php echo $result['rank']['current_rank']; ?></td>
                         <td>
                             <a href="title-search.php?companies=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a>
                         </td>
