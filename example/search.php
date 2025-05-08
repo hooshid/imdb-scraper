@@ -25,8 +25,12 @@ elseif ($_GET['type'] === 'name') {
 elseif ($_GET['type'] === 'title') {
     header("Location: title-search.php?searchTerm=" . $search);
     exit;
-}// search type is episode
+} // search type is episode
 elseif ($_GET['type'] === 'episode') {
-    header("Location: title-search.php?searchTerm=" . $search ."&types=tvEpisode");
+    header("Location: title-search.php?searchTerm=" . $search . "&types=tvEpisode");
+    exit;
+} // search type is keyword
+elseif ($_GET['type'] === 'keyword') {
+    header("Location: keyword-search.php?keyword=" . $search);
     exit;
 }

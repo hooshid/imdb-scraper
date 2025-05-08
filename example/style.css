@@ -226,6 +226,12 @@ input[type=submit]:hover {
     flex: 25%;
 }
 
+.alert {
+    padding: 16px;
+    border-radius: 5px;
+    background: red;
+    color: white;
+}
 
 .photo img {
     border-radius: 4px;
@@ -317,6 +323,9 @@ hr {
 }
 .badge-yellow.badge::before {
     background-color: #f6e700;
+}
+.badge-light-green.badge::before {
+    background-color: #00ea04;
 }
 
 .name-image {
