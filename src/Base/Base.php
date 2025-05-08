@@ -140,4 +140,19 @@ class Base extends Config
             return null;
         }
     }
+
+    /**
+     * Convert seconds to minutes
+     *
+     * @param int|null $seconds
+     * @return int|null
+     */
+    protected function secondsToMinutes(int $seconds = null): ?int
+    {
+        if(empty($seconds)){
+            return null;
+        }
+
+        return intval($seconds / 60);
+    }
 }

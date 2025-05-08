@@ -134,7 +134,7 @@ class TitleSearch extends Base
         }
 
         if (!empty($params['keywords'])) {
-            $keywords = strtolower(str_replace(" ","-",$params['keywords']));
+            $keywords = strtolower(str_replace(" ", "-", $params['keywords']));
             $constraints[] = sprintf('keywordConstraint: {anyKeywords: [%s]}', $this->formatList($keywords));
         }
 
@@ -284,11 +284,6 @@ GRAPHQL;
                 }
             }
 
-            $runtime = null;
-            if (!empty($edge->node->title->runtime->seconds)) {
-                $runtime = $edge->node->title->runtime->seconds / 60;
-            }
-
             $results[] = [
                 'id' => $imdbId,
                 'url' => $this->getBaseUrl() . "/title/" . $imdbId,
@@ -297,7 +292,7 @@ GRAPHQL;
                 'type' => $edge->node->title->titleType->text ?? null,
                 'year' => $yearRange,
                 'plot' => $edge->node->title->plot->plotText->plainText ?? null,
-                'runtime' => $runtime,
+                'runtime' => $this->secondsToMinutes($edge->node->title->runtime->seconds ?? null),
                 'rating' => $edge->node->title->ratingsSummary->aggregateRating ?? null,
                 'votes' => $edge->node->title->ratingsSummary->voteCount ?? null,
                 'metacritic' => $edge->node->title->metacritic->metascore->score ?? null,
