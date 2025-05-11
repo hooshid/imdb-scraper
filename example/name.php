@@ -1,5 +1,6 @@
 <?php
 
+use Hooshid\ImdbScraper\Base\Image;
 use Hooshid\ImdbScraper\Name;
 
 require __DIR__ . "/../vendor/autoload.php";
@@ -7,15 +8,18 @@ require __DIR__ . "/../vendor/autoload.php";
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name = new Name($id);
+    $person = $name->full();
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
-        echo json_encode($name->full());
+        echo json_encode($person);
         exit();
     }
 } else {
     header("Location: /example");
     exit;
 }
+
+$image = new Image();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,7 +28,7 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="googlebot" content="noindex">
-    <title><?php echo $name->fullName(); ?></title>
+    <title><?php echo $person['full_name']; ?></title>
     <link rel="stylesheet" href="/example/style.css">
 </head>
 <body>
@@ -35,19 +39,19 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
 <div class="container">
     <div class="boxed">
         <!-- Name -->
-        <h2 class="text-center pb-30"><?php echo $name->fullName(); ?></h2>
+        <h2 class="text-center pb-30"><?php echo $person['full_name']; ?></h2>
 
         <div class="flex-container">
             <div class="col-25">
                 <!-- Photo -->
                 <div class="photo">
-                    <?php
-                    if (($photo_url = $name->photo()) != NULL) {
-                        echo '<img src="' . $photo_url['original'] . '" alt="Cover">';
-                    } else {
-                        echo "No photo available";
-                    }
-                    ?>
+                    <?php if ($person['image']) { ?>
+                        <img src="<?php
+                        echo $image->makeThumbnail($person['image']['url'], $person['image']['width'], $person['image']['height'], 280, 414);
+                        ?>" alt="<?php echo $person['full_name']; ?>" loading="lazy">
+                    <?php } else { ?>
+                        No photo available
+                    <?php } ?>
                 </div>
             </div>
 
@@ -56,166 +60,146 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
                     <!-- Main Url -->
                     <tr>
                         <td style="width: 140px;"><b>IMDb Full Url:</b></td>
-                        <td>[<a href="<?php echo $name->mainUrl(); ?>">IMDb</a>]</td>
+                        <td>[<a href="<?php echo $person['main_url']; ?>">IMDb</a>]</td>
                     </tr>
 
                     <!-- IMDb id -->
                     <tr>
                         <td><b>IMDb id:</b></td>
-                        <td><?php echo $name->imdbId(); ?></td>
+                        <td><?php echo $person['imdb_id']; ?></td>
                     </tr>
 
                     <!-- Redirect -->
-                    <?php
-                    if (!empty($name->canonicalId())) {
-                        ?>
+                    <?php if (!empty($person['canonical_id'])) { ?>
                         <tr>
-                            <td><b>new IMDb ID:</b></td>
+                            <td><b>New IMDb ID:</b></td>
                             <td>
-                                <?php echo $name->canonicalId(); ?>
+                                <?php echo $person['canonical_id']; ?>
                             </td>
                         </tr>
                     <?php } ?>
 
                     <!-- Birth information -->
-                    <?php
-                    if (!empty($rank = $name->rank())) {
-                        ?>
+                    <?php if (!empty($person['rank'])) { ?>
                         <tr>
                             <td><b>Rank:</b></td>
                             <td>
-                                <?php if ($rank["current_rank"]) { ?>
-                                    Current rank: <?php echo $rank["current_rank"]; ?><br>
+                                <?php if ($person['rank']["current_rank"]) { ?>
+                                    Current rank: <?php echo $person['rank']["current_rank"]; ?><br>
                                 <?php } ?>
-                                <?php if ($rank["change_direction"]) { ?>
-                                    Change Direction: <?php echo $rank["change_direction"]; ?><br>
+                                <?php if ($person['rank']["change_direction"]) { ?>
+                                    Change Direction: <?php echo $person['rank']["change_direction"]; ?><br>
                                 <?php } ?>
-                                <?php if ($rank["difference"]) { ?>
-                                    Difference: <?php echo $rank["difference"]; ?><br>
+                                <?php if ($person['rank']["difference"]) { ?>
+                                    Difference: <?php echo $person['rank']["difference"]; ?><br>
                                 <?php } ?>
                             </td>
                         </tr>
                     <?php } ?>
 
                     <!-- Birth information -->
-                    <?php
-                    $birth = $name->birth();
-                    if (!empty($birth)) {
-                        ?>
+                    <?php if (!empty($person['birth'])) { ?>
                         <tr>
                             <td><b>Birth:</b></td>
                             <td>
-                                <?php echo $birth["day"] . ' ' . $birth["month"] . ' ' . $birth["year"]; ?>
-                                <?php if ($birth["date"]) { ?>
-                                    (<?php echo $birth["date"]; ?>)
+                                <?php echo $person['birth']["day"] . ' ' . $person['birth']["month"] . ' ' . $person['birth']["year"]; ?>
+                                <?php if ($person['birth']["date"]) { ?>
+                                    (<?php echo $person['birth']["date"]; ?>)
                                 <?php } ?>
 
-                                <?php if (!empty($birth["place"])) { ?>
-                                    <br>in <?php echo $birth["place"]; ?>
+                                <?php if (!empty($person['birth']["place"])) { ?>
+                                    <br>in <?php echo $person['birth']["place"]; ?>
                                 <?php } ?>
                             </td>
                         </tr>
                     <?php } ?>
 
                     <!-- Death information -->
-                    <?php
-                    $death = $name->death();
-                    if (!empty($death)) {
-                        ?>
+                    <?php if (!empty($person['death'])) { ?>
                         <tr>
                             <td><b>Death:</b></td>
                             <td>
-                                <?php echo $death["day"] . ' ' . $death["month"] . ' ' . $death["year"]; ?>
-                                (<?php echo $death["date"]; ?>)
+                                <?php echo $person['death']["day"] . ' ' . $person['death']["month"] . ' ' . $person['death']["year"]; ?>
+                                (<?php echo $person['death']["date"]; ?>)
 
-                                <?php if (!empty($death["place"])) { ?>
-                                    <br>in <?php echo $death["place"]; ?>
+                                <?php if (!empty($person['death']["place"])) { ?>
+                                    <br>in <?php echo $person['death']["place"]; ?>
                                 <?php } ?>
 
-                                <?php if (!empty($death["cause"])) { ?>
-                                    <br><?php echo $death["cause"]; ?>
+                                <?php if (!empty($person['death']["cause"])) { ?>
+                                    <br><?php echo $person['death']["cause"]; ?>
                                 <?php } ?>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Age -->
+                    <?php if (!empty($person['age'])) { ?>
+                        <tr>
+                            <td><b>Age:</b></td>
+                            <td>
+                                <?php echo $person['age']; ?>
+                                years <?php if (!empty($person['death'])) { ?> when died<?php } ?>
                             </td>
                         </tr>
                     <?php } ?>
 
                     <!-- Birth name -->
-                    <?php
-                    $birth_name = $name->birthName();
-                    if (!empty($birth_name)) {
-                        ?>
+                    <?php if (!empty($person['birth_name'])) { ?>
                         <tr>
                             <td><b>Birth Name:</b></td>
-                            <td><?php echo $birth_name; ?></td>
+                            <td><?php echo $person['birth_name']; ?></td>
                         </tr>
                     <?php } ?>
 
                     <!-- Nick name(s) -->
-                    <?php
-                    if (!empty($nick_names = $name->nickNames())) {
-                        ?>
+                    <?php if (!empty($person['nick_names'])) { ?>
                         <tr>
                             <td><b>Nicknames:</b></td>
-                            <td><?php echo implode(', ', $nick_names); ?></td>
+                            <td><?php echo implode(', ', $person['nick_names']); ?></td>
                         </tr>
                     <?php } ?>
 
-                    <!-- Nick name(s) -->
-                    <?php
-                    if (!empty($aka_names = $name->akaNames())) {
-                        ?>
+                    <!-- AKA name(s) -->
+                    <?php if (!empty($person['aka_names'])) { ?>
                         <tr>
                             <td><b>AKA Names:</b></td>
-                            <td><?php echo implode(', ', $aka_names); ?></td>
+                            <td><?php echo implode(', ', $person['aka_names']); ?></td>
                         </tr>
                     <?php } ?>
 
                     <!-- Professions -->
-                    <?php
-                    if (!empty($professions = $name->professions())) {
-                        ?>
+                    <?php if (!empty($person['professions'])) { ?>
                         <tr>
                             <td><b>Professions:</b></td>
-                            <td><?php echo implode(', ', $professions); ?></td>
+                            <td><?php echo implode(', ', $person['professions']); ?></td>
                         </tr>
                     <?php } ?>
 
                     <!-- Body Height -->
-                    <?php
-                    $body_height = $name->bodyHeight();
-                    if (!empty($body_height)) {
-                        ?>
+                    <?php if (!empty($person['body_height'])) {?>
                         <tr>
                             <td><b>Body Height:</b></td>
-                            <td><?php echo $body_height["imperial"]; ?> - <?php echo $body_height["metric"]; ?>
-                                (<?php echo $body_height["metric_cm"]; ?> cm)
+                            <td><?php echo $person['body_height']["imperial"]; ?> - <?php echo $person['body_height']["metric"]; ?>
+                                (<?php echo $person['body_height']["metric_cm"]; ?> cm)
                             </td>
                         </tr>
                     <?php } ?>
 
                     <!-- Mini Bio -->
-                    <?php
-                    $bio = $name->bio();
-                    if (!empty($bio)) {
-                        if (count($bio) < 2) $idx = 0; else $idx = 1;
-                        $mini_bio = $bio[$idx]["text"];
-                        $mini_bio = preg_replace('/https:\/\/' . str_replace(".", "\.", $name->imdbSiteUrl) . '\/name\/nm(\d{7,8})(\?ref_=nmbio_mbio)?/', 'name.php?id=nm\\1', $mini_bio);
-                        $mini_bio = preg_replace('/https:\/\/' . str_replace(".", "\.", $name->imdbSiteUrl) . '\/title\/tt(\d{7,8})(\?ref_=nmbio_mbio)?/', 'title.php?id=tt\\1', $mini_bio);
-                        ?>
+                    <?php if (!empty($person['bio'])) { ?>
                         <tr>
                             <td><b>Mini Bio:</b></td>
                             <td>
-                                <?php echo $mini_bio; ?>
-                                <?php if (isset($bio[$idx]['author']) and isset($bio[$idx]['author']['name'])) { ?>
-                                    <br>(Written by: <?php echo $bio[$idx]['author']['name']; ?>)
+                                <?php echo $person['bio'][0]['text']; ?>
+                                <?php if (isset($person['bio'][0]['author'])) { ?>
+                                    <br>(Written by: <?php echo $person['bio'][0]['author']; ?>)
                                 <?php } ?>
                             </td>
                         </tr>
                     <?php } ?>
-
                 </table>
             </div>
-
         </div>
     </div>
 </div>

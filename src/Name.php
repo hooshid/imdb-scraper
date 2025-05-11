@@ -2,6 +2,7 @@
 
 namespace Hooshid\ImdbScraper;
 
+use Exception;
 use Hooshid\ImdbScraper\Base\Base;
 use Hooshid\ImdbScraper\Base\Config;
 
@@ -12,18 +13,21 @@ class Name extends Base
     private bool $isFullCalled = false;
 
     protected array $data = [
+        'imdb_id' => null,
+        'main_url' => null,
         'canonical_id' => null,
         'full_name' => null,
-        'photo' => [],
+        'image' => null,
         'rank' => null,
-        'birth' => [],
-        'death' => [],
+        'age' => null,
+        'birth' => null,
+        'death' => null,
         'birth_name' => null,
-        'nick_names' => [],
-        'aka_names' => [],
-        'body_height' => [],
-        'bio' => [],
-        'professions' => [],
+        'nick_names' => null,
+        'aka_names' => null,
+        'body_height' => null,
+        'bio' => null,
+        'professions' => null,
     ];
 
     /**
@@ -34,47 +38,17 @@ class Name extends Base
     {
         parent::__construct($config);
         $this->imdb_id = $id;
+        $this->data['imdb_id'] = $id;
+        $this->data['main_url'] = $this->mainUrl();
     }
 
     /***************************************[ Main Methods ]***************************************/
 
     /**
-     * Set up the URL to the person page
-     *
-     * @return string
-     */
-    public function mainUrl(): string
-    {
-        return "https://" . $this->imdbSiteUrl . "/name/" . $this->imdb_id . "/";
-    }
-
-    /**
-     * Get imdb id
-     *
-     * @return string
-     */
-    public function imdbId(): string
-    {
-        return $this->imdb_id;
-    }
-
-    /**
      * This function returns the full extracted data in a single JSON-compatible array.
      *
-     * @return array{
-     *     canonical_id: mixed,
-     *     full_name: mixed,
-     *     photo: array,
-     *     rank: mixed,
-     *     birth: array,
-     *     death: array,
-     *     birth_name: mixed,
-     *     nick_names: array,
-     *     aka_names: array,
-     *     body_height: array,
-     *     bio: array,
-     *     professions: array
-     * }
+     * @return array
+     * @throws Exception
      */
     public function full(): array
     {
@@ -94,6 +68,8 @@ query Name(\$id: ID!) {
     }
     primaryImage {
       url
+      width
+      height
     }
     meterRanking {
       currentRank
@@ -101,6 +77,9 @@ query Name(\$id: ID!) {
         changeDirection
         difference
       }
+    }
+    age {
+      value
     }
     birthDate {
       dateComponents {
@@ -170,8 +149,9 @@ EOF;
         /***************** Parse data *****************/
         $this->parseCanonicalId($data);
         $this->fullNameParse($data);
-        $this->photoParse($data);
+        $this->imageParse($data);
         $this->rankParse($data);
+        $this->ageParse($data);
         $this->birthParse($data);
         $this->deathParse($data);
         $this->birthNameParse($data);
@@ -185,11 +165,31 @@ EOF;
     }
 
     /***************************************[ Methods ]***************************************/
+    /**
+     * Set up the URL to the person page
+     *
+     * @return string
+     */
+    public function mainUrl(): string
+    {
+        return $this->getBaseUrl() . "/name/" . $this->imdb_id . "/";
+    }
+
+    /**
+     * Get imdb id
+     *
+     * @return string
+     */
+    public function imdbId(): string
+    {
+        return $this->imdb_id;
+    }
 
     /**
      * Check redirect to another id or not.
      *
      * @return string|null
+     * @throws Exception
      */
     public function canonicalId(): ?string
     {
@@ -219,9 +219,9 @@ EOF;
     private function parseCanonicalId($data): void
     {
         if (!empty($data->name->meta->canonicalId)) {
-            $nameImdbId = $data->name->meta->canonicalId;
-            if ($nameImdbId != $this->imdb_id) {
-                $this->data['canonical_id'] = $nameImdbId;
+            $canonicalId = $data->name->meta->canonicalId;
+            if ($canonicalId != $this->imdb_id) {
+                $this->data['canonical_id'] = $canonicalId;
             }
         }
     }
@@ -230,6 +230,7 @@ EOF;
      * Get the name of the person
      *
      * @return string|null
+     * @throws Exception
      */
     public function fullName(): ?string
     {
@@ -258,53 +259,59 @@ EOF;
      */
     private function fullNameParse($data): void
     {
-        $this->data['full_name'] = $this->cleanString($data->name->nameText->text ?? '');
+        if (!empty($data->name->nameText->text)) {
+            $this->data['full_name'] = $this->cleanString($data->name->nameText->text);
+        }
     }
 
     /**
-     * Get photo
+     * Get image
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function photo(): array
+    public function image(): ?array
     {
-        if (!$this->isFullCalled && empty($this->data['photo'])) {
+        if (!$this->isFullCalled && empty($this->data['image'])) {
             $query = <<<EOF
-query PrimaryImage(\$id: ID!) {
+query Image(\$id: ID!) {
   name(id: \$id) {
     primaryImage {
       url
+      width
+      height
     }
   }
 }
 EOF;
 
-            $data = $this->graphql->query($query, "PrimaryImage", ["id" => $this->imdb_id]);
-            $this->photoParse($data);
+            $data = $this->graphql->query($query, "Image", ["id" => $this->imdb_id]);
+            $this->imageParse($data);
         }
 
-        return $this->data['photo'];
+        return $this->data['image'];
     }
 
     /**
-     * Parse photo and image url
+     * Parse image
      *
      * @param $data
      * @return void
      */
-    private function photoParse($data): void
+    private function imageParse($data): void
     {
         if (!empty($data->name->primaryImage->url)) {
-            $this->data['photo'] = $this->imageUrl($data->name->primaryImage->url);
+            $this->data['image'] = $this->parseImage($data->name->primaryImage);
         }
     }
 
     /**
      * Get current popularity rank of a person
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function rank(): array
+    public function rank(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['rank'])) {
             $query = <<<EOF
@@ -344,11 +351,50 @@ EOF;
     }
 
     /**
+     * Get the age of the person
+     *
+     * @return int|null
+     * @throws Exception
+     */
+    public function age(): ?int
+    {
+        if (!$this->isFullCalled && empty($this->data['age'])) {
+            $query = <<<EOF
+query Age(\$id: ID!) {
+  name(id: \$id) {
+    age {
+      value
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "Age", ["id" => $this->imdb_id]);
+            $this->ageParse($data);
+        }
+
+        return $this->data['age'];
+    }
+
+    /**
+     * Parse age
+     *
+     * @param $data
+     * @return void
+     */
+    private function ageParse($data): void
+    {
+        if (!empty($data->name->age->value)) {
+            $this->data['age'] = $data->name->age->value;
+        }
+    }
+
+    /**
      * Get birth information
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function birth(): array
+    public function birth(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['birth'])) {
             $query = <<<EOF
@@ -376,6 +422,7 @@ EOF;
 
     /**
      * Parse birth
+     *
      * @param $data
      * @return void
      */
@@ -388,7 +435,6 @@ EOF;
             $year = $birthDate->year ?? null;
             $monthName = $monthInt ? date("F", mktime(0, 0, 0, $monthInt, 10)) : null;
             $full_date = (!empty($day) && !empty($monthInt) && !empty($year)) ? date("Y-m-d", mktime(0, 0, 0, $monthInt, $day, $year)) : null;
-            $place = $this->cleanString($data->name->birthLocation->text ?? '');
 
             $this->data['birth'] = [
                 "day" => $day,
@@ -396,7 +442,7 @@ EOF;
                 "mon" => $monthInt,
                 "year" => $year,
                 "date" => $full_date,
-                "place" => $place
+                "place" => $data->name->birthLocation->text ?? null
             ];
         }
     }
@@ -404,9 +450,10 @@ EOF;
     /**
      * Get death information
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function death(): array
+    public function death(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['death'])) {
             $query = <<<EOF
@@ -450,8 +497,6 @@ EOF;
             $year = $deathDate->year ?? null;
             $monthName = $monthInt ? date("F", mktime(0, 0, 0, $monthInt, 10)) : null;
             $full_date = (!empty($day) && !empty($monthInt) && !empty($year)) ? date("Y-m-d", mktime(0, 0, 0, $monthInt, $day, $year)) : null;
-            $place = $this->cleanString($data->name->deathLocation->text ?? '');
-            $cause = $this->cleanString($data->name->deathCause->text ?? '');
 
             $this->data['death'] = [
                 "day" => $day,
@@ -459,8 +504,8 @@ EOF;
                 "mon" => $monthInt,
                 "year" => $year,
                 "date" => $full_date,
-                "place" => $place,
-                "cause" => $cause,
+                "place" => $data->name->deathLocation->text ?? null,
+                "cause" => $data->name->deathCause->text ?? null,
             ];
         }
     }
@@ -469,6 +514,7 @@ EOF;
      * Get the birth name
      *
      * @return string|null
+     * @throws Exception
      */
     public function birthName(): ?string
     {
@@ -497,19 +543,21 @@ EOF;
      */
     private function birthNameParse($data): void
     {
-        $this->data['birth_name'] = $data->name->birthName->text ?? null;
+        if (!empty($data->name->birthName->text)) {
+            $this->data['birth_name'] = $data->name->birthName->text;
+        }
     }
 
     /**
      * Get the nicknames
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function nickNames(): array
+    public function nickNames(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['nick_names'])) {
-            if (empty($this->nickName)) {
-                $query = <<<EOF
+            $query = <<<EOF
 query NickName(\$id: ID!) {
   name(id: \$id) {
     nickNames {
@@ -518,9 +566,8 @@ query NickName(\$id: ID!) {
   }
 }
 EOF;
-                $data = $this->graphql->query($query, "NickName", ["id" => $this->imdb_id]);
-                $this->nickNamesParse($data);
-            }
+            $data = $this->graphql->query($query, "NickName", ["id" => $this->imdb_id]);
+            $this->nickNamesParse($data);
         }
 
         return $this->data['nick_names'];
@@ -536,23 +583,21 @@ EOF;
     {
         if (!empty($data->name->nickNames)) {
             foreach ($data->name->nickNames as $nickName) {
-                if (!empty($nickName->text)) {
-                    $this->data['nick_names'][] = $nickName->text;
-                }
+                $this->data['nick_names'][] = $nickName->text;
             }
         }
     }
 
     /**
-     * Get alternative names for a person
+     * Get AKA names for a person
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function akaNames(): array
+    public function akaNames(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['aka_names'])) {
-            if (empty($this->professions)) {
-                $query = <<<EOF
+            $query = <<<EOF
 query AkaName(\$id: ID!) {
   name(id: \$id) {
     akas(first: 9999) {
@@ -565,9 +610,8 @@ query AkaName(\$id: ID!) {
   }
 }
 EOF;
-                $data = $this->graphql->query($query, "AkaName", ["id" => $this->imdb_id]);
-                $this->akaNamesParse($data);
-            }
+            $data = $this->graphql->query($query, "AkaName", ["id" => $this->imdb_id]);
+            $this->akaNamesParse($data);
         }
 
         return $this->data['aka_names'];
@@ -583,9 +627,7 @@ EOF;
     {
         if (!empty($data->name->akas->edges)) {
             foreach ($data->name->akas->edges as $edge) {
-                if (isset($edge->node->text)) {
-                    $this->data['aka_names'][] = $edge->node->text;
-                }
+                $this->data['aka_names'][] = $edge->node->text;
             }
         }
     }
@@ -593,9 +635,10 @@ EOF;
     /**
      * Get the body height
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function bodyHeight(): array
+    public function bodyHeight(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['body_height'])) {
             $query = <<<EOF
@@ -651,6 +694,7 @@ EOF;
      * Get the person's mini bio
      *
      * @return array
+     * @throws Exception
      */
     public function bio(): array
     {
@@ -690,15 +734,10 @@ EOF;
     {
         if (!empty($data->name->bios->edges)) {
             foreach ($data->name->bios->edges as $edge) {
-                $bio["text"] = $edge->node->text->plainText ?? null;
-                $bioAuthor = '';
-                if (!empty($edge->node->author) and !empty($edge->node->author->plainText)) {
-                    $bioAuthor = $edge->node->author->plainText;
-                }
-                $bio["author"]["url"] = '';
-                $bio["author"]["name"] = $bioAuthor;
-
-                $this->data['bio'][] = $bio;
+                $this->data['bio'][] = [
+                    'text' => $edge->node->text->plainText ?? null,
+                    'author' => $edge->node->author->plainText ?? null,
+                ];
             }
         }
     }
@@ -706,13 +745,13 @@ EOF;
     /**
      * Get primary professions of this person
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function professions(): array
+    public function professions(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['professions'])) {
-            if (empty($this->professions)) {
-                $query = <<<EOF
+            $query = <<<EOF
 query Professions(\$id: ID!) {
   name(id: \$id) {
     primaryProfessions {
@@ -723,9 +762,8 @@ query Professions(\$id: ID!) {
   }
 }
 EOF;
-                $data = $this->graphql->query($query, "Professions", ["id" => $this->imdb_id]);
-                $this->professionsParse($data);
-            }
+            $data = $this->graphql->query($query, "Professions", ["id" => $this->imdb_id]);
+            $this->professionsParse($data);
         }
 
         return $this->data['professions'];
@@ -741,12 +779,9 @@ EOF;
     {
         if (!empty($data->name->primaryProfessions)) {
             foreach ($data->name->primaryProfessions as $primaryProfession) {
-                if (!empty($primaryProfession->category->text)) {
-                    $this->data['professions'][] = $primaryProfession->category->text;
-                }
+                $this->data['professions'][] = $primaryProfession->category->text;
             }
         }
     }
-
 }
 
