@@ -88,7 +88,7 @@ GRAPHQL;
                 'weekend_gross_amount' => $edge->weekendGross->total->amount ?? null,
                 'weekend_gross_currency' => $edge->weekendGross->total->currency ?? null,
                 'weeks_released' => $weeks,
-                'image' => $this->image($edge->title->primaryImage)
+                'image' => $this->parseImage($edge->title->primaryImage)
             );
         }
 
@@ -194,7 +194,7 @@ GRAPHQL;
                 'year' => $edge->node->item->releaseYear->year ?? null,
                 'rating' => $edge->node->item->ratingsSummary->aggregateRating ?? null,
                 'votes' => $edge->node->item->ratingsSummary->voteCount ?? null,
-                'image' => $this->image($edge->node->item->primaryImage)
+                'image' => $this->parseImage($edge->node->item->primaryImage)
             );
         }
 
@@ -307,7 +307,7 @@ GRAPHQL;
                 'year' => $edge->node->releaseYear->year ?? null,
                 'rating' => $edge->node->ratingsSummary->aggregateRating ?? null,
                 'votes' => $edge->node->ratingsSummary->voteCount ?? null,
-                'image' => $this->image($edge->node->primaryImage)
+                'image' => $this->parseImage($edge->node->primaryImage)
             ];
         }
 
@@ -412,7 +412,7 @@ GRAPHQL;
                 'rank' => $edge->node->meterRanking->currentRank ?? null,
                 'professions' => $professions,
                 'known_for' => $knownFor,
-                'image' => $this->image($edge->node->primaryImage)
+                'image' => $this->parseImage($edge->node->primaryImage)
             ];
         }
 

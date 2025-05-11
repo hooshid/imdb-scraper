@@ -26,25 +26,60 @@ html {
 
 table {
     width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    display: table;
 }
 
 th,
 td {
-    padding: 8px 14px;
+    padding: 5px;
     text-align: left;
     border-bottom: 1px solid #E1E1E1;
-    vertical-align: top;
 }
 
-th:first-child,
-td:first-child {
-    padding-left: 0;
+tr:first-child th,
+tr:last-child td {
+    border-bottom: 0;
 }
 
-th:last-child,
-td:last-child {
-    padding-right: 0;
+table, th, td {
+    border-collapse: collapse;
+    padding: 5px;
 }
+
+tr:nth-child(odd) {
+    background-color: #f2f2f2
+}
+
+tr:hover {
+    background-color: rgb(255, 221, 115) !important;
+}
+
+th {
+    background-color: #07f;
+    color: white;
+    vertical-align: middle;
+    padding: 10px 5px;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:link {
+    color: #1a0dab;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: red;
+}
+
+table a:visited {
+    color: #e30032;
+}
+
 
 .container {
     position: relative;
@@ -253,8 +288,8 @@ hr {
     position: fixed;
     padding: 5px 13px;
     background: #678efe;
-    color: #fff;
-    text-decoration: none;
+    color: #fff !important;
+    text-decoration: none !important;
     border-radius: 0 30px 30px 0;
     text-align: center;
     left: 0;
@@ -262,10 +297,12 @@ hr {
     z-index: 1;
 }
 
-.back-page:hover,
-.output-json-link:hover {
-    color: #fff;
+.back-page:hover{
     background: #275efe;
+}
+
+.output-json-link:hover {
+    background: #d70d53;
 }
 
 .output-json-link {
@@ -435,66 +472,3 @@ hr {
     text-decoration: none;
     display: block;
 }
-
-
-/*
-h2 span {
-    text-decoration: underline;
-}
-
-table {
-    border-collapse: collapse;
-    margin: 0 auto;
-}
-
-td, th {
-    border: 1px solid black;
-}
-
-th {
-    padding: 5px;
-    background-color: #FFB000;
-}
-
-table table {
-    background-color: #ddd;
-    margin: 0;
-}
-
-table table th {
-    background-color: #07f;
-    color: #fff;
-}
-
-a {
-    text-decoration: none;
-}
-
-a:link {
-    color: #1a0dab;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-a:visited {
-    color: #609;
-}
-
-.table {
-    max-width: 1000px;
-}
-
-.table td {
-    padding: 5px;
-    vertical-align: top;
-}
-.table tr:nth-child(odd) {
-    background-color: #f2f2f2
-}
-
-
-
-*/
-

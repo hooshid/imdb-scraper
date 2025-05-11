@@ -82,7 +82,7 @@ GRAPHQL;
                 'sourceLabel' => $edge->node->source->homepage->label ?? null,
                 'plaidHtml' => $edge->node->text->plaidHtml ?? null,
                 'plainText' => $edge->node->text->plainText ?? null,
-                'image' => $this->image($edge->node->image)
+                'image' => $this->parseImage($edge->node->image)
             ];
         }
 

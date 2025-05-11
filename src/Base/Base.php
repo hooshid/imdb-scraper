@@ -91,7 +91,7 @@ class Base extends Config
      * @param object|null $obj
      * @return array|null Array of image URLs or null if no URL provided
      */
-    protected function image(?object $obj = null): ?array
+    protected function parseImage(?object $obj = null): ?array
     {
         if (!$obj) {
             return null;

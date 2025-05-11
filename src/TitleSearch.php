@@ -296,7 +296,7 @@ GRAPHQL;
                 'rating' => $edge->node->title->ratingsSummary->aggregateRating ?? null,
                 'votes' => $edge->node->title->ratingsSummary->voteCount ?? null,
                 'metacritic' => $edge->node->title->metacritic->metascore->score ?? null,
-                'image' => $this->image($edge->node->title->primaryImage)
+                'image' => $this->parseImage($edge->node->title->primaryImage)
             ];
         }
 

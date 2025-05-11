@@ -137,7 +137,7 @@ GRAPHQL;
                 "release_date" => $releaseDate,
                 "genres" => $genres,
                 "cast" => $cast,
-                "image" => $this->image($edge->node->primaryImage)
+                "image" => $this->parseImage($edge->node->primaryImage)
             ];
         }
 

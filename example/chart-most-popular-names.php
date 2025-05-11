@@ -39,6 +39,7 @@ $image = new Image();
                 <tr>
                     <th>Rank</th>
                     <th>Name</th>
+                    <th>Image</th>
                     <th>Professions</th>
                     <th>Known for</th>
                 </tr>

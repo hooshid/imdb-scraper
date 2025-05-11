@@ -291,7 +291,7 @@ GRAPHQL;
                 'id' => $id,
                 'url' => $this->getBaseUrl() . "/name/" . $id,
                 'name' => $this->cleanString($name),
-                'image' => $this->image($edge->node->name->primaryImage),
+                'image' => $this->parseImage($edge->node->name->primaryImage),
                 'professions' => $professions,
                 'bio' => $bio,
                 'known_for' => $knownFor,

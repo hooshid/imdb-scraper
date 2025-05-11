@@ -67,7 +67,7 @@ $image = new Image();
                         <td><?php echo $row['runtime']; ?>m</td>
                         <td><?php echo $row['year']; ?></td>
                         <td><?php echo $row['rating']; ?></td>
-                        <td><?php echo $row['votes']; ?></td>
+                        <td><?php echo number_format($row['votes']); ?></td>
                     </tr>
                 <?php } ?>
             </table>
