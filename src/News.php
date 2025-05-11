@@ -6,11 +6,6 @@ use Exception;
 use Hooshid\ImdbScraper\Base\Base;
 use InvalidArgumentException;
 
-/**
- * Class for retrieving news from IMDb
- *
- * Handles fetching and processing news articles for movies, TV, celebrities, etc.
- */
 class News extends Base
 {
     /**
