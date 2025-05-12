@@ -28,6 +28,7 @@ class Name extends Base
         'body_height' => null,
         'bio' => null,
         'professions' => null,
+        'news' => null,
     ];
 
     /**
@@ -141,6 +142,37 @@ query Name(\$id: ID!) {
         text
       }
     }
+    
+    news(first: 100) {
+      edges {
+        node {
+          id
+          articleTitle {
+            plainText
+          }
+          byline
+          date
+          externalUrl
+          image {
+            url
+            width
+            height
+          }
+          source {
+            description
+            homepage {
+              label
+              url
+            }
+          }
+          text {
+            plainText
+            plaidHtml
+          }
+        }
+      }
+    }
+    
   }
 }
 EOF;
@@ -160,6 +192,7 @@ EOF;
         $this->bodyHeightParse($data);
         $this->bioParse($data);
         $this->professionsParse($data);
+        $this->newsParse($data);
 
         return $this->data;
     }
@@ -781,6 +814,89 @@ EOF;
             foreach ($data->name->primaryProfessions as $primaryProfession) {
                 $this->data['professions'][] = $primaryProfession->category->text;
             }
+        }
+    }
+
+    /**
+     * Get news items about this name, max 100 items!
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function news(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['news'])) {
+            $query = <<<EOF
+query News(\$id: ID!) {
+  name(id: \$id) {
+    news(first: 100) {
+      edges {
+        node {
+          id
+          articleTitle {
+            plainText
+          }
+          byline
+          date
+          externalUrl
+          image {
+            url
+            width
+            height
+          }
+          source {
+            homepage {
+              label
+              url
+            }
+          }
+          text {
+            plainText
+            plaidHtml
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "News", ["id" => $this->imdb_id]);
+            $this->newsParse($data);
+        }
+
+        return $this->data['news'];
+    }
+
+    /**
+     * Parse news
+     *
+     * @param $data
+     * @return void
+     */
+    private function newsParse($data): void
+    {
+        if (!empty($data->name->news->edges)) {
+            $newsListItems = [];
+            foreach ($data->name->news->edges as $edge) {
+                if (empty($edge->node->id) or empty($edge->node->articleTitle->plainText)) {
+                    continue;
+                }
+
+                $newsListItems[] = [
+                    'id' => $edge->node->id,
+                    'title' => $edge->node->articleTitle->plainText,
+                    'author' => $edge->node->byline ?? null,
+                    'date' => $edge->node->date ?? null,
+                    'sourceUrl' => $edge->node->externalUrl ?? null,
+                    'sourceHomeUrl' => $edge->node->source->homepage->url ?? null,
+                    'sourceLabel' => $edge->node->source->homepage->label ?? null,
+                    'plainHtml' => $edge->node->text->plaidHtml ?? null,
+                    'plainText' => $edge->node->text->plainText ?? null,
+                    'image' => $this->parseImage($edge->node->image)
+                ];
+            }
+
+            $this->data['news'] = $newsListItems;
         }
     }
 }

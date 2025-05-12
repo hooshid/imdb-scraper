@@ -59,6 +59,9 @@ class NameTest extends TestCase
         $this->assertIsArray($person['professions']);
         $this->assertCount(3, $person['professions']);
         $this->assertEquals("Actor, Producer, Director", implode(", ", $person['professions']));
+
+        $this->assertIsArray($person['news']);
+        $this->assertCount(100, $person['news']);
     }
 
     public function testPersonDied()

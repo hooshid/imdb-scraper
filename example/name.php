@@ -177,10 +177,11 @@ $image = new Image();
                     <?php } ?>
 
                     <!-- Body Height -->
-                    <?php if (!empty($person['body_height'])) {?>
+                    <?php if (!empty($person['body_height'])) { ?>
                         <tr>
                             <td><b>Body Height:</b></td>
-                            <td><?php echo $person['body_height']["imperial"]; ?> - <?php echo $person['body_height']["metric"]; ?>
+                            <td><?php echo $person['body_height']["imperial"]; ?>
+                                - <?php echo $person['body_height']["metric"]; ?>
                                 (<?php echo $person['body_height']["metric_cm"]; ?> cm)
                             </td>
                         </tr>
@@ -200,6 +201,38 @@ $image = new Image();
                     <?php } ?>
                 </table>
             </div>
+
+            <!-- News -->
+            <?php if (!empty($person['news'])) { ?>
+                    <div class="head-title">News</div>
+                <div class="grid-box-4">
+                    <?php foreach ($person['news'] as $key => $item) {?>
+                        <div class="news-box">
+                            <div class="thumbnail">
+                                <?php if ($item['image']) { ?>
+                                    <img src="<?php
+                                    echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 500, 281);
+                                    ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
+                                <?php } ?>
+
+                                <div class="date">
+                                    <?php echo date('Y-m-d H:i', strtotime($item['date'])); ?>
+                                </div>
+
+                                <a href="<?php echo $item['sourceHomeUrl']; ?>" target="_blank" class="sourceLabel">
+                                    <?php echo $item['sourceLabel']; ?>
+                                </a>
+                            </div>
+
+                            <a href="<?php echo $item['sourceUrl']; ?>" target="_blank" class="title">
+                                <?php echo $item['title']; ?>
+                            </a>
+                        </div>
+                    <?php if ($key == 7) {break;} ?>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+
         </div>
     </div>
 </div>
