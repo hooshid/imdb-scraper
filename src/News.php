@@ -35,13 +35,13 @@ query News {
   news(first: $limit, category: $listType) {
     edges {
       node {
+        id
         articleTitle {
           plainText
         }
         byline
         date
         externalUrl
-        id
         image {
           url
           width
@@ -50,6 +50,7 @@ query News {
         source {
           homepage {
             label
+            url
           }
         }
         text {
@@ -79,8 +80,9 @@ GRAPHQL;
                 'author' => $edge->node->byline ?? null,
                 'date' => $edge->node->date ?? null,
                 'sourceUrl' => $edge->node->externalUrl ?? null,
+                'sourceHomeUrl' => $edge->node->source->homepage->url ?? null,
                 'sourceLabel' => $edge->node->source->homepage->label ?? null,
-                'plaidHtml' => $edge->node->text->plaidHtml ?? null,
+                'plainHtml' => $edge->node->text->plaidHtml ?? null,
                 'plainText' => $edge->node->text->plainText ?? null,
                 'image' => $this->parseImage($edge->node->image)
             ];

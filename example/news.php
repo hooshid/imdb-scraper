@@ -53,9 +53,9 @@ $image = new Image();
                                 <?php echo date('Y-m-d H:i', strtotime($item['date'])); ?>
                             </div>
 
-                            <div class="sourceLabel">
+                            <a href="<?php echo $item['sourceHomeUrl']; ?>" target="_blank" class="sourceLabel">
                                 <?php echo $item['sourceLabel']; ?>
-                            </div>
+                            </a>
                         </div>
 
                         <a href="<?php echo $item['sourceUrl']; ?>" target="_blank" class="title">
