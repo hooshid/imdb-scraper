@@ -110,6 +110,10 @@ table a:visited {
     text-align: justify;
 }
 
+.font-bold {
+    font-weight: bold;
+}
+
 .boxed {
     width: 100%;
     padding: 20px;
@@ -488,4 +492,61 @@ hr {
     font-size: 90%;
     text-decoration: none;
     display: block;
+}
+
+
+.video-box {
+    display: inline-block;
+    margin-bottom: 15px;
+    text-decoration: none;
+}
+
+.video-box .thumbnail {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 5px;
+    width: 100%;
+    box-shadow: 1px 1px 3px 0 #c7c7c7;
+}
+
+.video-box .thumbnail img {
+    width: 100%;
+    min-height: 180px;
+}
+
+.video-box .top-label,
+.video-box .bottom-label {
+    background: rgba(0, 0, 0, 0.73);
+    display: inline-block;
+    border-radius: 5px;
+    color: #fff;
+    padding: 4px 8px;
+    position: absolute;
+    font-size: 80%;
+}
+
+.video-box .top-label {
+    right: 6px;
+    top: 6px;
+}
+
+.video-box .bottom-label {
+    left: 6px;
+    bottom: 6px;
+}
+
+.video-box .title {
+    padding: 2px;
+    margin: 6px 0;
+    font-size: 90%;
+    text-decoration: none;
+    display: block;
+}
+
+.video-box time {
+    font-size: 14px;
+    color: #3c3c3c;
+    padding: 2px;
+    margin: 6px 0;
 }

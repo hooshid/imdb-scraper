@@ -77,6 +77,9 @@
             <a class="badge badge-purple" href="/example/keyword-search.php?keyword=Gun">Search keyword: Gun</a>
             <a class="badge badge-purple" href="/example/keyword-search.php?keyword=Love">Search keyword: Love</a>
 
+            <a class="badge badge-light-green" href="/example/trailers.php?type=recent">Recent Trailers</a>
+            <a class="badge badge-light-green" href="/example/trailers.php?type=trending">Trending Trailers</a>
+
             <a class="badge badge-yellow" href="/example/video.php?id=vi2051194393">Video: Tenet - Final Trailer</a>
             <a class="badge badge-yellow" href="/example/video.php?id=vi1032782617">Video: The Matrix - Theatrical Trailer</a>
 
