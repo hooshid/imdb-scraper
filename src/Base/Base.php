@@ -149,7 +149,7 @@ class Base extends Config
      */
     protected function secondsToMinutes(int $seconds = null): ?int
     {
-        if(empty($seconds)){
+        if (empty($seconds)) {
             return null;
         }
 
@@ -158,11 +158,15 @@ class Base extends Config
 
     /**
      * Convert seconds to time format
-     * @param $seconds
-     * @return string
+     * @param int|null $seconds
+     * @return string|null
      */
-    protected function secondsToTimeFormat($seconds): string
+    protected function secondsToTimeFormat(?int $seconds): ?string
     {
+        if (empty($seconds)) {
+            return null;
+        }
+
         // Calculate hours, minutes, and seconds
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
@@ -174,5 +178,18 @@ class Base extends Config
         } else {
             return sprintf("%d:%02d", $minutes, $seconds);
         }
+    }
+
+    /**
+     * Make full IMDb url
+     *
+     * @param ...$params
+     * @return string
+     */
+    protected function makeUrl(...$params): string
+    {
+        $baseUrl = "https://www.imdb.com/";
+        $path = implode('/', $params);
+        return rtrim($baseUrl . $path, '/') . '/';
     }
 }
