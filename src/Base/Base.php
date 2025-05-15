@@ -155,4 +155,24 @@ class Base extends Config
 
         return intval($seconds / 60);
     }
+
+    /**
+     * Convert seconds to time format
+     * @param $seconds
+     * @return string
+     */
+    protected function secondsToTimeFormat($seconds): string
+    {
+        // Calculate hours, minutes, and seconds
+        $hours = floor($seconds / 3600);
+        $minutes = floor(($seconds % 3600) / 60);
+        $seconds = $seconds % 60;
+
+        // Determine the format based on whether there are hours
+        if ($hours > 0) {
+            return sprintf("%d:%d:%02d", $hours, $minutes, $seconds);
+        } else {
+            return sprintf("%d:%02d", $minutes, $seconds);
+        }
+    }
 }
