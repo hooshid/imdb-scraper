@@ -9,6 +9,8 @@ class NameTest extends TestCase
     {
         // Robert De Niro
         $name = new Name("nm0000134");
+        $name->videos(25);
+        $name->news(25);
         $person = $name->full();
 
         $this->assertEquals('nm0000134', $person['imdb_id']);
@@ -25,10 +27,9 @@ class NameTest extends TestCase
 
         $this->assertIsInt($person['age']);
 
-        $this->assertCount(6, $person['birth']);
+        $this->assertCount(5, $person['birth']);
         $this->assertEquals(17, $person['birth']['day']);
-        $this->assertEquals('August', $person['birth']['month']);
-        $this->assertEquals(8, $person['birth']['mon']);
+        $this->assertEquals(8, $person['birth']['month']);
         $this->assertEquals(1943, $person['birth']['year']);
         $this->assertEquals('1943-08-17', $person['birth']['date']);
         $this->assertEquals('New York City, New York, USA', $person['birth']['place']);
@@ -60,8 +61,11 @@ class NameTest extends TestCase
         $this->assertCount(3, $person['professions']);
         $this->assertEquals("Actor, Producer, Director", implode(", ", $person['professions']));
 
+        $this->assertIsArray($person['videos']);
+        $this->assertCount(25, $person['videos']);
+
         $this->assertIsArray($person['news']);
-        $this->assertCount(100, $person['news']);
+        $this->assertCount(25, $person['news']);
     }
 
     public function testPersonDied()
@@ -72,10 +76,9 @@ class NameTest extends TestCase
         $this->assertEquals(40, $name->age());
 
         $death = $name->death();
-        $this->assertCount(7, $death);
+        $this->assertCount(6, $death);
         $this->assertEquals(30, $death['day']);
-        $this->assertEquals('November', $death['month']);
-        $this->assertEquals(11, $death['mon']);
+        $this->assertEquals(11, $death['month']);
         $this->assertEquals(2013, $death['year']);
         $this->assertEquals('2013-11-30', $death['date']);
         $this->assertEquals('Valencia, Santa Clarita, California, USA', $death['place']);
@@ -116,18 +119,16 @@ class NameTest extends TestCase
         $this->assertNull($person['rank']);
         $this->assertEquals(70, $person['age']);
 
-        $this->assertCount(6, $person['birth']);
+        $this->assertCount(5, $person['birth']);
         $this->assertNull($person['birth']['day']);
         $this->assertNull($person['birth']['month']);
-        $this->assertNull($person['birth']['mon']);
         $this->assertEquals(1862, $person['birth']['year']);
         $this->assertNull($person['birth']['date']);
         $this->assertNull($person['birth']['place']);
 
-        $this->assertCount(7, $person['death']);
+        $this->assertCount(6, $person['death']);
         $this->assertNull($person['death']['day']);
         $this->assertNull($person['death']['month']);
-        $this->assertNull($person['death']['mon']);
         $this->assertEquals(1932, $person['death']['year']);
         $this->assertNull($person['death']['date']);
         $this->assertNull($person['death']['place']);

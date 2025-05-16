@@ -28,6 +28,7 @@ class Name extends Base
         'body_height' => null,
         'bio' => null,
         'professions' => null,
+        'videos' => null,
         'news' => null,
     ];
 
@@ -142,37 +143,6 @@ query Name(\$id: ID!) {
         text
       }
     }
-    
-    news(first: 100) {
-      edges {
-        node {
-          id
-          articleTitle {
-            plainText
-          }
-          byline
-          date
-          externalUrl
-          image {
-            url
-            width
-            height
-          }
-          source {
-            description
-            homepage {
-              label
-              url
-            }
-          }
-          text {
-            plainText
-            plaidHtml
-          }
-        }
-      }
-    }
-    
   }
 }
 EOF;
@@ -192,7 +162,6 @@ EOF;
         $this->bodyHeightParse($data);
         $this->bioParse($data);
         $this->professionsParse($data);
-        $this->newsParse($data);
 
         return $this->data;
     }
@@ -205,7 +174,7 @@ EOF;
      */
     public function mainUrl(): string
     {
-        return $this->getBaseUrl() . "/name/" . $this->imdb_id . "/";
+        return $this->makeUrl("name", $this->imdb_id);
     }
 
     /**
@@ -293,7 +262,7 @@ EOF;
     private function fullNameParse($data): void
     {
         if (!empty($data->name->nameText->text)) {
-            $this->data['full_name'] = $this->cleanString($data->name->nameText->text);
+            $this->data['full_name'] = $data->name->nameText->text;
         }
     }
 
@@ -464,17 +433,14 @@ EOF;
         $birthDate = $data->name->birthDate->dateComponents ?? null;
         if ($birthDate) {
             $day = $birthDate->day ?? null;
-            $monthInt = $birthDate->month ?? null;
+            $month = $birthDate->month ?? null;
             $year = $birthDate->year ?? null;
-            $monthName = $monthInt ? date("F", mktime(0, 0, 0, $monthInt, 10)) : null;
-            $full_date = (!empty($day) && !empty($monthInt) && !empty($year)) ? date("Y-m-d", mktime(0, 0, 0, $monthInt, $day, $year)) : null;
 
             $this->data['birth'] = [
                 "day" => $day,
-                "month" => $monthName,
-                "mon" => $monthInt,
+                "month" => $month,
                 "year" => $year,
-                "date" => $full_date,
+                "date" => $this->buildDate($day, $month, $year),
                 "place" => $data->name->birthLocation->text ?? null
             ];
         }
@@ -526,17 +492,14 @@ EOF;
         $deathDate = $data->name->deathDate->dateComponents ?? null;
         if ($deathDate) {
             $day = $deathDate->day ?? null;
-            $monthInt = $deathDate->month ?? null;
+            $month = $deathDate->month ?? null;
             $year = $deathDate->year ?? null;
-            $monthName = $monthInt ? date("F", mktime(0, 0, 0, $monthInt, 10)) : null;
-            $full_date = (!empty($day) && !empty($monthInt) && !empty($year)) ? date("Y-m-d", mktime(0, 0, 0, $monthInt, $day, $year)) : null;
 
             $this->data['death'] = [
                 "day" => $day,
-                "month" => $monthName,
-                "mon" => $monthInt,
+                "month" => $month,
                 "year" => $year,
-                "date" => $full_date,
+                "date" => $this->buildDate($day, $month, $year),
                 "place" => $data->name->deathLocation->text ?? null,
                 "cause" => $data->name->deathCause->text ?? null,
             ];
@@ -818,18 +781,120 @@ EOF;
     }
 
     /**
+     * Get all videos
+     *
+     * @return array|null videos
+     * @throws Exception
+     */
+    public function videos($limit = 9999): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['videos'])) {
+            $query = <<<EOF
+query Video(\$id: ID!) {
+  name(id: \$id) {
+    primaryVideos(first: $limit) {
+      edges {
+        node {
+          id
+          name {
+            value
+          }
+          runtime {
+            value
+          }
+          contentType {
+            displayName {
+              value
+            }
+          }
+          description {
+            value
+          }
+          thumbnail {
+            url
+            width
+            height
+          }
+          createdDate
+          primaryTitle {
+            id
+            titleText {
+              text
+            }
+            releaseYear {
+              year
+            }
+            primaryImage {
+              url
+              width
+              height
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "Video", ["id" => $this->imdb_id]);
+            $this->videosParse($data);
+        }
+
+        return $this->data['videos'];
+    }
+
+    /**
+     * Parse videos
+     *
+     * @param $data
+     * @return void
+     */
+    private function videosParse($data): void
+    {
+        if (!empty($data->name->primaryVideos->edges)) {
+            $videos = [];
+            foreach ($data->name->primaryVideos->edges as $edge) {
+                if (empty($edge->node->id) or empty($edge->node->name->value)) {
+                    continue;
+                }
+
+                $videos[] = [
+                    'id' => $edge->node->id,
+                    'playback_url' => $this->makeUrl('video', $edge->node->id),
+                    'created_date' => $edge->node->createdDate ?? null,
+                    'runtime_formatted' => $this->secondsToTimeFormat($edge->node->runtime->value),
+                    'runtime_seconds' => $edge->node->runtime->value ?? null,
+                    'title' => $edge->node->name->value,
+                    'description' => $edge->node->description->value ?? null,
+                    'content_type' => $edge->node->contentType->displayName->value,
+                    'thumbnail' => $this->parseImage($edge->node->thumbnail),
+                    'primary_title' => [
+                        'id' => $edge->node->primaryTitle->id,
+                        'title' => $edge->node->primaryTitle->titleText->text ?? null,
+                        'year' => $edge->node->primaryTitle->releaseYear->year ?? null,
+                        'image' => $this->parseImage($edge->node->primaryTitle->primaryImage)
+                    ],
+                ];
+            }
+
+            $this->data['videos'] = $videos;
+        }
+    }
+
+    /**
      * Get news items about this name, max 100 items!
      *
+     * @param int $limit
      * @return array|null
      * @throws Exception
      */
-    public function news(): ?array
+    public function news(int $limit = 100): ?array
     {
         if (!$this->isFullCalled && empty($this->data['news'])) {
             $query = <<<EOF
 query News(\$id: ID!) {
   name(id: \$id) {
-    news(first: 100) {
+    news(first: $limit) {
       edges {
         node {
           id
@@ -887,11 +952,11 @@ EOF;
                     'title' => $edge->node->articleTitle->plainText,
                     'author' => $edge->node->byline ?? null,
                     'date' => $edge->node->date ?? null,
-                    'sourceUrl' => $edge->node->externalUrl ?? null,
-                    'sourceHomeUrl' => $edge->node->source->homepage->url ?? null,
-                    'sourceLabel' => $edge->node->source->homepage->label ?? null,
-                    'plainHtml' => $edge->node->text->plaidHtml ?? null,
-                    'plainText' => $edge->node->text->plainText ?? null,
+                    'source_url' => $edge->node->externalUrl ?? null,
+                    'source_home_url' => $edge->node->source->homepage->url ?? null,
+                    'source_label' => $edge->node->source->homepage->label ?? null,
+                    'plain_html' => $edge->node->text->plaidHtml ?? null,
+                    'plain_text' => $edge->node->text->plainText ?? null,
                     'image' => $this->parseImage($edge->node->image)
                 ];
             }

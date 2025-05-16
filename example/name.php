@@ -8,6 +8,8 @@ require __DIR__ . "/../vendor/autoload.php";
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name = new Name($id);
+    $name->videos(8);
+    $name->news(8);
     $person = $name->full();
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
@@ -102,9 +104,8 @@ $image = new Image();
                         <tr>
                             <td><b>Birth:</b></td>
                             <td>
-                                <?php echo $person['birth']["day"] . ' ' . $person['birth']["month"] . ' ' . $person['birth']["year"]; ?>
                                 <?php if ($person['birth']["date"]) { ?>
-                                    (<?php echo $person['birth']["date"]; ?>)
+                                    <?php echo $person['birth']["date"]; ?>
                                 <?php } ?>
 
                                 <?php if (!empty($person['birth']["place"])) { ?>
@@ -119,8 +120,9 @@ $image = new Image();
                         <tr>
                             <td><b>Death:</b></td>
                             <td>
-                                <?php echo $person['death']["day"] . ' ' . $person['death']["month"] . ' ' . $person['death']["year"]; ?>
-                                (<?php echo $person['death']["date"]; ?>)
+                                <?php if ($person['death']["date"]) { ?>
+                                    <?php echo $person['death']["date"]; ?>
+                                <?php } ?>
 
                                 <?php if (!empty($person['death']["place"])) { ?>
                                     <br>in <?php echo $person['death']["place"]; ?>
@@ -203,10 +205,45 @@ $image = new Image();
             </div>
 
             <!-- News -->
-            <?php if (!empty($person['news'])) { ?>
-                    <div class="head-title">News</div>
+            <?php if (!empty($person['videos'])) { ?>
+                <div class="head-title">Videos</div>
                 <div class="grid-box-4">
-                    <?php foreach ($person['news'] as $key => $item) {?>
+                    <?php foreach ($person['videos'] as $key => $item) { ?>
+                            <div class="video-box">
+                                <div class="thumbnail">
+                                    <a href="video.php?id=<?php echo $item['id']; ?>">
+                                        <?php if ($item['thumbnail']) { ?>
+                                            <img src="<?php
+                                            echo $image->makeThumbnail($item['thumbnail']['url'], $item['thumbnail']['width'], $item['thumbnail']['height'], 500, 281);
+                                            ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
+                                        <?php } ?>
+
+                                        <div class="top-label"><?php echo date('Y-m-d H:i', strtotime($item['created_date'])); ?></div>
+
+                                        <div class="bottom-label"><?php echo $item['content_type']; ?>
+                                            - <?php echo $item['runtime_formatted']; ?></div>
+                                    </a>
+                                </div>
+
+                                <a href="video.php?id=<?php echo $item['id']; ?>" class="title font-bold">
+                                    <?php echo $item['title']; ?>
+                                </a>
+
+                                <a href="title.php?id=<?php echo $item['primary_title']['id']; ?>" class="title">
+                                    <?php echo $item['primary_title']['title']; ?>
+                                </a>
+
+                                <time><?php echo $item['primary_title']['year']; ?></time>
+                            </div>
+                        <?php } ?>
+                </div>
+            <?php } ?>
+
+            <!-- News -->
+            <?php if (!empty($person['news'])) { ?>
+                <div class="head-title">News</div>
+                <div class="grid-box-4">
+                    <?php foreach ($person['news'] as $key => $item) { ?>
                         <div class="news-box">
                             <div class="thumbnail">
                                 <?php if ($item['image']) { ?>
@@ -219,16 +256,15 @@ $image = new Image();
                                     <?php echo date('Y-m-d H:i', strtotime($item['date'])); ?>
                                 </div>
 
-                                <a href="<?php echo $item['sourceHomeUrl']; ?>" target="_blank" class="sourceLabel">
-                                    <?php echo $item['sourceLabel']; ?>
+                                <a href="<?php echo $item['source_home_url']; ?>" target="_blank" class="sourceLabel">
+                                    <?php echo $item['source_label']; ?>
                                 </a>
                             </div>
 
-                            <a href="<?php echo $item['sourceUrl']; ?>" target="_blank" class="title">
+                            <a href="<?php echo $item['source_url']; ?>" target="_blank" class="title">
                                 <?php echo $item['title']; ?>
                             </a>
                         </div>
-                    <?php if ($key == 7) {break;} ?>
                     <?php } ?>
                 </div>
             <?php } ?>

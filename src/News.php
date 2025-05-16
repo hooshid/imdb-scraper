@@ -79,11 +79,11 @@ GRAPHQL;
                 'title' => $edge->node->articleTitle->plainText,
                 'author' => $edge->node->byline ?? null,
                 'date' => $edge->node->date ?? null,
-                'sourceUrl' => $edge->node->externalUrl ?? null,
-                'sourceHomeUrl' => $edge->node->source->homepage->url ?? null,
-                'sourceLabel' => $edge->node->source->homepage->label ?? null,
-                'plainHtml' => $edge->node->text->plaidHtml ?? null,
-                'plainText' => $edge->node->text->plainText ?? null,
+                'source_url' => $edge->node->externalUrl ?? null,
+                'source_home_url' => $edge->node->source->homepage->url ?? null,
+                'source_label' => $edge->node->source->homepage->label ?? null,
+                'plain_html' => $edge->node->text->plaidHtml ?? null,
+                'plain_text' => $edge->node->text->plainText ?? null,
                 'image' => $this->parseImage($edge->node->image)
             ];
         }
