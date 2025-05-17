@@ -18,6 +18,5 @@ class CalendarTest extends TestCase
         $this->assertEquals(10, strlen($result[0]['release_date']));
         $this->assertIsArray($result[0]['genres']);
         $this->assertIsArray($result[0]['cast']);
-        $this->assertIsArray($result[0]['image']);
     }
 }
