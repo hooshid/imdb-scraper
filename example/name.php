@@ -8,6 +8,7 @@ require __DIR__ . "/../vendor/autoload.php";
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name = new Name($id);
+    $name->images(8);
     $name->videos(8);
     $name->news(8);
     $person = $name->full();
@@ -204,7 +205,33 @@ $image = new Image();
                 </table>
             </div>
 
-            <!-- News -->
+            <!-- Images -->
+            <?php if (!empty($person['images'])) { ?>
+                <div class="head-title">Images</div>
+                <div class="grid-box-4">
+                    <?php foreach ($person['images'] as $key => $item) { ?>
+                        <div class="video-box">
+                            <div class="thumbnail">
+                                <?php if ($item['image']) { ?>
+                                    <img src="<?php
+                                    echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 500,300);
+                                    ?>" alt="<?php echo $item['caption']; ?>" loading="lazy">
+                                <?php } ?>
+
+                                <?php if ($item['copyright']) { ?>
+                                    <div class="bottom-label">© <?php echo $item['copyright']; ?></div>
+                                <?php } ?>
+                            </div>
+
+                            <div class="title font-bold">
+                                <?php echo $item['caption']; ?>
+                            </div>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+
+            <!-- Videos -->
             <?php if (!empty($person['videos'])) { ?>
                 <div class="head-title">Videos</div>
                 <div class="grid-box-4">

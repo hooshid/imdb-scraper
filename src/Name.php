@@ -28,6 +28,7 @@ class Name extends Base
         'body_height' => null,
         'bio' => null,
         'professions' => null,
+        'images' => null,
         'videos' => null,
         'news' => null,
     ];
@@ -781,12 +782,113 @@ EOF;
     }
 
     /**
-     * Get all videos
+     * Get all images
      *
-     * @return array|null videos
+     * @param int $limit
+     * @return array|null
      * @throws Exception
      */
-    public function videos($limit = 9999): ?array
+    public function images(int $limit = 9999): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['images'])) {
+            $query = <<<EOF
+query Images(\$id: ID!) {
+  name(id: \$id) {
+    images(first: $limit) {
+      edges {
+        node {
+          id
+          url
+          width
+          height
+          caption {
+            plainText
+          }
+          copyright
+          titles {
+            id
+            titleText {
+              text
+            }
+          }
+          names {
+            id
+            nameText {
+              text
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "Images", ["id" => $this->imdb_id]);
+            $this->imagesParse($data);
+        }
+
+        return $this->data['images'];
+    }
+
+    /**
+     * Parse images
+     *
+     * @param $data
+     * @return void
+     */
+    private function imagesParse($data): void
+    {
+        if (!empty($data->name->images->edges)) {
+            $images = [];
+            foreach ($data->name->images->edges as $edge) {
+                if (empty($edge->node->id) || empty($edge->node->url)) {
+                    continue;
+                }
+
+                // Titles
+                $titles = [];
+                if (!empty($edge->node->titles)) {
+                    foreach ($edge->node->titles as $title) {
+                        $titles[] = [
+                            'id' => $title->id ?? null,
+                            'title' => $title->titleText->text ?? null
+                        ];
+                    }
+                }
+
+                // Names
+                $names = [];
+                if (!empty($edge->node->names)) {
+                    foreach ($edge->node->names as $name) {
+                        $names[] = [
+                            'id' => $name->id ?? null,
+                            'name' => $name->nameText->text ?? null
+                        ];
+                    }
+                }
+
+                $images[] = [
+                    'id' => $edge->node->id,
+                    'caption' => $edge->node->caption->plainText ?? null,
+                    'copyright' => $edge->node->copyright ?? null,
+                    'image' => $this->parseImage($edge->node),
+                    'titles' => $titles,
+                    'names' => $names,
+                ];
+            }
+
+            $this->data['images'] = $images;
+        }
+    }
+
+    /**
+     * Get all videos
+     *
+     * @param int $limit
+     * @return array|null
+     * @throws Exception
+     */
+    public function videos(int $limit = 9999): ?array
     {
         if (!$this->isFullCalled && empty($this->data['videos'])) {
             $query = <<<EOF
