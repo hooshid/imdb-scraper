@@ -9,6 +9,8 @@ class NameTest extends TestCase
     {
         // Robert De Niro
         $name = new Name("nm0000134");
+        $name->spouses();
+        $name->salaries();
         $name->images(25);
         $name->videos(25);
         $name->news(25);
@@ -63,12 +65,14 @@ class NameTest extends TestCase
         $this->assertEquals("Actor, Producer, Director", implode(", ", $person['professions']));
 
         $this->assertIsArray($person['spouses']);
-        $this->assertCount(8, $person['spouses']);
+        $this->assertCount(8, $person['spouses'][0]);
         $this->assertEquals('nm2984460', $person['spouses'][0]['id']);
         $this->assertEquals('Grace Hightower', $person['spouses'][0]['name']);
         $this->assertEquals(2, $person['spouses'][0]['children']);
         $this->assertIsBool($person['spouses'][0]['current']);
 
+        $this->assertIsArray($person['salaries']);
+        $this->assertCount(6, $person['salaries'][0]);
 
         $this->assertIsArray($person['images']);
         $this->assertCount(25, $person['images']);

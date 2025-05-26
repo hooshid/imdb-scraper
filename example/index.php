@@ -53,6 +53,7 @@
             <a class="badge badge-green" href="/example/calendar.php?type=TV">Calendar: Upcoming TV Series</a>
             <a class="badge badge-green" href="/example/calendar.php?type=TV_EPISODE">Calendar: Upcoming TV Episodes</a>
 
+            <a class="badge badge-blue" href="/example/name.php?id=nm0000129">Name: Tom Cruise</a>
             <a class="badge badge-blue" href="/example/name.php?id=nm0000134">Name: Robert De Niro</a>
             <a class="badge badge-blue" href="/example/name.php?id=nm1297015">Name: Emma Stone</a>
             <a class="badge badge-blue" href="/example/name.php?id=nm0908094">Name: Paul Walker</a>

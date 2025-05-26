@@ -8,6 +8,8 @@ require __DIR__ . "/../vendor/autoload.php";
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name = new Name($id);
+    $name->spouses();
+    $name->salaries();
     $name->images(8);
     $name->videos(8);
     $name->news(8);
@@ -214,6 +216,23 @@ $image = new Image();
                                             (<?php echo $spouse['date_text']; ?>) -
                                             <?php if (!empty($spouse['children'])) { ?>Children: <?php echo $spouse['children']; ?> -<?php } ?>
                                             <?php if (!empty($spouse['comment'])) { ?><?php echo $spouse['comment'][0]; ?><?php } ?>
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Salaries -->
+                    <?php if (!empty($person['salaries'])) { ?>
+                        <tr>
+                            <td><b>Salaries:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['salaries'] as $salary) { ?>
+                                        <li><a href="title.php?id=<?php echo $salary['id']; ?>"><?php echo $salary['title']; ?> (<?php echo $salary['year']; ?>)</a>
+                                            <?php echo number_format($salary['amount']); ?> <?php echo $salary['currency']; ?>
+                                            <?php if (!empty($salary['comment'])) { ?><?php echo $salary['comment'][0]; ?><?php } ?>
                                         </li>
                                     <?php } ?>
                                 </ul>

@@ -29,6 +29,7 @@ class Name extends Base
         'bio' => null,
         'professions' => null,
         'spouses' => null,
+        'salaries' => null,
         'images' => null,
         'videos' => null,
         'news' => null,
@@ -896,6 +897,75 @@ EOF;
     }
 
     /**
+     * Get the salary list
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function salaries(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['salaries'])) {
+            $query = <<<EOF
+title {
+  titleText {
+    text
+  }
+  id
+  releaseYear {
+    year
+  }
+}
+amount {
+  amount
+  currency
+}
+attributes {
+  text
+}
+EOF;
+            $data = $this->getAllData("Salaries", "titleSalaries", $query);
+            $this->salariesParse($data);
+        }
+
+        return $this->data['salaries'];
+    }
+
+    /**
+     * Parse salaries
+     *
+     * @param $data
+     * @return void
+     */
+    private function salariesParse($data): void
+    {
+        if (count($data) > 0) {
+            foreach ($data as $edge) {
+                if (empty($edge->node->title->id)) {
+                    continue;
+                }
+
+                $comments = null;
+                if (!empty($edge->node->attributes)) {
+                    foreach ($edge->node->attributes as $attribute) {
+                        if (!empty($attribute->text)) {
+                            $comments[] = $attribute->text;
+                        }
+                    }
+                }
+
+                $this->data['salaries'][] = [
+                    'id' => $edge->node->title->id,
+                    'title' => $edge->node->title->titleText->text ?? null,
+                    'year' => $edge->node->title->releaseYear->year ?? null,
+                    'amount' => $edge->node->amount->amount ?? null,
+                    'currency' => $edge->node->amount->currency ?? null,
+                    'comment' => $comments
+                ];
+            }
+        }
+    }
+
+    /**
      * Get all images
      *
      * @param int $limit
@@ -1180,5 +1250,55 @@ EOF;
             $this->data['news'] = $newsListItems;
         }
     }
+
+
+    /***************************************[ Helper Methods ]***************************************/
+    /**
+     * Get all edges of a field in the name type
+     *
+     * @param string $queryName
+     * @param string $fieldName
+     * @param string $nodeQuery
+     * @param string $filter
+     * @return array
+     * @throws Exception
+     */
+    protected function getAllData(string $queryName, string $fieldName, string $nodeQuery, string $filter = ""): array
+    {
+        $query = <<<EOF
+query $queryName(\$id: ID!, \$after: ID) {
+  name(id: \$id) {
+    $fieldName(first: 9999, after: \$after$filter) {
+      edges {
+        node {
+          $nodeQuery
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
+EOF;
+        $fullQuery = implode("\n", array_map('trim', explode("\n", $query)));
+
+        // Results are paginated, so loop until we've got all the data
+        $endCursor = null;
+        $hasNextPage = true;
+        $edges = [];
+        while ($hasNextPage) {
+            $data = $this->graphql->query($fullQuery, $queryName, ["id" => $this->imdb_id, "after" => $endCursor]);
+            if (isset($data->name->{$fieldName})) {
+                $edges = array_merge($edges, $data->name->{$fieldName}->edges);
+                $hasNextPage = $data->name->{$fieldName}->pageInfo->hasNextPage;
+                $endCursor = $data->name->{$fieldName}->pageInfo->endCursor;
+            }
+        }
+
+        return $edges;
+    }
+
 }
 
