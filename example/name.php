@@ -12,6 +12,9 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name->children();
     $name->parents();
     $name->relatives();
+    $name->trivia();
+    $name->quotes();
+    $name->trademarks();
     $name->salaries();
     $name->images(8);
     $name->videos(8);
@@ -282,6 +285,63 @@ $image = new Image();
                                                 <?php echo $relative['name']; ?>
                                             <?php } ?>
                                             (<?php echo $relative['type']; ?>)
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Trivia -->
+                    <?php if (!empty($person['trivia'])) { ?>
+                        <tr>
+                            <td><b>Trivia:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['trivia'] as $key => $trivia) { ?>
+                                        <?php if ($key > 5) {
+                                            break;
+                                        } ?>
+                                        <li>
+                                            <?php echo $trivia; ?>
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Quotes -->
+                    <?php if (!empty($person['quotes'])) { ?>
+                        <tr>
+                            <td><b>Trademarks:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['quotes'] as $key => $quote) { ?>
+                                        <?php if ($key > 5) {
+                                            break;
+                                        } ?>
+                                        <li>
+                                            <?php echo $quote; ?>
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Trademarks -->
+                    <?php if (!empty($person['trademarks'])) { ?>
+                        <tr>
+                            <td><b>Trademarks:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['trademarks'] as $key => $trademark) { ?>
+                                        <?php if ($key > 5) {
+                                            break;
+                                        } ?>
+                                        <li>
+                                            <?php echo $trademark; ?>
                                         </li>
                                     <?php } ?>
                                 </ul>

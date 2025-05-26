@@ -10,7 +10,13 @@ class NameTest extends TestCase
         // Robert De Niro
         $name = new Name("nm0000134");
         $name->spouses();
+        $name->children();
+        $name->parents();
+        $name->relatives();
         $name->salaries();
+        $name->trivia();
+        $name->quotes();
+        $name->trademarks();
         $name->images(25);
         $name->videos(25);
         $name->news(25);
@@ -65,6 +71,7 @@ class NameTest extends TestCase
         $this->assertEquals("Actor, Producer, Director", implode(", ", $person['professions']));
 
         $this->assertIsArray($person['spouses']);
+        $this->assertCount(2, $person['spouses']);
         $this->assertCount(8, $person['spouses'][0]);
         $this->assertEquals('nm2984460', $person['spouses'][0]['id']);
         $this->assertEquals('Grace Hightower', $person['spouses'][0]['name']);
@@ -72,8 +79,18 @@ class NameTest extends TestCase
         $this->assertIsBool($person['spouses'][0]['current']);
 
         $this->assertIsArray($person['children']);
+        $this->assertCount(7, $person['children']);
         $this->assertIsArray($person['parents']);
+        $this->assertCount(2, $person['parents']);
         $this->assertIsArray($person['relatives']);
+        $this->assertCount(2, $person['relatives']);
+
+        $this->assertIsArray($person['trivia']);
+        $this->assertGreaterThan(50,count($person['trivia']));
+        $this->assertIsArray($person['quotes']);
+        $this->assertGreaterThan(50,count($person['quotes']));
+        $this->assertIsArray($person['trademarks']);
+        $this->assertGreaterThan(7,count($person['trademarks']));
 
         $this->assertIsArray($person['salaries']);
         $this->assertCount(6, $person['salaries'][0]);

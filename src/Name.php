@@ -33,6 +33,9 @@ class Name extends Base
         'parents' => null,
         'relatives' => null,
         'salaries' => null,
+        'trivia' => null,
+        'quotes' => null,
+        'trademarks' => null,
         'images' => null,
         'videos' => null,
         'news' => null,
@@ -793,7 +796,7 @@ EOF;
      */
     public function spouses(): ?array
     {
-        if (!$this->isFullCalled && empty($this->data['spouses'])) {
+        if (empty($this->data['spouses'])) {
             $query = <<<EOF
 query Spouses(\$id: ID!) {
   name(id: \$id) {
@@ -945,6 +948,51 @@ EOF;
     }
 
     /**
+     * Get the Trivia
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function trivia(): ?array
+    {
+        if (empty($this->data['trivia'])) {
+            $this->dataParse("trivia");
+        }
+
+        return $this->data['trivia'];
+    }
+
+    /**
+     * Get the Personal Quotes
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function quotes(): ?array
+    {
+        if (empty($this->data['quotes'])) {
+            $this->dataParse("quotes");
+        }
+
+        return $this->data['quotes'];
+    }
+
+    /**
+     * Get the "trademarks" of the person
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function trademarks(): ?array
+    {
+        if (empty($this->data['trademarks'])) {
+            $this->dataParse("trademarks");
+        }
+
+        return $this->data['trademarks'];
+    }
+
+    /**
      * Get the salary list
      *
      * @return array|null
@@ -952,7 +1000,7 @@ EOF;
      */
     public function salaries(): ?array
     {
-        if (!$this->isFullCalled && empty($this->data['salaries'])) {
+        if (empty($this->data['salaries'])) {
             $query = <<<EOF
 title {
   titleText {
@@ -1022,7 +1070,7 @@ EOF;
      */
     public function images(int $limit = 9999): ?array
     {
-        if (!$this->isFullCalled && empty($this->data['images'])) {
+        if (empty($this->data['images'])) {
             $query = <<<EOF
 query Images(\$id: ID!) {
   name(id: \$id) {
@@ -1122,7 +1170,7 @@ EOF;
      */
     public function videos(int $limit = 9999): ?array
     {
-        if (!$this->isFullCalled && empty($this->data['videos'])) {
+        if (empty($this->data['videos'])) {
             $query = <<<EOF
 query Video(\$id: ID!) {
   name(id: \$id) {
@@ -1224,7 +1272,7 @@ EOF;
      */
     public function news(int $limit = 100): ?array
     {
-        if (!$this->isFullCalled && empty($this->data['news'])) {
+        if (empty($this->data['news'])) {
             $query = <<<EOF
 query News(\$id: ID!) {
   name(id: \$id) {
@@ -1392,6 +1440,30 @@ EOF;
                     'name' => $name,
                     'type' => $edge->node->relationshipType->text ?? null
                 ];
+            }
+        }
+    }
+
+    /**
+     * Parse Trivia, Quotes and Trademarks
+     *
+     * @param string $name
+     * @return void
+     * @throws Exception
+     */
+    protected function dataParse(string $name): void
+    {
+        $query = <<<EOF
+text {
+  plainText
+}
+EOF;
+        $data = $this->getAllData("Data", $name, $query);
+        if (count($data) > 0) {
+            foreach ($data as $edge) {
+                if (!empty($edge->node->text->plainText)) {
+                    $this->data[$name][] = $edge->node->text->plainText;
+                }
             }
         }
     }
