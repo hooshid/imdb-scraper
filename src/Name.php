@@ -668,22 +668,21 @@ EOF;
     {
         if (!empty($data->name->height->displayableProperty->value->plainText)) {
             $heightParts = explode("(", $data->name->height->displayableProperty->value->plainText);
-            $imperial = str_replace("″", '"', $heightParts[0]);
-            $imperial = str_replace("′", "'", $imperial);
-            $this->data['body_height']["imperial"] = trim($imperial);
+            $this->data['body_height']["imperial"] = trim($heightParts[0]);
             if (!empty($heightParts[1])) {
                 $this->data['body_height']["metric"] = trim($heightParts[1], ")");
+
+                // change to centimeter
+                $height = $this->data['body_height']["metric"];
+                $height = str_replace(["m", ".", " "], "", $height);
+                if (strlen($height) == 2) {
+                    $height = $height . '0';
+                }
+                $this->data['body_height']["metric_cm"] = (int)$height;
             } else {
                 $this->data['body_height']["metric"] = null;
+                $this->data['body_height']["metric_cm"] = null;
             }
-
-            // change to centimeter
-            $height = $this->data['body_height']["metric"];
-            $height = str_replace(["m", ".", " "], "", $height);
-            if (strlen($height) == '2') {
-                $height = $height . '0';
-            }
-            $this->data['body_height']["metric_cm"] = (int)$height;
         }
     }
 

@@ -49,7 +49,7 @@ class NameTest extends TestCase
 
         $this->assertIsArray($person['body_height']);
         $this->assertCount(3, $person['body_height']);
-        $this->assertEquals("5' 9½\"", $person['body_height']['imperial']);
+        $this->assertEquals("5′ 9½″", $person['body_height']['imperial']);
         $this->assertEquals('1.77 m', $person['body_height']['metric']);
         $this->assertEquals(177, $person['body_height']['metric_cm']);
 
