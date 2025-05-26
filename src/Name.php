@@ -29,6 +29,9 @@ class Name extends Base
         'bio' => null,
         'professions' => null,
         'spouses' => null,
+        'children' => null,
+        'parents' => null,
+        'relatives' => null,
         'salaries' => null,
         'images' => null,
         'videos' => null,
@@ -897,6 +900,51 @@ EOF;
     }
 
     /**
+     * Get the Children
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function children(): ?array
+    {
+        if (empty($this->data['children'])) {
+            $this->nameDetailsParse("CHILDREN", 'children');
+        }
+
+        return $this->data['children'];
+    }
+
+    /**
+     * Get the Parents
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function parents(): ?array
+    {
+        if (empty($this->data['parents'])) {
+            $this->nameDetailsParse("PARENTS", 'parents');
+        }
+
+        return $this->data['parents'];
+    }
+
+    /**
+     * Get the relatives
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function relatives(): ?array
+    {
+        if (empty($this->data['relatives'])) {
+            $this->nameDetailsParse("OTHERS", 'relatives');
+        }
+
+        return $this->data['relatives'];
+    }
+
+    /**
      * Get the salary list
      *
      * @return array|null
@@ -1298,6 +1346,54 @@ EOF;
         }
 
         return $edges;
+    }
+
+    /**
+     * Parse children, parents, relatives
+     *
+     * @param string $name
+     * @param string $arrayName
+     * @return void
+     * @throws Exception
+     */
+    protected function nameDetailsParse(string $name, string $arrayName): void
+    {
+        $filter = ', filter: {relationshipTypes: ' . $name . '}';
+        $query = <<<EOF
+relationName {
+  name {
+    id
+    nameText {
+      text
+    }
+  }
+  nameText
+}
+relationshipType {
+  text
+}
+EOF;
+        $data = $this->getAllData("Data", "relations", $query, $filter);
+
+        if (count($data) > 0) {
+            foreach ($data as $edge) {
+                if (!empty($edge->node->relationName->name)) {
+                    $name = $edge->node->relationName->name->nameText->text ?? null;
+                } else {
+                    $name = $edge->node->relationName->nameText ?? null;
+                }
+
+                if (empty($name)) {
+                    continue;
+                }
+
+                $this->data[$arrayName][] = [
+                    'id' => $edge->node->relationName->name->id ?? null,
+                    'name' => $name,
+                    'type' => $edge->node->relationshipType->text ?? null
+                ];
+            }
+        }
     }
 
 }

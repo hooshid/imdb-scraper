@@ -9,6 +9,9 @@ $id = $_GET["id"];
 if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name = new Name($id);
     $name->spouses();
+    $name->children();
+    $name->parents();
+    $name->relatives();
     $name->salaries();
     $name->images(8);
     $name->videos(8);
@@ -212,10 +215,73 @@ $image = new Image();
                             <td>
                                 <ul>
                                     <?php foreach ($person['spouses'] as $spouse) { ?>
-                                        <li><a href="name.php?id=<?php echo $spouse['id']; ?>"><?php echo $spouse['name']; ?></a>
+                                        <li>
+                                            <a href="name.php?id=<?php echo $spouse['id']; ?>"><?php echo $spouse['name']; ?></a>
                                             (<?php echo $spouse['date_text']; ?>) -
                                             <?php if (!empty($spouse['children'])) { ?>Children: <?php echo $spouse['children']; ?> -<?php } ?>
                                             <?php if (!empty($spouse['comment'])) { ?><?php echo $spouse['comment'][0]; ?><?php } ?>
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Children -->
+                    <?php if (!empty($person['children'])) { ?>
+                        <tr>
+                            <td><b>Children:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['children'] as $child) { ?>
+                                        <li>
+                                            <?php if (!empty($child['id'])) { ?>
+                                                <a href="name.php?id=<?php echo $child['id']; ?>"><?php echo $child['name']; ?></a>
+                                            <?php } else { ?>
+                                                <?php echo $child['name']; ?>
+                                            <?php } ?>
+                                            (<?php echo $child['type']; ?>)
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Parents -->
+                    <?php if (!empty($person['parents'])) { ?>
+                        <tr>
+                            <td><b>Parents:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['parents'] as $parent) { ?>
+                                        <li>
+                                            <?php if (!empty($parent['id'])) { ?>
+                                                <a href="name.php?id=<?php echo $parent['id']; ?>"><?php echo $parent['name']; ?></a>
+                                            <?php } else { ?>
+                                                <?php echo $parent['name']; ?>
+                                            <?php } ?>
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Relatives -->
+                    <?php if (!empty($person['relatives'])) { ?>
+                        <tr>
+                            <td><b>Relatives:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['relatives'] as $relative) { ?>
+                                        <li>
+                                            <?php if (!empty($relative['id'])) { ?>
+                                                <a href="name.php?id=<?php echo $relative['id']; ?>"><?php echo $relative['name']; ?></a>
+                                            <?php } else { ?>
+                                                <?php echo $relative['name']; ?>
+                                            <?php } ?>
+                                            (<?php echo $relative['type']; ?>)
                                         </li>
                                     <?php } ?>
                                 </ul>
@@ -230,7 +296,9 @@ $image = new Image();
                             <td>
                                 <ul>
                                     <?php foreach ($person['salaries'] as $salary) { ?>
-                                        <li><a href="title.php?id=<?php echo $salary['id']; ?>"><?php echo $salary['title']; ?> (<?php echo $salary['year']; ?>)</a>
+                                        <li>
+                                            <a href="title.php?id=<?php echo $salary['id']; ?>"><?php echo $salary['title']; ?>
+                                                (<?php echo $salary['year']; ?>)</a>
                                             <?php echo number_format($salary['amount']); ?> <?php echo $salary['currency']; ?>
                                             <?php if (!empty($salary['comment'])) { ?><?php echo $salary['comment'][0]; ?><?php } ?>
                                         </li>
@@ -251,7 +319,7 @@ $image = new Image();
                             <div class="thumbnail">
                                 <?php if ($item['image']) { ?>
                                     <img src="<?php
-                                    echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 500,300);
+                                    echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 500, 300);
                                     ?>" alt="<?php echo $item['caption']; ?>" loading="lazy">
                                 <?php } ?>
 
@@ -273,33 +341,33 @@ $image = new Image();
                 <div class="head-title">Videos</div>
                 <div class="grid-box-4">
                     <?php foreach ($person['videos'] as $key => $item) { ?>
-                            <div class="video-box">
-                                <div class="thumbnail">
-                                    <a href="video.php?id=<?php echo $item['id']; ?>">
-                                        <?php if ($item['thumbnail']) { ?>
-                                            <img src="<?php
-                                            echo $image->makeThumbnail($item['thumbnail']['url'], $item['thumbnail']['width'], $item['thumbnail']['height'], 500, 281);
-                                            ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
-                                        <?php } ?>
+                        <div class="video-box">
+                            <div class="thumbnail">
+                                <a href="video.php?id=<?php echo $item['id']; ?>">
+                                    <?php if ($item['thumbnail']) { ?>
+                                        <img src="<?php
+                                        echo $image->makeThumbnail($item['thumbnail']['url'], $item['thumbnail']['width'], $item['thumbnail']['height'], 500, 281);
+                                        ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
+                                    <?php } ?>
 
-                                        <div class="top-label"><?php echo date('Y-m-d H:i', strtotime($item['created_date'])); ?></div>
+                                    <div class="top-label"><?php echo date('Y-m-d H:i', strtotime($item['created_date'])); ?></div>
 
-                                        <div class="bottom-label"><?php echo $item['content_type']; ?>
-                                            - <?php echo $item['runtime_formatted']; ?></div>
-                                    </a>
-                                </div>
-
-                                <a href="video.php?id=<?php echo $item['id']; ?>" class="title font-bold">
-                                    <?php echo $item['title']; ?>
+                                    <div class="bottom-label"><?php echo $item['content_type']; ?>
+                                        - <?php echo $item['runtime_formatted']; ?></div>
                                 </a>
-
-                                <a href="title.php?id=<?php echo $item['primary_title']['id']; ?>" class="title">
-                                    <?php echo $item['primary_title']['title']; ?>
-                                </a>
-
-                                <time><?php echo $item['primary_title']['year']; ?></time>
                             </div>
-                        <?php } ?>
+
+                            <a href="video.php?id=<?php echo $item['id']; ?>" class="title font-bold">
+                                <?php echo $item['title']; ?>
+                            </a>
+
+                            <a href="title.php?id=<?php echo $item['primary_title']['id']; ?>" class="title">
+                                <?php echo $item['primary_title']['title']; ?>
+                            </a>
+
+                            <time><?php echo $item['primary_title']['year']; ?></time>
+                        </div>
+                    <?php } ?>
                 </div>
             <?php } ?>
 

@@ -71,6 +71,10 @@ class NameTest extends TestCase
         $this->assertEquals(2, $person['spouses'][0]['children']);
         $this->assertIsBool($person['spouses'][0]['current']);
 
+        $this->assertIsArray($person['children']);
+        $this->assertIsArray($person['parents']);
+        $this->assertIsArray($person['relatives']);
+
         $this->assertIsArray($person['salaries']);
         $this->assertCount(6, $person['salaries'][0]);
 
