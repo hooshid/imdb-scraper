@@ -28,6 +28,7 @@ class Name extends Base
         'body_height' => null,
         'bio' => null,
         'professions' => null,
+        'spouses' => null,
         'images' => null,
         'videos' => null,
         'news' => null,
@@ -776,6 +777,120 @@ EOF;
         if (!empty($data->name->primaryProfessions)) {
             foreach ($data->name->primaryProfessions as $primaryProfession) {
                 $this->data['professions'][] = $primaryProfession->category->text;
+            }
+        }
+    }
+
+    /**
+     * Get spouse(s)
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function spouses(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['spouses'])) {
+            $query = <<<EOF
+query Spouses(\$id: ID!) {
+  name(id: \$id) {
+    spouses {
+      spouse {
+        name {
+          id
+        }
+        asMarkdown {
+          plainText
+        }
+      }
+      timeRange {
+        fromDate {
+          dateComponents {
+            day
+            month
+            year
+          }
+        }
+        toDate {
+          dateComponents {
+            day
+            month
+            year
+          }
+        }
+        displayableProperty {
+          value {
+            plainText
+          }
+        }
+      }
+      attributes {
+        text
+      }
+      current
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "Spouses", ["id" => $this->imdb_id]);
+            $this->spousesParse($data);
+        }
+
+        return $this->data['spouses'];
+    }
+
+    /**
+     * Parse spouses
+     *
+     * @param $data
+     * @return void
+     */
+    private function spousesParse($data): void
+    {
+        if (!empty($data->name->spouses)) {
+            foreach ($data->name->spouses as $spouse) {
+                if (empty($spouse->spouse->name->id)) {
+                    continue;
+                }
+
+                // From date
+                $fromDate = [
+                    "day" => $spouse->timeRange->fromDate->dateComponents->day ?? null,
+                    "month" => $spouse->timeRange->fromDate->dateComponents->month ?? null,
+                    "year" => $spouse->timeRange->fromDate->dateComponents->year ?? null
+                ];
+
+                // To date
+                $toDate = [
+                    "day" => $spouse->timeRange->toDate->dateComponents->day ?? null,
+                    "month" => $spouse->timeRange->toDate->dateComponents->month ?? null,
+                    "year" => $spouse->timeRange->toDate->dateComponents->year ?? null
+                ];
+
+                // Comments and children
+                $comment = [];
+                $children = 0;
+                if (isset($spouse->attributes) && is_array($spouse->attributes) && count($spouse->attributes) > 0) {
+                    foreach ($spouse->attributes as $key => $attribute) {
+                        if (!empty($attribute->text)) {
+                            if (stripos($attribute->text, "child") !== false) {
+                                $children = (int)preg_replace('/[^0-9]/', '', $attribute->text);
+                            } else {
+                                $comment[] = $attribute->text;
+                            }
+                        }
+                    }
+                }
+
+                $this->data['spouses'][] = [
+                    'id' => $spouse->spouse->name->id,
+                    'name' => $spouse->spouse->asMarkdown->plainText ?? null,
+                    'from' => $fromDate,
+                    'to' => $toDate,
+                    'date_text' => $spouse->timeRange->displayableProperty->value->plainText ?? null,
+                    'comment' => $comment,
+                    'children' => $children,
+                    'current' => $spouse->current
+                ];
             }
         }
     }

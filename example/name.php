@@ -202,6 +202,24 @@ $image = new Image();
                             </td>
                         </tr>
                     <?php } ?>
+
+                    <!-- Spouse(s) -->
+                    <?php if (!empty($person['spouses'])) { ?>
+                        <tr>
+                            <td><b>Spouse(s):</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($person['spouses'] as $spouse) { ?>
+                                        <li><a href="name.php?id=<?php echo $spouse['id']; ?>"><?php echo $spouse['name']; ?></a>
+                                            (<?php echo $spouse['date_text']; ?>) -
+                                            <?php if (!empty($spouse['children'])) { ?>Children: <?php echo $spouse['children']; ?> -<?php } ?>
+                                            <?php if (!empty($spouse['comment'])) { ?><?php echo $spouse['comment'][0]; ?><?php } ?>
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
                 </table>
             </div>
 

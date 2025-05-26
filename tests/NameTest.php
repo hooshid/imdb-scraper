@@ -62,6 +62,14 @@ class NameTest extends TestCase
         $this->assertCount(3, $person['professions']);
         $this->assertEquals("Actor, Producer, Director", implode(", ", $person['professions']));
 
+        $this->assertIsArray($person['spouses']);
+        $this->assertCount(8, $person['spouses']);
+        $this->assertEquals('nm2984460', $person['spouses'][0]['id']);
+        $this->assertEquals('Grace Hightower', $person['spouses'][0]['name']);
+        $this->assertEquals(2, $person['spouses'][0]['children']);
+        $this->assertIsBool($person['spouses'][0]['current']);
+
+
         $this->assertIsArray($person['images']);
         $this->assertCount(25, $person['images']);
 
