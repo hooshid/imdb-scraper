@@ -438,6 +438,18 @@ hr {
     gap: 1rem;
 }
 
+.grid-box-5 {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.grid-box-6 {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1rem;
+}
+
 .head-title {
     margin: 10px 0;
     display: block;
@@ -513,6 +525,14 @@ hr {
 .video-box .thumbnail img {
     width: 100%;
     min-height: 180px;
+}
+
+.video-box .thumbnail.title-poster {
+    height: 460px;
+}
+
+.video-box .thumbnail.title-poster img {
+    min-height: 460px;
 }
 
 .video-box .top-label,

@@ -19,6 +19,7 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name->images(8);
     $name->videos(8);
     $name->news(8);
+    $name->creditKnownFor();
     $person = $name->full();
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
@@ -369,6 +370,34 @@ $image = new Image();
                     <?php } ?>
                 </table>
             </div>
+
+            <!-- Credit known for -->
+            <?php if (!empty($person['credit_known_for'])) { ?>
+                <div class="head-title">Known for</div>
+                <div class="grid-box-4">
+                    <?php foreach ($person['credit_known_for'] as $key => $item) { ?>
+                        <div class="video-box">
+                            <a href="title.php?id=<?php echo $item['id']; ?>" class="title font-bold">
+                                <div class="thumbnail title-poster">
+                                    <?php if ($item['image']) { ?>
+                                        <img src="<?php
+                                        echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 280, 414);
+                                        ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
+                                    <?php } ?>
+
+                                    <?php if ($item['characters']) { ?>
+                                        <div class="bottom-label"><?php echo $item['characters'][0]; ?></div>
+                                    <?php } ?>
+                                </div>
+
+                                <div class="title font-bold">
+                                    <?php echo $item['title']; ?> (<?php echo $item['year']; ?>)
+                                </div>
+                            </a>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
 
             <!-- Images -->
             <?php if (!empty($person['images'])) { ?>

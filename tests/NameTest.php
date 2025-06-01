@@ -20,6 +20,7 @@ class NameTest extends TestCase
         $name->images(25);
         $name->videos(25);
         $name->news(25);
+        $name->creditKnownFor();
         $person = $name->full();
 
         $this->assertEquals('nm0000134', $person['imdb_id']);
@@ -103,6 +104,9 @@ class NameTest extends TestCase
 
         $this->assertIsArray($person['news']);
         $this->assertCount(25, $person['news']);
+
+        $this->assertIsArray($person['credit_known_for']);
+        $this->assertCount(4, $person['credit_known_for']);
     }
 
     public function testPersonDied()

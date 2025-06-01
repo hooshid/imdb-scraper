@@ -39,6 +39,7 @@ class Name extends Base
         'images' => null,
         'videos' => null,
         'news' => null,
+        'credit_known_for' => null,
     ];
 
     /**
@@ -1344,6 +1345,95 @@ EOF;
             }
 
             $this->data['news'] = $newsListItems;
+        }
+    }
+
+    /**
+     * All prestigious title credits for this person
+     *
+     * @param int $limit
+     * @return array|null
+     * @throws Exception
+     */
+    public function creditKnownFor(int $limit = 4): ?array
+    {
+        if (empty($this->data['credit_known_for'])) {
+            $query = <<<EOF
+query KnownFor(\$id: ID!) {
+  name(id: \$id) {
+    knownFor(first: $limit) {
+      edges {
+        node{
+          credit {
+            title {
+              id
+              titleText {
+                text
+              }
+              releaseYear {
+                year
+                endYear
+              }
+              primaryImage {
+                url
+                width
+                height
+              }
+            }
+            ... on Cast {
+              characters {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "KnownFor", ["id" => $this->imdb_id]);
+            $this->creditKnownForParse($data);
+        }
+
+        return $this->data['credit_known_for'];
+    }
+
+    /**
+     * Parse Credit known
+     *
+     * @param $data
+     * @return void
+     */
+    private function creditKnownForParse($data): void
+    {
+        if (!empty($data->name->knownFor->edges)) {
+            $items = [];
+            foreach ($data->name->knownFor->edges as $edge) {
+                if (empty($edge->node->credit->title->id) or empty($edge->node->credit->title->titleText->text)) {
+                    continue;
+                }
+
+                $characters = [];
+                if (isset($edge->node->credit->characters)) {
+                    foreach ($edge->node->credit->characters as $character) {
+                        if (!empty($character->name)) {
+                            $characters[] = $character->name;
+                        }
+                    }
+                }
+
+                $items[] = [
+                    'id' => $edge->node->credit->title->id,
+                    'title' => $edge->node->credit->title->titleText->text,
+                    'year' => $edge->node->credit->title->releaseYear->year ?? null,
+                    'end_year' => $edge->node->credit->title->releaseYear->endYear ?? null,
+                    'characters' => $characters,
+                    'image' => $this->parseImage($edge->node->credit->title->primaryImage)
+                ];
+            }
+
+            $this->data['credit_known_for'] = $items;
         }
     }
 
