@@ -21,6 +21,7 @@ class NameTest extends TestCase
         $name->videos(25);
         $name->news(25);
         $name->creditKnownFor();
+        $name->credits();
         $person = $name->full();
 
         $this->assertEquals('nm0000134', $person['imdb_id']);
@@ -107,6 +108,11 @@ class NameTest extends TestCase
 
         $this->assertIsArray($person['credit_known_for']);
         $this->assertCount(4, $person['credit_known_for']);
+
+        $this->assertIsArray($person['credits']);
+        $this->assertCount(2, $person['credits']['director']);
+        $this->assertCount(0, $person['credits']['actress']);
+        $this->assertGreaterThan(120, count($person['credits']['actor']));
     }
 
     public function testPersonDied()

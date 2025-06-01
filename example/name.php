@@ -20,6 +20,7 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name->videos(8);
     $name->news(8);
     $name->creditKnownFor();
+    $name->credits();
     $person = $name->full();
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
@@ -370,6 +371,62 @@ $image = new Image();
                     <?php } ?>
                 </table>
             </div>
+
+            <style>
+                details {
+                    border: 1px solid #aaa;
+                    border-radius: 4px;
+                    padding: 0.5em 0.5em 0;
+                    margin-bottom: 5px;
+                }
+
+                summary {
+                    font-weight: bold;
+                    margin: -0.5em -0.5em 0;
+                    padding: 0.5em;
+                    background: #f3f3f3;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+
+                details[open] {
+                    padding: 0.5em;
+                }
+
+                details[open] summary {
+                    border-bottom: 1px solid #aaa;
+                    margin-bottom: 0.5em;
+                }
+
+                details div {
+                    padding: 0 0 0 20px;
+                }
+            </style>
+
+            <!-- Credits -->
+            <?php if (!empty($person['credits'])) { ?>
+                <div class="head-title">Credits</div>
+                <div class="w-full">
+                    <?php foreach ($person['credits'] as $key => $items) { ?>
+                        <?php if (count($items)) { ?>
+                            <details>
+                                <summary><?php echo $key; ?></summary>
+                                <div>
+                                    <ul>
+                                        <?php foreach ($items as $item) { ?>
+                                            <li>
+                                                <a href="title.php?id=<?php echo $item['id']; ?>"><?php echo $item['title']; ?>
+                                                    (<?php echo $item['year']; ?>)</a>
+                                                <?php if (!empty($item['jobs'])) { ?><?php echo $item['jobs'][0]; ?><?php } ?>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                </div>
+                            </details>
+                        <?php } ?>
+                    <?php } ?>
+                </div>
+            <?php } ?>
 
             <!-- Credit known for -->
             <?php if (!empty($person['credit_known_for'])) { ?>

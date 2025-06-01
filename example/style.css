@@ -114,6 +114,10 @@ table a:visited {
     font-weight: bold;
 }
 
+.w-full {
+    width: 100%;
+}
+
 .boxed {
     width: 100%;
     padding: 20px;

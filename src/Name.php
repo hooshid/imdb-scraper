@@ -40,6 +40,7 @@ class Name extends Base
         'videos' => null,
         'news' => null,
         'credit_known_for' => null,
+        'credits' => null,
     ];
 
     /**
@@ -1434,6 +1435,165 @@ EOF;
             }
 
             $this->data['credit_known_for'] = $items;
+        }
+    }
+
+    public array $creditCategoryIds = [
+        'director' => 'director',
+        'writer' => 'writer',
+        'actress' => 'actress',
+        'actor' => 'actor',
+        'producer' => 'producer',
+        'composer' => 'composer',
+        'cinematographer' => 'cinematographer',
+        'editor' => 'editor',
+        'casting_director' => 'castingDirector',
+        'production_designer' => 'productionDesigner',
+        'art_director' => 'artDirector',
+        'set_decorator' => 'setDecorator',
+        'costume_designer' => 'costumeDesigner',
+        'make_up_department' => 'makeUpDepartment',
+        'production_manager' => 'productionManager',
+        'assistant_director' => 'assistantDirector',
+        'art_department' => 'artDepartment',
+        'sound_department' => 'soundDepartment',
+        'special_effects' => 'specialEffects',
+        'visual_effects' => 'visualEffects',
+        'stunts' => 'stunts',
+        'choreographer' => 'choreographer',
+        'camera_department' => 'cameraDepartment',
+        'animation_department' => 'animationDepartment',
+        'casting_department' => 'castingDepartment',
+        'costume_department' => 'costumeDepartment',
+        'editorial_department' => 'editorialDepartment',
+        'electrical_department' => 'electricalDepartment',
+        'location_management' => 'locationManagement',
+        'music_department' => 'musicDepartment',
+        'production_department' => 'productionDepartment',
+        'script_department' => 'scriptDepartment',
+        'transportation_department' => 'transportationDepartment',
+        'miscellaneous' => 'miscellaneous',
+        'thanks' => 'thanks',
+        'executive' => 'executive',
+        'legal' => 'legal',
+        'soundtrack' => 'soundtrack',
+        'manager' => 'manager',
+        'assistant' => 'assistant',
+        'talent_agent' => 'talentAgent',
+        'self' => 'self',
+        'publicist' => 'publicist',
+        'music_artist' => 'musicArtist',
+        'podcaster' => 'podcaster',
+        'archive_footage' => 'archiveFootage',
+        'archive_sound' => 'archiveSound',
+        'costume_supervisor' => 'costumeSupervisor',
+        'hair_stylist' => 'hairStylist',
+        'intimacy_coordinator' => 'intimacyCoordinator',
+        'make_up_artist' => 'makeUpArtist',
+        'music_supervisor' => 'musicSupervisor',
+        'property_master' => 'propertyMaster',
+        'script_supervisor' => 'scriptSupervisor',
+        'showrunner' => 'showrunner',
+        'stunt_coordinator' => 'stuntCoordinator',
+        'accountant' => 'accountant'
+    ];
+
+    /**
+     * Get all credits for a person
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function credits(): ?array
+    {
+        if (empty($this->data['credits'])) {
+            foreach ($this->creditCategoryIds as $categoryId) {
+                $this->data['credits'][$categoryId] = [];
+            }
+
+            $query = <<<EOF
+category {
+  id
+}
+title {
+  id
+  titleText {
+    text
+  }
+  titleType {
+    text
+  }
+  releaseYear {
+    year
+    endYear
+  }
+  primaryImage {
+    url
+    width
+    height
+  }
+}
+... on Cast {
+  characters {
+    name
+  }
+}
+... on Crew {
+  jobs {
+    text
+  }
+}
+EOF;
+            $data = $this->getAllData("Credits", "credits", $query);
+            $this->creditsParse($data);
+        }
+
+        return $this->data['credits'];
+    }
+
+    /**
+     * Parse Credits
+     *
+     * @param $data
+     * @return void
+     */
+    private function creditsParse($data): void
+    {
+        if (!empty($data)) {
+            foreach ($data as $edge) {
+                if (empty($edge->node->title->id)) {
+                    continue;
+                }
+
+                $characters = [];
+                if (isset($edge->node->characters)) {
+                    foreach ($edge->node->characters as $character) {
+                        if (!empty($character->name)) {
+                            $characters[] = $character->name;
+                        }
+                    }
+                }
+
+                $jobs = [];
+                if (isset($edge->node->jobs)) {
+                    foreach ($edge->node->jobs as $job) {
+                        if (!empty($job->text)) {
+                            $jobs[] = $job->text;
+                        }
+                    }
+                }
+
+                $this->data['credits'][$this->creditCategoryIds[$edge->node->category->id]][] = [
+                    'id' => $edge->node->title->id,
+                    'title' => $edge->node->title->titleText->text ?? null,
+                    'type' => $edge->node->title->titleType->text ?? null,
+                    'year' => $edge->node->title->releaseYear->year ?? null,
+                    'end_year' => $edge->node->title->releaseYear->endYear ?? null,
+                    'characters' => $characters,
+                    'jobs' => $jobs,
+                    'image' => $this->parseImage($edge->node->title->primaryImage)
+                ];
+            }
         }
     }
 
