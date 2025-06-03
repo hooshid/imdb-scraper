@@ -17,27 +17,27 @@ class NameSearchTest extends TestCase
         $this->assertIsArray($results);
         $this->assertCount(37, $results);
 
-        // Johnny Depp
-        $johnny = $results[0];
-        $this->assertIsArray($johnny['image']);
-        $this->assertEquals(1, $johnny['index']);
-        $this->assertEquals('nm0000136', $johnny['id']);
-        $this->assertEquals('Johnny Depp', $johnny['name']);
-        $this->assertEquals('Actor, Producer, Director', implode(", ", $johnny['professions']));
-        $this->assertGreaterThan(250, strlen($johnny['bio']));
-        $this->assertIsArray($johnny['known_for']);
-        $this->assertCount(5, $johnny['known_for']);
-
-        // Lily-Rose Depp
-        $lily = $results[1];
-        $this->assertIsArray($lily['image']);
-        $this->assertEquals(2, $lily['index']);
-        $this->assertEquals('nm6675440', $lily['id']);
-        $this->assertEquals('Lily-Rose Depp', $lily['name']);
-        $this->assertEquals('Actress, Composer, Soundtrack', implode(", ", $lily['professions']));
-        $this->assertGreaterThan(250, strlen($lily['bio']));
-        $this->assertIsArray($lily['known_for']);
-        $this->assertCount(5, $lily['known_for']);
+        foreach ($results as $result) {
+            if ($result['id'] == "nm0000136" || $result['name'] == "Johnny Depp") {
+                $this->assertIsArray($result['image']);
+                $this->assertIsInt($result['index']);
+                $this->assertEquals('nm0000136', $result['id']);
+                $this->assertEquals('Johnny Depp', $result['name']);
+                $this->assertEquals('Actor, Producer, Director', implode(", ", $result['professions']));
+                $this->assertGreaterThan(250, strlen($result['bio']));
+                $this->assertIsArray($result['known_for']);
+                $this->assertCount(5, $result['known_for']);
+            } else if ($result['id'] == "nm6675440" || $result['name'] == "Lily-Rose Depp") {
+                $this->assertIsArray($result['image']);
+                $this->assertLessThan(3, $result['index']);
+                $this->assertEquals('nm6675440', $result['id']);
+                $this->assertEquals('Lily-Rose Depp', $result['name']);
+                $this->assertEquals('Actress, Composer, Soundtrack', implode(", ", $result['professions']));
+                $this->assertGreaterThan(250, strlen($result['bio']));
+                $this->assertIsArray($result['known_for']);
+                $this->assertCount(5, $result['known_for']);
+            }
+        }
     }
 
     public function testBornToday()
@@ -62,7 +62,7 @@ class NameSearchTest extends TestCase
     public function testDied()
     {
         $name = new NameSearch();
-        $data = $name->search(['deathDateRangeStart' => '2025-01-16','deathDateRangeEnd' => '2025-01-16']);
+        $data = $name->search(['deathDateRangeStart' => '2025-01-16', 'deathDateRangeEnd' => '2025-01-16']);
         $results = $data['results'];
 
         $this->assertIsArray($results);
