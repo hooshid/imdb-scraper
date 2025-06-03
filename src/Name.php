@@ -42,6 +42,15 @@ class Name extends Base
         'credit_known_for' => null,
         'credits' => null,
         'awards' => null,
+        'pub_prints' => null,
+        'pub_movies' => null,
+        'pub_portrayal' => null,
+        'pub_article' => null,
+        'pub_interview' => null,
+        'pub_magazine' => null,
+        'pub_pictorial' => null,
+        'other_works' => null,
+        'external_sites' => null,
     ];
 
     /**
@@ -71,7 +80,7 @@ class Name extends Base
         }
         $this->isFullCalled = true;
 
-        $query = <<<EOF
+        $query = <<<GRAPHQL
 query Name(\$id: ID!) {
   name(id: \$id) {
     meta {
@@ -157,7 +166,7 @@ query Name(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
         $data = $this->graphql->query($query, "Name", ["id" => $this->imdb_id]);
 
         /***************** Parse data *****************/
@@ -208,7 +217,7 @@ EOF;
     public function canonicalId(): ?string
     {
         if (!$this->isFullCalled) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Redirect(\$id: ID!) {
   name(id: \$id) {
     meta {
@@ -216,7 +225,7 @@ query Redirect(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "Redirect", ["id" => $this->imdb_id]);
             $this->parseCanonicalId($data);
         }
@@ -249,7 +258,7 @@ EOF;
     public function fullName(): ?string
     {
         if (!$this->isFullCalled && empty($this->data['full_name'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Name(\$id: ID!) {
   name(id: \$id) {
     nameText {
@@ -257,7 +266,7 @@ query Name(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "Name", ["id" => $this->imdb_id]);
             $this->fullNameParse($data);
         }
@@ -287,7 +296,7 @@ EOF;
     public function image(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['image'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Image(\$id: ID!) {
   name(id: \$id) {
     primaryImage {
@@ -297,7 +306,7 @@ query Image(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
 
             $data = $this->graphql->query($query, "Image", ["id" => $this->imdb_id]);
             $this->imageParse($data);
@@ -328,7 +337,7 @@ EOF;
     public function rank(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['rank'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Rank(\$id: ID!) {
   name(id: \$id) {
     meterRanking {
@@ -340,7 +349,7 @@ query Rank(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
 
             $data = $this->graphql->query($query, "Rank", ["id" => $this->imdb_id]);
             $this->rankParse($data);
@@ -373,7 +382,7 @@ EOF;
     public function age(): ?int
     {
         if (!$this->isFullCalled && empty($this->data['age'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Age(\$id: ID!) {
   name(id: \$id) {
     age {
@@ -381,7 +390,7 @@ query Age(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "Age", ["id" => $this->imdb_id]);
             $this->ageParse($data);
         }
@@ -411,7 +420,7 @@ EOF;
     public function birth(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['birth'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query BirthDate(\$id: ID!) {
   name(id: \$id) {
     birthDate {
@@ -426,7 +435,7 @@ query BirthDate(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "BirthDate", ["id" => $this->imdb_id]);
             $this->birthParse($data);
         }
@@ -467,7 +476,7 @@ EOF;
     public function death(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['death'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query DeathDate(\$id: ID!) {
   name(id: \$id) {
     deathDate {
@@ -485,7 +494,7 @@ query DeathDate(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "DeathDate", ["id" => $this->imdb_id]);
             $this->deathParse($data);
         }
@@ -527,7 +536,7 @@ EOF;
     public function birthName(): ?string
     {
         if (!$this->isFullCalled && empty($this->data['birth_name'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query BirthName(\$id: ID!) {
   name(id: \$id) {
     birthName {
@@ -535,7 +544,7 @@ query BirthName(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "BirthName", ["id" => $this->imdb_id]);
             $this->birthNameParse($data);
         }
@@ -565,7 +574,7 @@ EOF;
     public function nickNames(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['nick_names'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query NickName(\$id: ID!) {
   name(id: \$id) {
     nickNames {
@@ -573,7 +582,7 @@ query NickName(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "NickName", ["id" => $this->imdb_id]);
             $this->nickNamesParse($data);
         }
@@ -605,7 +614,7 @@ EOF;
     public function akaNames(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['aka_names'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query AkaName(\$id: ID!) {
   name(id: \$id) {
     akas(first: 9999) {
@@ -617,7 +626,7 @@ query AkaName(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "AkaName", ["id" => $this->imdb_id]);
             $this->akaNamesParse($data);
         }
@@ -649,7 +658,7 @@ EOF;
     public function bodyHeight(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['body_height'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query BodyHeight(\$id: ID!) {
   name(id: \$id) {
     height {
@@ -661,7 +670,7 @@ query BodyHeight(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "BodyHeight", ["id" => $this->imdb_id]);
             $this->bodyHeightParse($data);
         }
@@ -706,7 +715,7 @@ EOF;
     public function bio(): array
     {
         if (!$this->isFullCalled && empty($this->data['bio'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query MiniBio(\$id: ID!) {
   name(id: \$id) {
     bios(first: 9999) {
@@ -723,7 +732,7 @@ query MiniBio(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "MiniBio", ["id" => $this->imdb_id]);
             $this->bioParse($data);
         }
@@ -758,7 +767,7 @@ EOF;
     public function professions(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['professions'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Professions(\$id: ID!) {
   name(id: \$id) {
     primaryProfessions {
@@ -768,7 +777,7 @@ query Professions(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "Professions", ["id" => $this->imdb_id]);
             $this->professionsParse($data);
         }
@@ -800,7 +809,7 @@ EOF;
     public function spouses(): ?array
     {
         if (empty($this->data['spouses'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Spouses(\$id: ID!) {
   name(id: \$id) {
     spouses {
@@ -840,7 +849,7 @@ query Spouses(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "Spouses", ["id" => $this->imdb_id]);
             $this->spousesParse($data);
         }
@@ -1004,7 +1013,7 @@ EOF;
     public function salaries(): ?array
     {
         if (empty($this->data['salaries'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 title {
   titleText {
     text
@@ -1021,7 +1030,7 @@ amount {
 attributes {
   text
 }
-EOF;
+GRAPHQL;
             $data = $this->getAllData("Salaries", "titleSalaries", $query);
             $this->salariesParse($data);
         }
@@ -1074,7 +1083,7 @@ EOF;
     public function images(int $limit = 9999): ?array
     {
         if (empty($this->data['images'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Images(\$id: ID!) {
   name(id: \$id) {
     images(first: $limit) {
@@ -1105,7 +1114,7 @@ query Images(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "Images", ["id" => $this->imdb_id]);
             $this->imagesParse($data);
         }
@@ -1174,7 +1183,7 @@ EOF;
     public function videos(int $limit = 9999): ?array
     {
         if (empty($this->data['videos'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query Video(\$id: ID!) {
   name(id: \$id) {
     primaryVideos(first: $limit) {
@@ -1220,7 +1229,7 @@ query Video(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "Video", ["id" => $this->imdb_id]);
             $this->videosParse($data);
         }
@@ -1276,7 +1285,7 @@ EOF;
     public function news(int $limit = 100): ?array
     {
         if (empty($this->data['news'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query News(\$id: ID!) {
   name(id: \$id) {
     news(first: $limit) {
@@ -1309,7 +1318,7 @@ query News(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "News", ["id" => $this->imdb_id]);
             $this->newsParse($data);
         }
@@ -1360,7 +1369,7 @@ EOF;
     public function creditKnownFor(int $limit = 4): ?array
     {
         if (empty($this->data['credit_known_for'])) {
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 query KnownFor(\$id: ID!) {
   name(id: \$id) {
     knownFor(first: $limit) {
@@ -1393,7 +1402,7 @@ query KnownFor(\$id: ID!) {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->graphql->query($query, "KnownFor", ["id" => $this->imdb_id]);
             $this->creditKnownForParse($data);
         }
@@ -1512,7 +1521,7 @@ EOF;
                 $this->data['credits'][$categoryId] = [];
             }
 
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 category {
   id
 }
@@ -1544,7 +1553,7 @@ title {
     text
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->getAllData("Credits", "credits", $query);
             $this->creditsParse($data);
         }
@@ -1598,60 +1607,19 @@ EOF;
         }
     }
 
-
     /**
      * Get all awards for a name
-     * @param $winsOnly boolean Default: false, set to true to only get won awards
-     * @param $event string Default: "" eventId Example " ev0000003" to only get Oscars
-     *  Possible values for $event:
-     *  ev0000003 (Oscar)
-     *  ev0000223 (Emmy)
-     *  ev0000292 (Golden Globe)
-     * @return array[festivalName][0..n] of
-     *      array[awardYear,awardWinner(bool),awardCategory,awardName,awardNotes
-     *      array awardTitles[titleId,titleName,titleNote],awardOutcome] array total(win, nom)
-     *  Array
-     *       (
-     *           [Academy Awards, USA] => Array
-     *               (
-     *                   [0] => Array
-     *                   (
-     *                   [awardYear] => 1972
-     *                   [awardWinner] =>
-     *                   [awardCategory] => Best Picture
-     *                   [awardName] => Oscar
-     *                   [awardTitles] => Array
-     *                       (
-     *                           [0] => Array
-     *                               (
-     *                                   [titleId] => 0000040
-     *                                   [titleName] => 1408
-     *                                   [titleNote] => screenplay/director
-     *                                   [titleFullImageUrl] => https://m.media-amazon.com/images/M/MV5BMTg3ODY2ODM3OF5BMl5BanBnXkFtZTYwOTQ5NTM3._V1_.jpg
-     *                                   [titleThumbImageUrl] => https://m.media-amazon.com/images/M/MV5BMTg3ODY2ODM3OF5BMl5BanBnXkFtZTYwOTQ5NTM3._V1_QL75_SX281_.jpg
-     *                               )
      *
-     *                       )
-     *                   [awardNotes] => Based on the novel
-     *                   [awardOutcome] => Nominee
-     *                   )
-     *               )
-     *           )
-     *           [total] => Array
-     *           (
-     *               [win] => 12
-     *               [nom] => 26
-     *           )
-     *
-     *       )
+     * @param bool $winsOnly
+     * @param string $event
+     * @return array|null
      * @throws Exception
-     * @see IMDB page / (TitlePage)
      */
-    public function awards(bool $winsOnly = false, string $event = "")
+    public function awards(bool $winsOnly = false, string $event = ""): ?array
     {
         if (empty($this->data['awards'])) {
             $filter = $this->awardFilter($winsOnly, $event);
-            $query = <<<EOF
+            $query = <<<GRAPHQL
 award {
   id
   event {
@@ -1690,7 +1658,7 @@ awardedEntities {
     }
   }
 }
-EOF;
+GRAPHQL;
             $data = $this->getAllData("Award", "awardNominations", $query, $filter);
 
             $winnerCount = 0;
@@ -1741,6 +1709,7 @@ EOF;
 
     /**
      * Build award filter string
+     *
      * @param $winsOnly boolean
      * @param $event string eventId
      * @return string $filter
@@ -1765,6 +1734,310 @@ EOF;
         return $filter;
     }
 
+    /**
+     * Print media about this person
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function pubPrints(): ?array
+    {
+        if (empty($this->data['pub_prints'])) {
+            $filter = ', filter: {categories: ["namePrintBiography"]}';
+            $query = <<<GRAPHQL
+... on NamePrintBiography {
+  title {
+    text
+  }
+  authors {
+    plainText
+  }
+  isbn
+  publisher
+}
+GRAPHQL;
+            $data = $this->getAllData("PubPrint", "publicityListings", $query, $filter);
+
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $authors = [];
+                    if (!empty($edge->node->authors)) {
+                        foreach ($edge->node->authors as $author) {
+                            if (!empty($author->plainText)) {
+                                $authors[] = $author->plainText;
+                            }
+                        }
+                    }
+
+                    $this->data['pub_prints'][] = [
+                        "title" => $edge->node->title->text ?? null,
+                        "author" => $authors,
+                        "publisher" => $edge->node->publisher ?? null,
+                        "isbn" => $edge->node->isbn ?? null
+                    ];
+                }
+            }
+        }
+
+        return $this->data['pub_prints'];
+    }
+
+    /**
+     * Biographical Movies
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function pubMovies(): ?array
+    {
+        if (empty($this->data['pub_movies'])) {
+            $filter = ', filter: {categories: ["nameFilmBiography"]}';
+            $query = <<<GRAPHQL
+... on NameFilmBiography {
+  title {
+    titleText {
+      text
+    }
+    id
+    releaseYear {
+      year
+    }
+    series {
+      displayableEpisodeNumber {
+        displayableSeason {
+          text
+        }
+        episodeNumber {
+          text
+        }
+      }
+      series {
+        titleText {
+          text
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+            $data = $this->getAllData("PubFilm", "publicityListings", $query, $filter);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $this->data['pub_movies'][] = [
+                        "id" => $edge->node->title->id ?? null,
+                        "title" => $edge->node->title->titleText->text ?? null,
+                        "year" => $edge->node->title->releaseYear->year ?? null,
+                        "series_title" => $edge->node->title->series->series->titleText->text ?? null,
+                        "series_season" => $edge->node->title->series->displayableEpisodeNumber->displayableSeason->text ?? null,
+                        "series_episode" => $edge->node->title->series->displayableEpisodeNumber->episodeNumber->text ?? null,
+                    ];
+                }
+            }
+        }
+
+        return $this->data['pub_movies'];
+    }
+
+    /**
+     * Portrayal listings about this person
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function pubPortrayal(): ?array
+    {
+        if (empty($this->data['pub_portrayal'])) {
+            $filter = ', filter: {categories: ["namePortrayal"]}';
+            $query = <<<GRAPHQL
+... on NamePortrayal {
+  title {
+    titleText {
+      text
+    }
+    id
+    releaseYear {
+      year
+    }
+  }
+}
+GRAPHQL;
+            $data = $this->getAllData("PubPortrayal", "publicityListings", $query, $filter);
+
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $this->data['pub_portrayal'][] = [
+                        'id' => $edge->node->title->id ?? null,
+                        'title' => $edge->node->title->titleText->text ?? null,
+                        'year' => $edge->node->title->releaseYear->year ?? null
+                    ];
+                }
+            }
+        }
+
+        return $this->data['pub_portrayal'];
+    }
+
+    /**
+     * Get the Publicity Articles of this name
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function pubArticle(): ?array
+    {
+        if (empty($this->data['pub_article'])) {
+            $this->data['pub_article'] = $this->pubOtherListing("PublicityArticle");
+        }
+
+        return $this->data['pub_article'];
+    }
+
+    /**
+     * Get the Publicity Interviews of this name
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function pubInterview(): ?array
+    {
+        if (empty($this->data['pub_interview'])) {
+            $this->data['pub_interview'] = $this->pubOtherListing("PublicityInterview");
+        }
+
+        return $this->data['pub_interview'];
+    }
+
+    /**
+     * Get the Publicity Magazines of this name
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function pubMagazine(): ?array
+    {
+        if (empty($this->data['pub_magazine'])) {
+            $this->data['pub_magazine'] = $this->pubOtherListing("PublicityMagazineCover");
+        }
+
+        return $this->data['pub_magazine'];
+    }
+
+    /**
+     * Get the Publicity Pictorials of this name
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function pubPictorial(): ?array
+    {
+        if (empty($this->data['pub_pictorial'])) {
+            $this->data['pub_pictorial'] = $this->pubOtherListing("PublicityPictorial");
+        }
+        return $this->data['pub_pictorial'];
+    }
+
+    /**
+     * Other works of this person
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function otherWorks(): ?array
+    {
+        if (empty($this->data['other_works'])) {
+            $query = <<<GRAPHQL
+category {
+  text
+}
+fromDate
+toDate
+text {
+  plainText
+}
+GRAPHQL;
+            $data = $this->getAllData("OtherWorks", "otherWorks", $query);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    // From date
+                    $fromDate = [
+                        "day" => $edge->node->fromDate->day ?? null,
+                        "month" => $edge->node->fromDate->month ?? null,
+                        "year" => $edge->node->fromDate->year ?? null
+                    ];
+                    // To date
+                    $toDate = [
+                        "day" => $edge->node->toDate->day ?? null,
+                        "month" => $edge->node->toDate->month ?? null,
+                        "year" => $edge->node->toDate->year ?? null
+                    ];
+                    $this->data['other_works'][] = [
+                        "category" => $edge->node->category->text ?? null,
+                        "fromDate" => $fromDate,
+                        "toDate" => $toDate,
+                        "text" => $edge->node->text->plainText ?? null
+                    ];
+                }
+            }
+        }
+
+        return $this->data['other_works'];
+    }
+
+    /**
+     * external websites with info of this name, excluding external reviews.
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function externalSites(): ?array
+    {
+        $categoryIds = [
+            'official' => 'official',
+            'video' => 'video',
+            'photo' => 'photo',
+            'sound' => 'sound',
+            'misc' => 'misc'
+        ];
+
+        if (empty($this->data['external_sites'])) {
+            foreach ($categoryIds as $categoryId) {
+                $this->data['external_sites'][$categoryId] = array();
+            }
+            $query = <<<GRAPHQL
+label
+url
+externalLinkCategory {
+  id
+}
+externalLinkLanguages {
+  text
+}
+GRAPHQL;
+            $filter = ' filter: {excludeCategories: "review"}';
+            $edges = $this->getAllData("ExternalSites", "externalLinks", $query, $filter);
+            if (count($edges) > 0) {
+                foreach ($edges as $edge) {
+                    $language = [];
+                    if (!empty($edge->node->externalLinkLanguages)) {
+                        foreach ($edge->node->externalLinkLanguages as $lang) {
+                            if (!empty($lang->text)) {
+                                $language[] = $lang->text;
+                            }
+                        }
+                    }
+
+                    $this->data['external_sites'][$categoryIds[$edge->node->externalLinkCategory->id]][] = [
+                        'label' => $edge->node->label ?? null,
+                        'url' => $edge->node->url ?? null,
+                        'language' => $language
+                    ];
+                }
+            }
+        }
+
+        return $this->data['external_sites'];
+    }
+
 
     /***************************************[ Helper Methods ]***************************************/
     /**
@@ -1779,7 +2052,7 @@ EOF;
      */
     protected function getAllData(string $queryName, string $fieldName, string $nodeQuery, string $filter = ""): array
     {
-        $query = <<<EOF
+        $query = <<<GRAPHQL
 query $queryName(\$id: ID!, \$after: ID) {
   name(id: \$id) {
     $fieldName(first: 9999, after: \$after$filter) {
@@ -1795,7 +2068,7 @@ query $queryName(\$id: ID!, \$after: ID) {
     }
   }
 }
-EOF;
+GRAPHQL;
         $fullQuery = implode("\n", array_map('trim', explode("\n", $query)));
 
         // Results are paginated, so loop until we've got all the data
@@ -1825,7 +2098,7 @@ EOF;
     protected function nameDetailsParse(string $name, string $arrayName): void
     {
         $filter = ', filter: {relationshipTypes: ' . $name . '}';
-        $query = <<<EOF
+        $query = <<<GRAPHQL
 relationName {
   name {
     id
@@ -1838,7 +2111,7 @@ relationName {
 relationshipType {
   text
 }
-EOF;
+GRAPHQL;
         $data = $this->getAllData("Data", "relations", $query, $filter);
 
         if (count($data) > 0) {
@@ -1871,11 +2144,11 @@ EOF;
      */
     protected function dataParse(string $name): void
     {
-        $query = <<<EOF
+        $query = <<<GRAPHQL
 text {
   plainText
 }
-EOF;
+GRAPHQL;
         $data = $this->getAllData("Data", $name, $query);
         if (count($data) > 0) {
             foreach ($data as $edge) {
@@ -1885,6 +2158,66 @@ EOF;
             }
         }
     }
+
+    /**
+     * helper for Article, Interview, Magazine and Pictorial publicity listings about this person
+     *
+     * @param string $listingType
+     * @return array
+     * @throws Exception
+     */
+    protected function pubOtherListing(string $listingType): array
+    {
+        $results = array();
+        $filter = ', filter: {categories: ["' . lcfirst($listingType) . '"]}';
+        $query = <<<GRAPHQL
+... on $listingType {
+  authors {
+    plainText
+  }
+  publication
+  reference
+  date
+  region {
+    id
+  }
+  title {
+    text
+  }
+}
+GRAPHQL;
+        $data = $this->getAllData($listingType, "publicityListings", $query, $filter);
+        if (count($data) > 0) {
+            foreach ($data as $edge) {
+                $date = [
+                    'day' => $edge->node->date->day ?? null,
+                    'month' => $edge->node->date->month ?? null,
+                    'year' => $edge->node->date->year ?? null
+                ];
+
+                $authors = [];
+                if (isset($edge->node->authors)) {
+                    foreach ($edge->node->authors as $author) {
+                        if (!empty($author->plainText)) {
+                            $authors[] = $author->plainText;
+                        }
+                    }
+                }
+
+                $results[] = [
+                    'publication' => $edge->node->publication ?? null,
+                    'regionId' => $edge->node->region->id ?? null,
+                    'title' => $edge->node->title->text ?? null,
+                    'date' => $date,
+                    'reference' => $edge->node->reference ?? null,
+                    'authors' => $authors
+                ];
+            }
+        }
+
+        return $results;
+    }
+
 
 }
 

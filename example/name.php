@@ -317,7 +317,7 @@ $image = new Image();
                     <!-- Quotes -->
                     <?php if (!empty($person['quotes'])) { ?>
                         <tr>
-                            <td><b>Trademarks:</b></td>
+                            <td><b>Quotes:</b></td>
                             <td>
                                 <ul>
                                     <?php foreach ($person['quotes'] as $key => $quote) { ?>
