@@ -57,7 +57,7 @@ class Title extends Base
      */
     protected function buildUrl(string $page = null): string
     {
-        return "https://" . $this->imdbSiteUrl . "/title/tt" . $this->imdb_id . $this->getUrlSuffix($page);
+        return $this->getBaseUrl() . "/title/tt" . $this->imdb_id . $this->getUrlSuffix($page);
     }
 
     /**
@@ -117,7 +117,7 @@ class Title extends Base
      */
     public function mainUrl(): string
     {
-        return "https://" . $this->imdbSiteUrl . "/title/tt" . $this->imdbId() . "/";
+        return $this->getBaseUrl() . "/title/tt" . $this->imdbId() . "/";
     }
 
     /**
