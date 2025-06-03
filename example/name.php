@@ -21,6 +21,7 @@ if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name->news(8);
     $name->creditKnownFor();
     $name->credits();
+    $name->awards();
     $person = $name->full();
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
@@ -452,6 +453,46 @@ $image = new Image();
                                 </div>
                             </a>
                         </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+
+            <!-- Awards -->
+            <?php if (!empty($person['awards'])) { ?>
+                <div class="head-title">Awards & Events - <?php echo $person['awards']['stats']['win']; ?> wins & <?php echo $person['awards']['stats']['nom']; ?> nominations</div>
+                <div class="w-full">
+                    <?php foreach ($person['awards']['events'] as $items) { ?>
+                        <?php if (count($items)) { ?>
+                            <details>
+                                <summary><?php echo $items[0]['event_name']; ?> (<?php echo $items[0]['name']; ?>) (<?php echo $items[0]['id']; ?>)</summary>
+                                <div>
+                                    <ul>
+                                        <?php foreach ($items as $item) { ?>
+                                            <li>
+                                                <?php echo $item['year']; ?> -
+
+                                                <?php if ($item['category']) { ?>
+                                                    <?php echo $item['category']; ?> -
+                                                <?php } ?>
+
+                                                <?php if ($item['notes']) { ?>
+                                                    <?php echo $item['notes']; ?> -
+                                                <?php } ?>
+
+                                                <?php echo $item['conclusion']; ?>
+
+                                                <?php if (!empty($item['titles'])) { ?>
+                                                    -
+                                                    <?php foreach ($item['titles'] as $title) { ?>
+                                                        <a href="title.php?id=<?php echo $title['id']; ?>"><?php echo $title['title']; ?></a>
+                                                    <?php } ?>
+                                                <?php } ?>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                </div>
+                            </details>
+                        <?php } ?>
                     <?php } ?>
                 </div>
             <?php } ?>
