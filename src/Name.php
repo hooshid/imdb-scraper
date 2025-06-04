@@ -65,7 +65,27 @@ class Name extends Base
         $this->data['main_url'] = $this->mainUrl();
     }
 
-    /***************************************[ Main Methods ]***************************************/
+    /***************************************[ Methods ]***************************************/
+
+    /**
+     * Set up the URL to the person page
+     *
+     * @return string
+     */
+    public function mainUrl(): string
+    {
+        return $this->makeUrl("name", $this->imdb_id);
+    }
+
+    /**
+     * Get imdb id
+     *
+     * @return string
+     */
+    public function imdbId(): string
+    {
+        return $this->imdb_id;
+    }
 
     /**
      * This function returns the full extracted data in a single JSON-compatible array.
@@ -185,27 +205,6 @@ GRAPHQL;
         $this->professionsParse($data);
 
         return $this->data;
-    }
-
-    /***************************************[ Methods ]***************************************/
-    /**
-     * Set up the URL to the person page
-     *
-     * @return string
-     */
-    public function mainUrl(): string
-    {
-        return $this->makeUrl("name", $this->imdb_id);
-    }
-
-    /**
-     * Get imdb id
-     *
-     * @return string
-     */
-    public function imdbId(): string
-    {
-        return $this->imdb_id;
     }
 
     /**
