@@ -3,112 +3,56 @@
 namespace Hooshid\ImdbScraper;
 
 use Exception;
-use Hooshid\ImdbScraper\Base\Old\Base;
+use Hooshid\ImdbScraper\Base\Base;
 use Hooshid\ImdbScraper\Base\Config;
 
 class Title extends Base
 {
-    protected $data = [
+    private ?string $imdb_id;
+
+    private bool $isFullCalled = false;
+
+    protected array $data = [
+        'imdb_id' => null,
+        'main_url' => null,
+        'canonical_id' => null,
         'title' => null,
         'original_title' => null,
         'type' => null,
         'year' => null,
         'end_year' => null,
+        'image' => null,
+        'ratings' => null,
+        'rank' => null,
+        'genres' => null,
+        'languages' => null,
+        'countries' => null,
         'runtime' => null,
-        'photo' => [],
-        'tagline' => null,
-        'genres' => [],
-        'languages' => [],
-        'languages_detailed' => [],
-        'countries' => [],
-        'countries_detailed' => [],
-        'rating' => null,
-        'votes' => null,
-        'colors' => [],
-        'sounds' => [],
+        'runtimes' => null,
+        'taglines' => null,
+        'keywords' => null,
+        'locations' => null,
+        'sounds' => null,
+        'colors' => null,
         'aspect_ratio' => null,
-        'taglines' => [],
-        'locations' => [],
-        'keywords' => [],
-        'trailers' => [],
-        'mpaas' => [],
-        'mpaa_reason' => null,
+        'cameras' => null,
+        'mpaas' => null,
+        'videos' => null,
     ];
-
-    protected $jsonLD = null;
-
 
     /**
      * @param string $id IMDB ID to use for data retrieval
      * @param Config|null $config OPTIONAL override default config
      */
-    public function __construct($id, Config $config = null)
+    public function __construct(string $id, Config $config = null)
     {
         parent::__construct($config);
-        $this->setid($id);
+        $this->imdb_id = $id;
+        $this->data['imdb_id'] = $id;
+        $this->data['main_url'] = $this->mainUrl();
     }
 
-    /**
-     * Build imdb url
-     *
-     * @param string|null $page
-     * @return string
-     * @throws \Exception
-     */
-    protected function buildUrl(string $page = null): string
-    {
-        return $this->getBaseUrl() . "/title/tt" . $this->imdb_id . $this->getUrlSuffix($page);
-    }
-
-    /**
-     * Get url suffix
-     *
-     * @param string $pageName
-     * @return string
-     * @throws \Exception
-     */
-    protected function getUrlSuffix(string $pageName): string
-    {
-        $pageUrls = [
-            "AlternateVersions" => '/alternateversions',
-            "Awards" => "/awards",
-            "CompanyCredits" => "/companycredits",
-            "CrazyCredits" => "/crazycredits",
-            "Credits" => "/fullcredits",
-            "Episodes" => "/episodes",
-            "ExtReviews" => "/externalreviews",
-            "goofs" => "/trivia?tab=gf",
-            "keywords" => "/keywords",
-            "locations" => "/locations",
-            "MovieConnections" => "/movieconnections",
-            "OfficialSites" => "/officialsites",
-            "parentalguide" => "/parentalguide",
-            "Plot" => "/plotsummary",
-            "Quotes" => "/quotes",
-            "ReleaseInfo" => "/releaseinfo",
-            "Soundtrack" => "/soundtrack",
-            "Synopsis" => "/plotsummary",
-            "taglines" => "/taglines/",
-            "Technical" => "/technical",
-            "title" => "/",
-            "videogallery" => "/videogallery/",
-            "trailer" => "/videogallery/?contentTypes=trailer",
-            "Trivia" => "/trivia",
-            "VideoSites" => "/externalsites",
-        ];
-
-        if (isset($pageUrls[$pageName])) {
-            return $pageUrls[$pageName];
-        }
-
-        if (preg_match('!^Episodes-(-?\d+)$!', $pageName, $match)) {
-            return '/episodes?season=' . $match[1];
-        }
-
-        throw new Exception("Could not find URL for page $pageName");
-    }
-
-    /***************************************[ Main Methods ]***************************************/
+    /***************************************[ Methods ]***************************************/
 
     /**
      * Set up the URL to the title page
@@ -117,187 +61,323 @@ class Title extends Base
      */
     public function mainUrl(): string
     {
-        return $this->getBaseUrl() . "/title/tt" . $this->imdbId() . "/";
+        return $this->makeUrl("title", $this->imdb_id);
     }
 
     /**
-     * this function return full extracted data in single json
+     * Get imdb id
      *
-     * @return array
+     * @return string
      */
-    public function full(): array
+    public function imdbId(): string
     {
-        $this->title();
-        $this->originalTitle();
-        $this->setupTitleYearType();
-        $this->type();
-        $this->runtime();
-        $this->photo();
-        $this->tagline();
-        $this->genres();
-        $this->languages();
-        $this->countries();
-        $this->rating();
-        $this->votes();
-        $this->colors();
-        $this->sounds();
-        $this->aspectRatio();
-        $this->taglines();
-        $this->locations();
-        $this->keywords();
-        $this->mpaa();
-        $this->mpaaReason();
-        $this->trailers();
+        return $this->imdb_id;
+    }
+
+    /**
+     * This function returns the full extracted data in a single JSON-compatible array.
+     *
+     * @param array|null $methods
+     * @return array
+     * @throws Exception
+     */
+    public function full(?array $methods = []): array
+    {
+        if ($this->isFullCalled) {
+            return $this->data;
+        }
+        $this->isFullCalled = true;
+
+        $query = <<<GRAPHQL
+query Title(\$id: ID!) {
+  title(id: \$id) {
+    meta {
+      canonicalId
+    }
+    titleText {
+      text
+    }
+    originalTitleText {
+      text
+    }
+    titleType {
+      text
+    }
+    releaseYear {
+      year
+      endYear
+    }
+    primaryImage {
+      url
+      width
+      height
+    }
+    ratingsSummary {
+      aggregateRating
+      voteCount
+    }
+    meterRanking {
+      currentRank
+      rankChange {
+        changeDirection
+        difference
+      }
+    }
+    runtime {
+      seconds
+    }
+    runtimes(first: 9999) {
+      edges {
+        node {
+          attributes {
+            text
+          }
+          country {
+            text
+          }
+          seconds
+        }
+      }
+    }
+    titleGenres {
+      genres {
+        genre {
+          text
+        }
+        subGenres {
+          keyword {
+            text {
+              text
+            }
+          }
+        }
+      }
+    }
+    spokenLanguages {
+      spokenLanguages {
+        id
+        text
+      }
+    }
+    countriesOfOrigin {
+      countries {
+        id
+        text
+      }
+    }
+    taglines(first: 9999) {
+      edges {
+        node {
+          text
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+        $data = $this->graphql->query($query, "Title", ["id" => $this->imdb_id]);
+
+        /***************** Parse data *****************/
+        $this->parseCanonicalId($data);
+        $this->titleParse($data);
+        $this->originalTitleParse($data);
+        $this->typeParse($data);
+        $this->yearParse($data);
+        $this->imageParse($data);
+        $this->ratingVotesParse($data);
+        $this->rankParse($data);
+        $this->runtimeParse($data);
+        $this->runtimesParse($data);
+        $this->genresParse($data);
+        $this->languagesParse($data);
+        $this->countriesParse($data);
+        $this->taglinesParse($data);
+
+        if (count($methods)) {
+            foreach ($methods as $method) {
+                $camelCaseMethod = lcfirst(str_replace('_', '', ucwords($method, '_')));
+                if (method_exists($this, $camelCaseMethod)) {
+                    $this->$camelCaseMethod();
+                }
+            }
+        }
 
         return $this->data;
     }
 
     /**
-     * @return mixed|null
+     * Check redirect to another id or not.
+     *
+     * @return string|null
+     * @throws Exception
      */
-    protected function jsonLD()
+    public function canonicalId(): ?string
     {
-        if ($this->jsonLD) {
-            return $this->jsonLD;
+        if (!$this->isFullCalled) {
+            $query = <<<GRAPHQL
+query Redirect(\$id: ID!) {
+  title(id: \$id) {
+    meta {
+      canonicalId
+    }
+  }
+}
+GRAPHQL;
+            $data = $this->graphql->query($query, "Redirect", ["id" => $this->imdb_id]);
+            $this->parseCanonicalId($data);
         }
-        $page = $this->getContentOfPage('title');
-        preg_match('#<script type="application/ld\+json">(.+?)</script>#ims', $page, $matches);
-        $this->jsonLD = json_decode($matches[1]);
 
-        return $this->jsonLD;
+        return $this->data['canonical_id'];
     }
 
-    /***************************************[ Main Page ]***************************************/
+    /**
+     * Parse redirects
+     *
+     * @param $data
+     * @return void
+     */
+    private function parseCanonicalId($data): void
+    {
+        if (!empty($data->title->meta->canonicalId)) {
+            $canonicalId = $data->title->meta->canonicalId;
+            if ($canonicalId != $this->imdb_id) {
+                $this->data['canonical_id'] = $canonicalId;
+            }
+        }
+    }
 
     /**
      * Setup title, year and type properties
+     *
+     * @return void
+     * @throws Exception
      */
-    protected function setupTitleYearType()
+    private function setupTitleYearType(): void
     {
-        $this->getContentOfPage("title");
-        if (@preg_match('!<title>(IMDb\s*-\s*)?(?<ititle>.*)(\s*-\s*IMDb)?</title>!', $this->page["title"], $imatch)) {
-            $ititle = $imatch['ititle'];
-            // serial
-            if (preg_match('!(?<title>.*) \((?<movietype>.*)(?<year>\d{4}|\?{4})((&nbsp;|–)(?<endyear>\d{4}|)).*\)(.*)!', $ititle, $match)) {
-                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
-                $this->data['year'] = $match['year'];
-                $this->data['end_year'] = $match['endyear'] ?: null;
-                $this->data['type'] = trim($match['movietype']);
-            } elseif (preg_match('!(?<title>.*) \((?<movietype>.*)(?<year>\d{4}|\?{4}).*\)(.*)!', $ititle, $match)) {
-                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
-                $this->data['year'] = $match['year'];
-                $this->data['end_year'] = $match['year'];
-                $this->data['type'] = trim($match['movietype']);
-            } // not yet released, but have been given a movietype.
-            elseif (preg_match('!(?<title>.*) \((?<movietype>.*)\)(.*)!', $ititle, $match)) {
-                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
-                $this->data['year'] = null;
-                $this->data['end_year'] = null;
-                $this->data['type'] = trim($match['movietype']);
-            } // not yet released, so no dates etc.
-            elseif (preg_match('!<title>(?<title>.*) - IMDb</title>!', $this->page["title"], $match)) {
-                $this->data['title'] = $this->htmlSpecialCharsDecode(htmlspecialchars_decode($match['title']));
-                $this->data['year'] = null;
-                $this->data['end_year'] = null;
-            }
-
-            if ($this->data['year'] == "????") {
-                $this->data['year'] = null;
-            }
+        if (!$this->isFullCalled && empty($this->data['title'])) {
+            $query = <<<GRAPHQL
+query Title(\$id: ID!) {
+  title(id: \$id) {
+    titleText {
+      text
+    }
+    originalTitleText {
+      text
+    }
+    titleType {
+      text
+    }
+    releaseYear {
+      year
+      endYear
+    }
+  }
+}
+GRAPHQL;
+            $data = $this->graphql->query($query, "Title", ["id" => $this->imdb_id]);
+            $this->titleParse($data);
+            $this->originalTitleParse($data);
+            $this->typeParse($data);
+            $this->yearParse($data);
         }
     }
 
     /**
-     * Get movie title
+     * Get movie/series title
      *
      * @return string|null
+     * @throws Exception
      */
     public function title(): ?string
     {
-        if (empty($this->data['title'])) {
+        if (!$this->isFullCalled && empty($this->data['title'])) {
             $this->setupTitleYearType();
-        }
-
-        if (empty($this->data['title'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if (!$dom->findOneOrFalse('[data-testid="hero-title-block__title"]')) {
-                return null;
-            }
-
-            $this->data['title'] = $dom->find('[data-testid="hero-title-block__title"]', 0)->innerText();
-            $this->data['title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($this->data['title'])));
         }
 
         return $this->data['title'];
     }
 
     /**
-     * Get movie original title
+     * Parse movie/series title
+     *
+     * @param $data
+     * @return void
+     */
+    private function titleParse($data): void
+    {
+        if (!empty($data->title->titleText->text)) {
+            $this->data['title'] = $data->title->titleText->text;
+        }
+    }
+
+    /**
+     * Get movie/series original title
      *
      * @return string|null
+     * @throws Exception
      */
     public function originalTitle(): ?string
     {
-        if (empty($this->data['original_title'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="hero__pageTitle"], h1')) {
-                $original_title = $dom->find('[data-testid="hero__pageTitle"], h1', 0)->next_sibling()->innerText();
-                if (strpos($original_title, 'Original') !== false) {
-                    $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($original_title), ["Original title:", "Originaltitel:"]));
-                }
-            }
-        }
-
-        if (empty($this->data['original_title'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="hero-title-block__original-title"]')) {
-                $this->data['original_title'] = $dom->find('[data-testid="hero-title-block__original-title"]', 0)->innerText();
-                $this->data['original_title'] = $this->htmlSpecialCharsDecode($this->cleanString(htmlspecialchars_decode($this->data['original_title']), ["Original title:", "Originaltitel:"]));
-            }
+        if (!$this->isFullCalled && empty($this->data['original_title'])) {
+            $this->setupTitleYearType();
         }
 
         return $this->data['original_title'];
     }
 
     /**
-     * Get movie type.
+     * Parse movie/series original title
+     *
+     * @param $data
+     * @return void
+     */
+    private function originalTitleParse($data): void
+    {
+        if (!empty($data->title->originalTitleText->text)
+            && $data->title->originalTitleText->text != $this->data['title']
+            && $data->title->originalTitleText->text != $data->title->titleText->text) {
+            $this->data['original_title'] = $data->title->originalTitleText->text;
+        }
+    }
+
+    /**
+     * Get movie/series type.
      * it can be returned (Movie, TV Series, TV Episode, TV Special, TV Movie, TV Mini-Series, Video Game, TV Short, Video)
      *
-     * @return string
+     * @return string|null
+     * @throws Exception
      */
-    public function type(): string
+    public function type(): ?string
     {
-        if (empty($this->data['type'])) {
+        if (!$this->isFullCalled && empty($this->data['type'])) {
             $this->setupTitleYearType();
-
-            if (!empty($this->data['type'])) {
-                return $this->data['type'];
-            }
-
-            // TV Special isn't shown in the page title but is mentioned next to the release date
-            if (preg_match('/title="See more release dates" >TV Special/', $this->getContentOfPage("title"), $match)) {
-                $this->data['type'] = 'TV Special';
-            }
-
-            if (empty($this->data['type'])) {
-                $this->data['type'] = 'Movie';
-            }
         }
 
         return $this->data['type'];
     }
 
     /**
-     * Get year
+     * Parse type title
+     *
+     * @param $data
+     * @return void
+     */
+    private function typeParse($data): void
+    {
+        if (!empty($data->title->titleType->text)) {
+            $this->data['type'] = $data->title->titleType->text;
+        }
+    }
+
+    /**
+     * Get movie/series year.
      *
      * @return int|null
+     * @throws Exception
      */
     public function year(): ?int
     {
-        if (empty($this->data['year'])) {
+        if (!$this->isFullCalled && empty($this->data['year'])) {
             $this->setupTitleYearType();
         }
 
@@ -305,14 +385,15 @@ class Title extends Base
     }
 
     /**
-     * Get end-year
-     * Usually this returns the same value as year() -- except for those cases where production spanned multiple years, usually for series
+     * Get series end year.
+     * this method return usually for series.
      *
      * @return int|null
+     * @throws Exception
      */
     public function endYear(): ?int
     {
-        if (empty($this->data['end_year'])) {
+        if (!$this->isFullCalled && empty($this->data['end_year'])) {
             $this->setupTitleYearType();
         }
 
@@ -320,435 +401,624 @@ class Title extends Base
     }
 
     /**
-     * Get overall runtime (first one mentioned on title page)
-     * runtime in minutes (if set), NULL otherwise
+     * Parse year and end year
+     *
+     * @param $data
+     * @return void
+     */
+    private function yearParse($data): void
+    {
+        if (!empty($data->title->releaseYear->year)) {
+            $this->data['year'] = $data->title->releaseYear->year;
+        }
+        if (!empty($data->title->releaseYear->endYear)) {
+            $this->data['end_year'] = $data->title->releaseYear->endYear;
+        }
+    }
+
+    /**
+     * Get image
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function image(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['image'])) {
+            $query = <<<GRAPHQL
+query Image(\$id: ID!) {
+  title(id: \$id) {
+    primaryImage {
+      url
+      width
+      height
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Image", ["id" => $this->imdb_id]);
+            $this->imageParse($data);
+        }
+
+        return $this->data['image'];
+    }
+
+    /**
+     * Parse image
+     *
+     * @param $data
+     * @return void
+     */
+    private function imageParse($data): void
+    {
+        if (!empty($data->title->primaryImage->url)) {
+            $this->data['image'] = $this->parseImage($data->title->primaryImage);
+        }
+    }
+
+    /**
+     * Get rating and votes
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    private function ratings(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['ratings'])) {
+            $query = <<<GRAPHQL
+query RatingVotes(\$id: ID!) {
+  title(id: \$id) {
+    ratingsSummary {
+      aggregateRating
+      voteCount
+    }
+  }
+}
+GRAPHQL;
+            $data = $this->graphql->query($query, "RatingVotes", ["id" => $this->imdb_id]);
+            $this->ratingVotesParse($data);
+        }
+
+        return $this->data['ratings'];
+    }
+
+    /**
+     * Parse Rating and Votes
+     *
+     * @param $data
+     * @return void
+     */
+    private function ratingVotesParse($data): void
+    {
+        $this->data['ratings']['rating'] = $data->title->ratingsSummary->aggregateRating ?? null;
+        $this->data['ratings']['votes'] = $data->title->ratingsSummary->voteCount ?? null;
+    }
+
+    /**
+     * Get title popularity rank
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function rank(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['rank'])) {
+            $query = <<<GRAPHQL
+query Rank(\$id: ID!) {
+  title(id: \$id) {
+    meterRanking {
+      currentRank
+      rankChange {
+        changeDirection
+        difference
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Rank", ["id" => $this->imdb_id]);
+            $this->rankParse($data);
+        }
+
+        return $this->data['rank'];
+    }
+
+    /**
+     * Parse rank
+     *
+     * @param $data
+     * @return void
+     */
+    private function rankParse($data): void
+    {
+        if (!empty($data->title->meterRanking)) {
+            $this->data['rank']['current_rank'] = $data->title->meterRanking->currentRank ?? null;
+            $this->data['rank']['change_direction'] = $data->title->meterRanking->rankChange->changeDirection ?? null;
+            $this->data['rank']['difference'] = $data->title->meterRanking->rankChange->difference ?? null;
+        }
+    }
+
+    /**
+     * Get title main runtime
      *
      * @return int|null
+     * @throws Exception
      */
     public function runtime(): ?int
     {
-        if (empty($this->data['runtime'])) {
-            $jsonValue = isset($this->jsonLD()->duration) ? $this->jsonLD()->duration : (isset($this->jsonLD()->timeRequired) ? $this->jsonLD()->timeRequired : null);
-            if (isset($jsonValue) && preg_match('/PT(?:(\d+)H)?(?:(\d+)M)?/', $jsonValue, $matches)) {
-                $h = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
-                $m = isset($matches[2]) ? intval($matches[2]) : 0;
-                return $this->data['runtime'] = $h + $m;
-            }
-        }
+        if (!$this->isFullCalled && empty($this->data['runtime'])) {
+            $query = <<<GRAPHQL
+query Runtime(\$id: ID!) {
+  title(id: \$id) {
+    runtime {
+      seconds
+    }
+  }
+}
+GRAPHQL;
 
-        if (empty($this->data['runtime'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="title-techspec_runtime"]') == false) {
-                return null;
-            }
-
-            $runtimeValue = $dom->find('[data-testid="title-techspec_runtime"] li span', 0)->innerText();
-            if (empty($runtimeValue)) {
-                $runtimeValue = $this->cleanString($dom->find('[data-testid="title-techspec_runtime"] div', 0)->innerText());
-            }
-
-            if (isset($runtimeValue)) {
-                // ..h ..min
-                if (preg_match('/(\d{1,2})h (\d{1,2})min/', $runtimeValue, $matches)) {
-                    $h = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
-                    $m = isset($matches[2]) ? intval($matches[2]) : 0;
-                    return $this->data['runtime'] = $h + $m;
-                } // ..h
-                elseif (preg_match('/(\d{1,2})h/', $runtimeValue, $matches)) {
-                    $m = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
-                    return $this->data['runtime'] = $m;
-                } // ..hour
-                elseif (preg_match('/(\d{1,2}) hour/', $runtimeValue, $matches)) {
-                    $m = isset($matches[1]) ? intval($matches[1]) * 60 : 0;
-                    return $this->data['runtime'] = $m;
-                } // ..minutes
-                elseif (preg_match('/(\d{1,2}) minutes/', $runtimeValue, $matches)) {
-                    $m = isset($matches[1]) ? intval($matches[1]) : 0;
-                    return $this->data['runtime'] = $m;
-                } // ..min
-                elseif (preg_match('/(\d{1,2})min/', $runtimeValue, $matches)) {
-                    $m = isset($matches[1]) ? intval($matches[1]) : 0;
-                    return $this->data['runtime'] = $m;
-                }
-            }
+            $data = $this->graphql->query($query, "Runtime", ["id" => $this->imdb_id]);
+            $this->runtimeParse($data);
         }
 
         return $this->data['runtime'];
     }
 
     /**
-     * Get photo poster
+     * Parse rank
      *
-     * @return array
+     * @param $data
+     * @return void
      */
-    public function photo(): array
+    private function runtimeParse($data): void
     {
-        if (empty($this->data['photo'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="hero-media__poster"] img') == false) {
-                return [];
-            }
-
-            $photo = $dom->find('[data-testid="hero-media__poster"] img', 0)->getAttribute('src');
-
-            $this->data['photo'] = $this->photoUrl($photo);
+        if (!empty($data->title->runtime)) {
+            $this->data['runtime'] = $data->title->runtime->seconds / 60;
         }
-
-        return $this->data['photo'];
-    }
-
-    // TODO deprecate this method
-
-    /**
-     * Get the main tagline for the movie
-     *
-     * @return string|null
-     */
-    public function tagline(): ?string
-    {
-        if (empty($this->data['tagline'])) {
-            if (count($this->taglines()) > 0) {
-                $this->data['tagline'] = $this->taglines()[0];
-            }
-        }
-
-        return $this->data['tagline'];
     }
 
     /**
-     * Get all genres
+     * Retrieve all runtimes and their descriptions
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function genres(): array
+    public function runtimes(): ?array
     {
-        if (empty($this->data['genres'])) {
-            $genres = isset($this->jsonLD()->genre) ? $this->jsonLD()->genre : [];
-            if (!is_array($genres)) {
-                $genres = (array)$genres;
-            }
-            $this->data['genres'] = $genres;
+        if (!$this->isFullCalled && empty($this->data['runtimes'])) {
+            $query = <<<GRAPHQL
+query Runtimes(\$id: ID!) {
+  title(id: \$id) {
+    runtimes(first: 9999) {
+      edges {
+        node {
+          attributes {
+            text
+          }
+          country {
+            text
+          }
+          seconds
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Runtimes", ["id" => $this->imdb_id]);
+            $this->runtimesParse($data);
         }
 
-        if (empty($this->data['genres'])) {
-            $dom = $this->getHtmlDomParser("title");
+        return $this->data['runtimes'];
+    }
 
-            if ($dom->findOneOrFalse('[data-testid="storyline-genres"]') == false) {
-                return [];
+    /**
+     * Parse runtimes
+     *
+     * @param $data
+     * @return void
+     */
+    private function runtimesParse($data): void
+    {
+        if (!empty($data->title->runtimes->edges)) {
+            foreach ($data->title->runtimes->edges as $edge) {
+                $attributes = [];
+                if (!empty($edge->node->attributes)) {
+                    foreach ($edge->node->attributes as $attribute) {
+                        if (!empty($attribute->text)) {
+                            $attributes[] = $attribute->text;
+                        }
+                    }
+                }
+
+                $this->data['runtimes'][] = [
+                    'time' => isset($edge->node->seconds) ? $edge->node->seconds / 60 : null,
+                    'annotations' => $attributes,
+                    'country' => $edge->node->country->text ?? null
+                ];
             }
+        }
+    }
 
-            $this->data['genres'] = $dom->find('[data-testid="storyline-genres"] a')->text();
+    /**
+     * Get all spoken languages spoken in this title
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function languages(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['languages'])) {
+            $query = <<<GRAPHQL
+query Languages(\$id: ID!) {
+  title(id: \$id) {
+    spokenLanguages {
+      spokenLanguages {
+        id
+        text
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Languages", ["id" => $this->imdb_id]);
+            $this->languagesParse($data);
+        }
+
+        return $this->data['languages'];
+    }
+
+    /**
+     * Parse languages
+     *
+     * @param $data
+     * @return void
+     */
+    private function languagesParse($data): void
+    {
+        if (!empty($data->title->spokenLanguages->spokenLanguages)) {
+            foreach ($data->title->spokenLanguages->spokenLanguages as $language) {
+                if (!empty($language->text)) {
+                    $this->data['languages'][] = [
+                        'code' => $language->id,
+                        'name' => $language->text
+                    ];
+                }
+            }
+        }
+    }
+
+    /**
+     * Get all genres the movie is registered for
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function genres(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['genres'])) {
+            $query = <<<GRAPHQL
+query Genres(\$id: ID!) {
+  title(id: \$id) {
+    titleGenres {
+      genres {
+        genre {
+          text
+        }
+        subGenres {
+          keyword {
+            text {
+              text
+            }
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Genres", ["id" => $this->imdb_id]);
+            $this->genresParse($data);
         }
 
         return $this->data['genres'];
     }
 
     /**
-     * Get all languages
+     * Parse genres
      *
-     * @return array
+     * @param $data
+     * @return void
      */
-    public function languages(): array
+    private function genresParse($data): void
     {
-        if (empty($this->data['languages'])) {
-            if (preg_match_all('!href="/search/title.+?primary_language=([^&]*)[^>]*>\s*(.*?)\s*</a>(\s+\((.*?)\)|)!m',
-                $this->getContentOfPage("title"), $matches)) {
-                $this->data['languages'] = $matches[2];
-                $mc = count($matches[2]);
-                for ($i = 0; $i < $mc; $i++) {
-                    $this->data['languages_detailed'][] = [
-                        'name' => $matches[2][$i],
-                        'code' => $matches[1][$i],
-                        'comment' => trim($matches[4][$i])
-                    ];
+        if (!empty($data->title->titleGenres->genres)) {
+            foreach ($data->title->titleGenres->genres as $edge) {
+                $subGenres = null;
+                if (isset($edge->subGenres) && is_array($edge->subGenres) && count($edge->subGenres) > 0) {
+                    foreach ($edge->subGenres as $subGenre) {
+                        if (!empty($subGenre->keyword->text->text)) {
+                            $subGenres[] = ucwords($subGenre->keyword->text->text);
+                        }
+                    }
                 }
+
+                $this->data['genres'][] = [
+                    'genre' => $edge->genre->text ?? null,
+                    'subs' => $subGenres
+                ];
             }
         }
-
-
-        // new theme
-        /*
-        if (empty($this->data['languages'])) {
-            $dom = $this->getHtmlDomParser("title");
-            try {
-                $list = $dom->find('#__NEXT_DATA__', 0);
-                $jsonLD = json_decode($list->innerText());
-                $spokenLanguages = $jsonLD->props->pageProps->mainColumnData->spokenLanguages;
-                foreach ($spokenLanguages as $item) {
-                    $this->data['languages'][] = $item->text;
-                    $this->data['languages_detailed'][] = [
-                        'name' => $item->text,
-                        'code' => $item->id,
-                        'comment' => null
-                    ];
-                }
-            } catch (Exception $e) {
-
-            }
-
-        }
-        */
-
-        return $this->data['languages'];
-    }
-
-    /**
-     * Get all languages with details
-     *
-     * @return array
-     */
-    public function languagesDetailed(): array
-    {
-        if (empty($this->data['languages_detailed'])) {
-            $this->languages();
-        }
-
-        return $this->data['languages_detailed'];
     }
 
     /**
      * Get country of production
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function countries(): array
+    public function countries(): ?array
     {
-        if (empty($this->data['countries'])) {
-            if (preg_match_all('!href="/search/title.+?country_of_origin=([^&]*)[^>]*>(.*?)<!m',
-                $this->getContentOfPage("title"), $matches)) {
-                $this->data['countries'] = $matches[2];
-                $mc = count($matches[2]);
-                for ($i = 0; $i < $mc; $i++) {
-                    $this->data['countries_detailed'][] = [
-                        'name' => $this->cleanString($matches[2][$i]),
-                        'code' => $this->cleanString(strtolower($matches[1][$i]))
-                    ];
-                }
-            }
+        if (!$this->isFullCalled && empty($this->data['countries'])) {
+            $query = <<<GRAPHQL
+query Countries(\$id: ID!) {
+  title(id: \$id) {
+    countriesOfOrigin {
+      countries {
+        id
+        text
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Countries", ["id" => $this->imdb_id]);
+            $this->countriesParse($data);
         }
 
         return $this->data['countries'];
     }
 
     /**
-     * Get all countries with details
+     * Parse countries
      *
-     * @return array
+     * @param $data
+     * @return void
      */
-    public function countriesDetailed(): array
+    private function countriesParse($data): void
     {
-        if (empty($this->data['countries_detailed'])) {
-            $this->countries();
-        }
-
-        return $this->data['countries_detailed'];
-    }
-
-    /**
-     * Get movie rating
-     *
-     * @return string|null
-     */
-    public function rating(): ?string
-    {
-        return $this->data['rating'] = isset($this->jsonLD()->aggregateRating->ratingValue) ? (string)$this->jsonLD()->aggregateRating->ratingValue : null;
-    }
-
-    /**
-     * Return number of votes for this movie
-     *
-     * @return int|null
-     */
-    public function votes(): ?int
-    {
-        return $this->data['votes'] = isset($this->jsonLD()->aggregateRating->ratingCount) ? (int)$this->jsonLD()->aggregateRating->ratingCount : null;
-    }
-
-    /**
-     * Get the colors this movie was shot in.
-     * e.g. Color, Black and White
-     *
-     * @return array
-     */
-    public function colors(): array
-    {
-        if (empty($this->data['colors'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="title-techspec_color"]') == false) {
-                return [];
-            }
-
-            $this->data['colors'] = $dom->find('[data-testid="title-techspec_color"] a')->text();
-        }
-
-        return $this->data['colors'];
-    }
-
-    /**
-     * Get sound formats
-     *
-     * @return array
-     */
-    public function sounds(): array
-    {
-        if (empty($this->data['sounds'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="title-techspec_soundmix"]') == false) {
-                return [];
-            }
-
-            $this->data['sounds'] = $dom->find('[data-testid="title-techspec_soundmix"] a')->text();
-        }
-
-        return $this->data['sounds'];
-    }
-
-    /**
-     * Aspect Ratio of movie screen
-     *
-     * @return string|null
-     */
-    public function aspectRatio(): ?string
-    {
-        if (empty($this->data['aspect_ratio'])) {
-            $dom = $this->getHtmlDomParser("title");
-
-            if ($dom->findOneOrFalse('[data-testid="title-techspec_aspectratio"]') == false) {
-                return null;
-            }
-
-            $this->data['aspect_ratio'] = $dom->find('[data-testid="title-techspec_aspectratio"] li span', 0)->innerText();
-            $this->data['aspect_ratio'] = $this->cleanString($this->data['aspect_ratio']);
-        }
-
-        return $this->data['aspect_ratio'];
-    }
-
-    /***************************************[ /taglines ]***************************************/
-    /**
-     * Get all available taglines for the movie
-     *
-     * @return array
-     */
-    public function taglines(): array
-    {
-        if (empty($this->data['taglines'])) {
-            $dom = $this->getHtmlDomParser("taglines");
-
-            // not found boxoffice table
-            if ($dom->findOneOrFalse('.ipc-page-section--base ul.ipc-metadata-list') == false) {
-                return [];
-            }
-
-            foreach ($dom->find('.ipc-page-section--base ul.ipc-metadata-list li') as $row) {
-                $tag = $this->cleanString($row->find('.ipc-html-content-inner-div', 0)->innerText());
-                if ($tag) {
-                    $this->data['taglines'][] = $tag;
+        if (!empty($data->title->countriesOfOrigin->countries)) {
+            foreach ($data->title->countriesOfOrigin->countries as $country) {
+                if (!empty($country->text)) {
+                    $this->data['countries'][] = [
+                        'code' => $country->id,
+                        'name' => $country->text
+                    ];
                 }
             }
+        }
+    }
+
+    /**
+     * Get all available taglines for the title
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function taglines(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['taglines'])) {
+            $query = <<<GRAPHQL
+query Taglines(\$id: ID!) {
+  title(id: \$id) {
+    taglines(first: 9999) {
+      edges {
+        node {
+          text
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Taglines", ["id" => $this->imdb_id]);
+            $this->taglinesParse($data);
         }
 
         return $this->data['taglines'];
     }
 
-    /***************************************[ /locations ]***************************************/
     /**
-     * Filming locations
+     * Parse taglines
      *
-     * @return array
+     * @param $data
+     * @return void
      */
-    public function locations(): array
+    private function taglinesParse($data): void
     {
-        // new theme
-        if (empty($this->data['locations'])) {
-            $dom = $this->getHtmlDomParser("locations");
-
-            // check exist in locations page
-            if ($dom->findOneOrFalse('[data-testid="sub-section-flmg_locations"]') != false) {
-                foreach ($dom->find('[data-testid="sub-section-flmg_locations"] [data-testid="item-id"] .ipc-link')->text() as $location) {
-                    $this->data['locations'][] = $this->cleanString($location);
-                }
+        if (!empty($data->title->taglines->edges)) {
+            foreach ($data->title->taglines->edges as $edge) {
+                $this->data['taglines'][] = $edge->node->text;
             }
         }
-
-        // old theme
-        if (empty($this->data['locations'])) {
-            $dom = $this->getHtmlDomParser("locations");
-
-            // no such page
-            if ($dom->findOneOrFalse('#filming_locations .soda dt a') == false) {
-                return [];
-            }
-
-            foreach ($dom->find('#filming_locations dt a')->text() as $location) {
-                $this->data['locations'][] = $this->cleanString($location);
-            }
-        }
-
-        return $this->data['locations'];
     }
 
-    /***************************************[ /keywords ]***************************************/
     /**
-     * Get the complete keywords for the movie
+     * Get all keywords
      *
-     * @return array
+     * @return array|null
+     * @throws Exception
      */
-    public function keywords(): array
+    public function keywords(): ?array
     {
-        // new theme
-        if (empty($this->data['locations'])) {
-            $dom = $this->getHtmlDomParser("keywords");
-
-            // check exist in locations page
-            if ($dom->findOneOrFalse('[data-testid="sub-section"]') != false) {
-                foreach ($dom->find('[data-testid="sub-section"] ul li')->text() as $keyword) {
-                    $this->data['keywords'][] = $this->cleanString($keyword);
-                }
-            }
-        }
-
         if (empty($this->data['keywords'])) {
-            $page = $this->getContentOfPage("keywords");
-            if (preg_match_all('|<a href="/search/keyword[^>]+?>(.*?)</a>|', $page, $matches)) {
-                $this->data['keywords'] = $matches[1];
+            $query = <<<GRAPHQL
+keyword {
+  text {
+    text
+  }
+}
+GRAPHQL;
+
+            $data = $this->getAllData("Keywords", "keywords", $query);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    if (!empty($edge->node->keyword->text->text)) {
+                        $this->data['keywords'][] = $edge->node->keyword->text->text;
+                    }
+                }
             }
         }
 
         return $this->data['keywords'];
     }
 
-    /***************************************[ /parentalguide ]***************************************/
     /**
-     * Get the MPAA rating / Parental Guidance / Age rating for this title by country
+     * Get all Filming locations
      *
-     * @return array [country => rating]
+     * @return array|null
+     * @throws Exception
      */
-    public function mpaa(): array
+    public function locations(): ?array
     {
-        // old theme
-        if (empty($this->data['mpaas'])) {
-            $source = $this->getContentOfPage("parentalguide");
-            if (preg_match_all("|/search/title\?certificates=.*?>\s*(.*?):(.*?)<|", $source, $matches)) {
-                $cc = count($matches[0]);
-                for ($i = 0; $i < $cc; ++$i) {
-                    $this->data['mpaas'][$matches[1][$i]] = $this->cleanString($matches[2][$i]);
+        if (empty($this->data['locations'])) {
+            $query = <<<GRAPHQL
+displayableProperty {
+  qualifiersInMarkdownList {
+    plainText
+  }
+  value {
+    plainText
+  }
+}
+GRAPHQL;
+
+            $data = $this->getAllData("FilmingLocations", "filmingLocations", $query);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $scenes = null;
+                    if (isset($edge->node->displayableProperty->qualifiersInMarkdownList)) {
+                        foreach ($edge->node->displayableProperty->qualifiersInMarkdownList as $attribute) {
+                            if (!empty($attribute->plainText)) {
+                                $scenes[] = $attribute->plainText;
+                            }
+                        }
+                    }
+
+                    $this->data['locations'][] = [
+                        'real' => $edge->node->displayableProperty->value->plainText ?? null,
+                        'scenes' => $scenes
+                    ];
                 }
             }
         }
 
-        // new theme
-        if (empty($this->data['mpaas'])) {
-            $dom = $this->getHtmlDomParser("parentalguide");
+        return $this->data['locations'];
+    }
 
-            // check exist in locations page
-            if ($dom->findOneOrFalse('[data-testid="certificates"]') != false) {
-                foreach ($dom->find('[data-testid="certificates"] ul li') as $mp) {
-                    $this->data['mpaas'][$mp->find('.ipc-metadata-list-item__label',0)->text()] = $mp->find('a',0)->text();
+    /**
+     * Get movie sound mixes
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function sounds(): ?array
+    {
+        if (empty($this->data['sounds'])) {
+            $this->techSpec("soundMixes", "text", 'sounds');
+        }
+
+        return $this->data['sounds'];
+    }
+
+    /**
+     * Get movie colorations like color or Black and white
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function colors(): ?array
+    {
+        if (empty($this->data['colors'])) {
+            $this->techSpec("colorations", "text", 'colors');
+        }
+
+        return $this->data['colors'];
+    }
+
+    /**
+     * Get movie aspect ratio like 1.66:1 or 16:9
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function aspectRatio(): ?array
+    {
+        if (empty($this->data['aspect_ratio'])) {
+            $this->techSpec("aspectRatios", "aspectRatio", 'aspect_ratio');
+        }
+
+        return $this->data['aspect_ratio'];
+    }
+
+    /**
+     * Get cameras used in this title
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function cameras(): ?array
+    {
+        if (empty($this->data['cameras'])) {
+            $this->techSpec("cameras", "camera", 'cameras');
+        }
+
+        return $this->data['cameras'];
+    }
+
+    /**
+     * Get the MPAA rating / Parental Guidance / Age rating for this title by country
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function mpaas(): ?array
+    {
+        if (empty($this->data['mpaas'])) {
+            $query = <<<GRAPHQL
+country {
+  text
+}
+rating
+attributes {
+  text
+}
+GRAPHQL;
+
+            $data = $this->getAllData("Mpaa", "certificates", $query);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $comments = null;
+                    if (isset($edge->node->attributes)) {
+                        foreach ($edge->node->attributes as $attribute) {
+                            if (!empty($attribute->text)) {
+                                $comments[] = $attribute->text;
+                            }
+                        }
+                    }
+
+                    $this->data['mpaas'][] = [
+                        'country' => $edge->node->country->text ?? null,
+                        'rating' => $edge->node->rating ?? null,
+                        'comment' => $comments
+                    ];
                 }
             }
         }
@@ -757,76 +1027,178 @@ class Title extends Base
     }
 
     /**
-     * Find out the reason for the MPAA rating
+     * Get all available taglines for the title
      *
-     * @return string|null
+     * @return array|null
+     * @throws Exception
      */
-    public function mpaaReason(): ?string
+    public function videos(string $videoContentType = null, bool $videoIncludeMature = false): ?array
     {
-        // Old theme
-        if (empty($this->data['mpaa_reason'])) {
-            $source = $this->getContentOfPage("parentalguide");
-            if (preg_match('!id="mpaa-rating"\s*>\s*<td[^>]*>.*</td>\s*<td[^>]*>(.*)</td>!im', $source, $match)) {
-                $this->data['mpaa_reason'] = trim($match[1]);
+        if (empty($this->data['videos'])) {
+            $filter = $videoIncludeMature === true ? ',filter:{maturityLevel:INCLUDE_MATURE}' : '';
+            $query = <<<GRAPHQL
+query Video(\$id: ID!) {
+  title(id: \$id) {
+    videoStrip(first:9999$filter) {
+      edges {
+        node {
+          id
+          name {
+            value
+          }
+          runtime {
+            value
+          }
+          contentType {
+            displayName {
+              value
             }
+          }
+          description {
+            value
+          }
+          thumbnail {
+            url
+            width
+            height
+          }
+          primaryTitle {
+            titleText {
+              text
+            }
+            releaseYear {
+              year
+            }
+          }
         }
+      }
+    }
+  }
+}
+GRAPHQL;
 
-        // new theme
-        if (empty($this->data['mpaa_reason'])) {
-            $dom = $this->getHtmlDomParser("parentalguide");
-            try {
-                $list = $dom->find('#__NEXT_DATA__', 0);
-                $jsonLD = json_decode($list->innerText());
-                if (isset($jsonLD->props->pageProps->contentData->contentRatingData->ratingReason)) {
-                    $this->data['mpaa_reason'] = trim($jsonLD->props->pageProps->contentData->contentRatingData->ratingReason);
+            $data = $this->graphql->query($query, "Video", ["id" => $this->imdb_id]);
+
+            if (isset($data->title->videoStrip->edges) &&
+                is_array($data->title->videoStrip->edges) &&
+                count($data->title->videoStrip->edges) > 0
+            ) {
+                foreach ($data->title->videoStrip->edges as $edge) {
+                    if (!empty($videoContentType) &&
+                        isset($edge->node->contentType->displayName->value) &&
+                        $edge->node->contentType->displayName->value !== $videoContentType
+                    ) {
+                        continue;
+                    }
+
+                    $this->data['videos'][] = [
+                        'id' => $edge->node->id,
+                        'type' => $edge->node->contentType->displayName->value ?? null,
+                        'title' => $edge->node->name->value ?? null,
+                        'runtime' => $edge->node->runtime->value ?? null,
+                        'description' => $edge->node->description->value ?? null,
+                        'titleName' => $edge->node->primaryTitle->titleText->text ?? null,
+                        'titleYear' => $edge->node->primaryTitle->releaseYear->year ?? null,
+                        'playbackUrl' => !empty($videoId) ? 'https://www.imdb.com/video/vi' . $edge->node->id . '/' : null,
+                        'image' => $this->parseImage($edge->node->thumbnail)
+                    ];
                 }
-            } catch (Exception $e) {
-
             }
-
         }
 
-        return $this->data['mpaa_reason'];
+        return $this->data['videos'];
     }
 
-    public function trailers()
+    /***************************************[ Helper Methods ]***************************************/
+    /**
+     * Get all edges of a field in the title type
+     *
+     * @param string $queryName
+     * @param string $fieldName
+     * @param string $nodeQuery
+     * @param string $filter
+     * @return array
+     * @throws Exception
+     */
+    protected function getAllData(string $queryName, string $fieldName, string $nodeQuery, string $filter = ""): array
     {
-        $dom = $this->getHtmlDomParser("trailer");
+        $query = <<<EOF
+query $queryName(\$id: ID!, \$after: ID) {
+  title(id: \$id) {
+    $fieldName(first: 9999, after: \$after$filter) {
+      edges {
+        node {
+          $nodeQuery
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
+EOF;
+        $fullQuery = implode("\n", array_map('trim', explode("\n", $query)));
 
-        if (empty($this->data['trailers'])) {
-            if ($dom->findOneOrFalse('.ipc-sub-grid')) {
-                foreach ($dom->find('.ipc-sub-grid .ipc-slate-card') as $e) {
-                    $id = $e->find('a', 0)->getAttribute('href');
-                    preg_match('/vi\d+/', $id, $matches);
-                    $id = $matches[0];
-
-                    $thumbnail = $e->find('.ipc-media img', 0)->getAttribute('src');
-                    $title = $e->find('.ipc-slate-card__title-text', 0)->text();
-                    $video_title = $e->find('.ipc-media img', 0)->getAttribute('alt');
-
-                    $type = $e->find('.ipc-lockup-overlay .ipc-lockup-overlay__text', 0)->text();
-                    $type = trim(preg_replace("/\s*\d{1,2}:\d{2}/", '', $type));
-
-                    $duration = $e->find('.ipc-lockup-overlay .ipc-lockup-overlay__text', 0)->text();
-                    if (preg_match("/\d{1,2}:\d{2}/", $duration, $match)) {
-                        $duration = trim($match[0]);
-                    }
-
-                    if (!empty($id) and !empty($title)) {
-                        $this->data['trailers'][] = [
-                            'id' => $id,
-                            'type' => $type,
-                            'title' => $this->cleanString($title),
-                            'video_title' => $this->cleanString($video_title),
-                            'thumbnail' => $this->cleanString($thumbnail),
-                            'duration' => $duration,
-                        ];
-                    }
-                }
+        // Results are paginated, so loop until we've got all the data
+        $endCursor = null;
+        $hasNextPage = true;
+        $edges = [];
+        while ($hasNextPage) {
+            $data = $this->graphql->query($fullQuery, $queryName, ["id" => $this->imdb_id, "after" => $endCursor]);
+            if (isset($data->title->{$fieldName})) {
+                $edges = array_merge($edges, $data->title->{$fieldName}->edges);
+                $hasNextPage = $data->title->{$fieldName}->pageInfo->hasNextPage;
+                $endCursor = $data->title->{$fieldName}->pageInfo->endCursor;
             }
         }
 
-        return $this->data['trailers'];
+        return $edges;
+    }
+
+    /**
+     * Get movie tech specs
+     *
+     * @throws Exception
+     */
+    protected function techSpec(string $type, string $valueType, string $arrayName): void
+    {
+        $query = <<<GRAPHQL
+query TechSpec(\$id: ID!) {
+  title(id: \$id) {
+    technicalSpecifications {
+      $type {
+        items {
+          $valueType
+          attributes {
+            text
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+        $data = $this->graphql->query($query, "TechSpec", ["id" => $this->imdb_id]);
+
+        if (isset($data->title->technicalSpecifications->$type->items)) {
+            foreach ($data->title->technicalSpecifications->$type->items as $item) {
+                $attributes = null;
+                if (isset($item->attributes)) {
+                    foreach ($item->attributes as $attribute) {
+                        if (!empty($attribute->text)) {
+                            $attributes[] = $attribute->text;
+                        }
+                    }
+                }
+
+                $this->data[$arrayName][] = [
+                    'value' => $item->$valueType ?? null,
+                    'attributes' => $attributes
+                ];
+            }
+        }
     }
 
 }

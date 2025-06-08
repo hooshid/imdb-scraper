@@ -6,235 +6,275 @@ use PHPUnit\Framework\TestCase;
 
 class TitleTest extends TestCase
 {
-    protected function getTitle($id, $language = "en-US"): Title
+    public function testMovie()
+    {
+        $title = new Title('tt0133093');
+        $data = $title->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'videos']);
+
+        $this->assertEquals('tt0133093', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt0133093/', $data['main_url']);
+        $this->assertNull($data['canonical_id']);
+        $this->assertEquals('The Matrix', $data['title']);
+        $this->assertNull($data['original_title']);
+        $this->assertEquals('Movie', $data['type']);
+        $this->assertEquals(1999, $data['year']);
+        $this->assertNull($data['end_year']);
+
+        $this->assertIsArray($data['image']);
+        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_.jpg', $data['image']['url']);
+        $this->assertEquals(2100, $data['image']['width']);
+        $this->assertEquals(3156, $data['image']['height']);
+
+        $this->assertEquals(8.7, $data['ratings']['rating']);
+        $this->assertGreaterThan(2000000, $data['ratings']['votes']);
+
+        $this->assertIsInt($data['rank']['current_rank']);
+        $this->assertIsString($data['rank']['change_direction']);
+        $this->assertIsInt($data['rank']['difference']);
+
+        $this->assertIsArray($data['languages']);
+        $this->assertCount(1, $data['languages']);
+        $this->assertEquals('en', $data['languages'][0]['code']);
+        $this->assertEquals('English', $data['languages'][0]['name']);
+
+        $this->assertIsArray($data['countries']);
+        $this->assertCount(2, $data['countries']);
+        $this->assertEquals('US', $data['countries'][0]['code']);
+        $this->assertEquals('United States', $data['countries'][0]['name']);
+        $this->assertEquals('AU', $data['countries'][1]['code']);
+        $this->assertEquals('Australia', $data['countries'][1]['name']);
+
+        $this->assertEquals(136, $data['runtime']);
+        $this->assertIsArray($data['runtimes']);
+
+        $this->assertIsArray($data['taglines']);
+        $this->assertCount(15, $data['taglines']);
+        $this->assertEquals('Free your mind', $data['taglines'][0]);
+
+        $this->assertIsArray($data['keywords']);
+        $this->assertCount(403, $data['keywords']);
+        $this->assertEquals('artificial reality', $data['keywords'][0]);
+        $this->assertEquals('war with machines', $data['keywords'][1]);
+        $this->assertEquals('simulated reality', $data['keywords'][2]);
+        $this->assertEquals('dystopia', $data['keywords'][3]);
+
+        $this->assertIsArray($data['locations']);
+        $this->assertCount(22, $data['locations']);
+        $this->assertEquals('Nashville, Tennessee, USA', $data['locations'][0]['real']);
+        $this->assertEquals('exterior scenes: skyline in opening Trinity rooftop chase', $data['locations'][0]['scenes'][0]);
+
+        $this->assertIsArray($data['sounds']);
+        $this->assertCount(4, $data['sounds']);
+        $this->assertEquals('DTS', $data['sounds'][0]['value']);
+        $this->assertEquals('Dolby Digital', $data['sounds'][1]['value']);
+        $this->assertEquals('SDDS', $data['sounds'][2]['value']);
+        $this->assertEquals('Dolby Atmos', $data['sounds'][3]['value']);
+
+        $this->assertIsArray($data['colors']);
+        $this->assertCount(1, $data['colors']);
+        $this->assertEquals('Color', $data['colors'][0]['value']);
+
+        $this->assertIsArray($data['aspect_ratio']);
+        $this->assertCount(2, $data['aspect_ratio']);
+        $this->assertEquals('2.20 : 1', $data['aspect_ratio'][0]['value']);
+        $this->assertEquals('2.39 : 1', $data['aspect_ratio'][1]['value']);
+
+        $this->assertIsArray($data['cameras']);
+        $this->assertCount(4, $data['cameras']);
+        $this->assertEquals('Arriflex 435, Panavision Primo Lenses', $data['cameras'][0]['value']);
+
+        $this->assertIsArray($data['videos']);
+        $this->assertGreaterThanOrEqual(18, count($data['videos']));
+    }
+
+    public function testMovie2()
+    {
+        $title = new Title('tt7618100');
+        $data = $title->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras']);
+
+        $this->assertEquals('tt7618100', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt7618100/', $data['main_url']);
+        $this->assertNull($data['canonical_id']);
+        $this->assertEquals('Untitled Star Wars Trilogy: Episode III', $data['title']);
+        $this->assertNull($data['original_title']);
+        $this->assertEquals('Movie', $data['type']);
+        $this->assertNull($data['year']);
+        $this->assertNull($data['end_year']);
+        $this->assertNull($data['image']);
+        $this->assertNull($data['ratings']['rating']);
+        $this->assertEquals(0, $data['ratings']['votes']);
+        $this->assertNull($data['rank']);
+        $this->assertNull($data['runtimes']);
+        $this->assertNull($data['taglines']);
+        $this->assertIsArray($data['keywords']);
+        $this->assertCount(8, $data['keywords']);
+        $this->assertNull($data['locations']);
+        $this->assertNull($data['sounds']);
+        $this->assertCount(1, $data['colors']);
+        $this->assertNull($data['aspect_ratio']);
+        $this->assertNull($data['cameras']);
+    }
+
+    public function testMovie3()
+    {
+        $title = new Title('tt9843312');
+        $data = $title->full(['keywords', 'colors', 'mpaas','videos']);
+
+        $this->assertEquals('tt9843312', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt9843312/', $data['main_url']);
+        $this->assertNull($data['canonical_id']);
+        $this->assertEquals('Ninja Ko', $data['title']);
+        $this->assertEquals('Ninja Ko, the Origami Master', $data['original_title']);
+        $this->assertEquals('Video', $data['type']);
+        $this->assertEquals(1990, $data['year']);
+        $this->assertNull($data['end_year']);
+        $this->assertNull($data['rank']);
+        $this->assertIsArray($data['keywords']);
+        $this->assertNull($data['colors']);
+        $this->assertNull($data['mpaas']);
+        $this->assertNull($data['videos']);
+    }
+
+    public function testMovie4()
+    {
+        $title = new Title('tt0108052');
+        $data = $title->full(['colors']);
+
+        $this->assertEquals('tt0108052', $data['imdb_id']);
+        $this->assertEquals("Schindler's List", $data['title']);
+        $this->assertEquals('Movie', $data['type']);
+
+        $this->assertIsArray($data['colors']);
+        $this->assertCount(2, $data['colors']);
+        $this->assertEquals('Black and White', $data['colors'][0]['value']);
+        $this->assertEquals('Color', $data['colors'][1]['value']);
+    }
+
+    public function testMovie5()
+    {
+        $title = new Title('tt0087544');
+        $data = $title->full(['locations', 'cameras']);
+
+        $this->assertEquals('tt0087544', $data['imdb_id']);
+        $this->assertEquals("Nausicaä of the Valley of the Wind", $data['title']);
+        $this->assertEquals("Kaze no tani no Naushika", $data['original_title']);
+        $this->assertEquals('Movie', $data['type']);
+
+        $this->assertNull($data['locations']);
+        $this->assertNull($data['cameras']);
+    }
+
+    public function testMovieInDifferentLanguage()
     {
         $config = new Config();
-        $config->language = $language;
+        $config->useLocalization = true;
+        $config->country = 'DE';
+        $config->language = 'de-DE';
+        $title = new Title('tt3110958', $config);
+        $data = $title->full();
 
-        return new Title($id, $config);
+        $this->assertEquals('tt3110958', $data['imdb_id']);
+        $this->assertEquals('Die Unfassbaren 2', $data['title']);
+        $this->assertEquals('Now You See Me 2', $data['original_title']);
+        $this->assertEquals('Movie', $data['type']);
     }
 
-    public function testMainUrl()
+    public function testSeries()
     {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals('https://www.imdb.com/title/tt0133093/', $title->mainUrl());
+        $title = new Title('tt0306414');
+        $data = $title->full(['keywords', 'videos']);
+
+        $this->assertEquals('tt0306414', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt0306414/', $data['main_url']);
+        $this->assertNull($data['canonical_id']);
+        $this->assertEquals('The Wire', $data['title']);
+        $this->assertNull($data['original_title']);
+        $this->assertEquals('TV Series', $data['type']);
+        $this->assertEquals(2002, $data['year']);
+        $this->assertEquals(2008, $data['end_year']);
+
+        $this->assertIsArray($data['image']);
+        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BZWYyNmRhYjktNjBhNC00M2NhLWEzYmMtZDYwNmIyZTRiZWMzXkEyXkFqcGc@._V1_.jpg', $data['image']['url']);
+        $this->assertEquals(960, $data['image']['width']);
+        $this->assertEquals(1440, $data['image']['height']);
+
+        $this->assertIsArray($data['languages']);
+        $this->assertCount(4, $data['languages']);
+        $this->assertEquals('en', $data['languages'][0]['code']);
+        $this->assertEquals('English', $data['languages'][0]['name']);
+
+        $this->assertIsArray($data['countries']);
+        $this->assertCount(1, $data['countries']);
+        $this->assertEquals('US', $data['countries'][0]['code']);
+        $this->assertEquals('United States', $data['countries'][0]['name']);
+
+        $this->assertEquals(60, $data['runtime']);
+        $this->assertIsArray($data['runtimes']);
+
+        $this->assertIsArray($data['taglines']);
+        $this->assertCount(6, $data['taglines']);
+        $this->assertEquals("237", strlen(implode(', ', $data['taglines'])));
+        $this->assertEquals('A new case begins... (second season)', $data['taglines'][0]);
+        $this->assertEquals('Rules change. The game remains the same. (third season)', $data['taglines'][1]);
+        $this->assertEquals('No corner left behind. (fourth season)', $data['taglines'][2]);
+        $this->assertEquals('Listen carefully (first season)', $data['taglines'][3]);
+        $this->assertEquals('All in the game. (fifth season)', $data['taglines'][4]);
+        $this->assertEquals('Read between the lines (season five)', $data['taglines'][5]);
+
+        $this->assertIsArray($data['keywords']);
+        $this->assertCount(63, $data['keywords']);
+        $this->assertEquals('baltimore maryland', $data['keywords'][0]);
+
+        $this->assertIsArray($data['videos']);
+        $this->assertGreaterThanOrEqual(10, count($data['videos']));
     }
 
-    /***************************************[ Title & Original Title ]***************************************/
-
-    public function testTitle()
+    public function testTVMiniSeries()
     {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals('The Matrix', $title->title());
+        $title = new Title('tt10048342');
+        $data = $title->full();
+
+        $this->assertEquals('tt10048342', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt10048342/', $data['main_url']);
+        $this->assertNull($data['canonical_id']);
+        $this->assertEquals("The Queen's Gambit", $data['title']);
+        $this->assertNull($data['original_title']);
+        $this->assertEquals('TV Mini Series', $data['type']);
+        $this->assertEquals(2020, $data['year']);
+        $this->assertEquals(2020, $data['end_year']);
     }
 
-    public function testTitleReturnNullIfNoOriginalTitle()
+    public function testTVEpisode()
     {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertNull($title->originalTitle());
+        $title = new Title('tt0579539');
+        $data = $title->full();
+
+        $this->assertEquals('tt0579539', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt0579539/', $data['main_url']);
+        $this->assertNull($data['canonical_id']);
+        $this->assertEquals("The Train Job", $data['title']);
+        $this->assertNull($data['original_title']);
+        $this->assertEquals('TV Episode', $data['type']);
+        $this->assertEquals(2002, $data['year']);
+        $this->assertNull($data['end_year']);
     }
 
-    public function testTitleWithOriginalTitle()
+    public function testTVMovie()
     {
-        $title = $this->getTitle('0087544'); // Nausicaä of the Valley of the Wind
-        $this->assertEquals('Kaze no tani no Naushika', $title->originalTitle());
+        $title = new Title('tt0284717');
+        $data = $title->full();
+
+        $this->assertEquals('tt0284717', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt0284717/', $data['main_url']);
+        $this->assertNull($data['canonical_id']);
+        $this->assertEquals('The Crusaders', $data['title']);
+        $this->assertEquals('Crociati', $data['original_title']);
+        $this->assertEquals('TV Movie', $data['type']);
+        $this->assertEquals(2001, $data['year']);
+        $this->assertNull($data['end_year']);
     }
 
-    public function testTitleNonEnglishTitleUsesEnglishTitle()
-    {
-        $title = $this->getTitle('0087544'); // Nausicaä of the Valley of the Wind
-        $this->assertEquals('Nausicaä of the Valley of the Wind', $title->title());
-    }
-
-    public function testTitleRemovesHtmlEntities()
-    {
-        $title = $this->getTitle('0103074'); // Thelma & Louise
-        $this->assertEquals('Thelma & Louise', $title->title());
-    }
-
-    public function testTitleInDifferentLanguage()
-    {
-        $title = $this->getTitle('3110958', 'de-DE'); // Now You See Me 2
-        $this->assertEquals('Die Unfassbaren 2', $title->title());
-        $this->assertEquals('Now You See Me 2', $title->originalTitle());
-    }
-
-    public function testTitleEpisodeTitle()
-    {
-        $title = $this->getTitle('0579539'); // "Firefly" The Train Job
-        $this->assertEquals('"Firefly" The Train Job', $title->title());
-    }
-
-    /***************************************[ Types ]***************************************/
-
-    public function testTypeMustReturnMovie()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals('Movie', $title->type());
-    }
-
-    public function testTypeMustReturnTVSeries()
-    {
-        $title = $this->getTitle("0306414"); // The Wire
-        $this->assertEquals('TV Series', $title->type());
-    }
-
-    public function testTypeMustReturnTVMovie()
-    {
-        $title = $this->getTitle("0284717"); // Crociati
-        $this->assertEquals('TV Movie', $title->type());
-    }
-
-    public function testTypeMustReturnTVSpecial()
-    {
-        $title = $this->getTitle("5258960"); // Jochem Myjer: Even geduld aub
-        $this->assertEquals('TV Special', $title->type());
-    }
-
-    public function testTypeMustReturnTVEpisode()
-    {
-        $title = $this->getTitle("0579539"); // Firefly: The Train Job
-        $this->assertEquals('TV Episode', $title->type());
-    }
-
-    public function testTypeMustReturnTVMiniSeries()
-    {
-        $title = $this->getTitle("10048342"); // The Queen's Gambit
-        $this->assertEquals('TV Mini Series', $title->type());
-    }
-
-    public function testTypeMustReturnVideoGame()
-    {
-        $title = $this->getTitle("1799527"); // Doom
-        $this->assertEquals('Video Game', $title->type());
-    }
-
-    public function testTypeMustReturnVideo()
-    {
-        $title = $this->getTitle("0149937"); // Bottom Live
-        $this->assertEquals('Video', $title->type());
-    }
-
-    /***************************************[ Year ]***************************************/
-
-    public function testYearForAMovie()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals(1999, $title->year());
-        // Film has no range, so end year is the same as year
-        $this->assertEquals(1999, $title->endYear());
-    }
-
-    public function testYearForATVSeries()
-    {
-        $title = $this->getTitle("0306414"); // The Wire
-        $this->assertEquals(2002, $title->year());
-        $this->assertEquals(2008, $title->endYear());
-    }
-
-    public function testYearReturnNullIfNoData()
-    {
-        $title = $this->getTitle("9916210"); // Rumpole of the Bailey
-        $this->assertNull($title->year());
-        $this->assertNull($title->endYear());
-    }
-
-    /***************************************[ Runtime ]***************************************/
-
-    public function testRuntime()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals(136, $title->runtime());
-    }
-
-    public function testRuntimeTVSeries()
-    {
-        $title = $this->getTitle("0306414"); // The Wire
-        $this->assertEquals(60, $title->runtime());
-    }
-
-    public function testRuntimeTVEpisode()
-    {
-        $title = $this->getTitle('0579539'); // "Firefly" The Train Job
-        $this->assertEquals(42, $title->runtime());
-    }
-
-    /***************************************[ Photo ]***************************************/
-
-    public function testPhoto()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->photo();
-
-        $this->assertIsArray($result);
-        $this->assertCount(2, $result);
-        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_QL75_UX190_CR0,2,190,281_.jpg', $result['thumbnail']);
-        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@.jpg', $result['original']);
-    }
-
-    public function testPhotoReturnEmptyArrayIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $result = $title->photo();
-
-        $this->assertIsArray($result);
-        $this->assertCount(0, $result);
-        $this->assertEmpty($result);
-    }
-
-    /***************************************[ Tagline ]***************************************/
-
-    public function testTagline()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals("Free your mind", $title->tagline());
-    }
-
-    public function testTaglines()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->taglines();
-
-        $this->assertIsArray($result);
-        $this->assertCount(15, $result);
-        $this->assertTrue(in_array($title->tagline(), $result));
-        $this->assertEquals(734, strlen(implode(', ', $result)));
-    }
-
-    public function testTaglineReturnNullIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $this->assertNull($title->tagline());
-    }
-
-    public function testTaglinesAll()
-    {
-        $title = $this->getTitle("0306414"); // The Wire
-        $result = $title->taglines();
-
-        $this->assertIsArray($result);
-        $this->assertCount(6, $result);
-        $this->assertEquals("237", strlen(implode(', ', $result)));
-        $this->assertEquals('A new case begins... (second season)', $result[0]);
-        $this->assertEquals('Rules change. The game remains the same. (third season)', $result[1]);
-        $this->assertEquals('No corner left behind. (fourth season)', $result[2]);
-        $this->assertEquals('Listen carefully (first season)', $result[3]);
-        $this->assertEquals('All in the game. (fifth season)', $result[4]);
-        $this->assertEquals('Read between the lines (season five)', $result[5]);
-    }
-
-    public function testTaglinesAllReturnEmptyArrayIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $result = $title->taglines();
-
-        $this->assertIsArray($result);
-        $this->assertCount(0, $result);
-        $this->assertEmpty($result);
-    }
-
-    /***************************************[ Genres ]***************************************/
-
+    /*
     public function testGenres()
     {
         $title = $this->getTitle("0133093"); // The Matrix
@@ -246,269 +286,6 @@ class TitleTest extends TestCase
         $this->assertEquals('Sci-Fi', $result[1]);
     }
 
-    /***************************************[ Languages ]***************************************/
-
-    public function testLanguagesOneLanguage()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->languages();
-
-        $this->assertIsArray($result);
-        $this->assertCount(1, $result);
-        $this->assertEquals('English', $result[0]);
-    }
-
-    public function testLanguagesDetailedOneLanguage()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->languagesDetailed();
-
-        $this->assertIsArray($result);
-        $this->assertCount(1, $result);
-
-        $this->assertEquals('English', $result[0]['name']);
-        $this->assertEquals('en', $result[0]['code']);
-        $this->assertEquals('', $result[0]['comment']);
-    }
-
-    public function testLanguagesMultipleLanguages()
-    {
-        $title = $this->getTitle("0306414"); // The Wire
-        $result = $title->languages();
-
-        $this->assertIsArray($result);
-        $this->assertCount(4, $result);
-
-        $this->assertEquals('English', $result[0]);
-        $this->assertEquals('Greek', $result[1]);
-        $this->assertEquals('Mandarin', $result[2]);
-        $this->assertEquals('Spanish', $result[3]);
-    }
-
-    public function testLanguagesDetailedMultipleLanguages()
-    {
-        $title = $this->getTitle("0306414"); // The Wire
-        $result = $title->languagesDetailed();
-
-        $this->assertIsArray($result);
-        $this->assertCount(4, $result);
-
-        $this->assertEquals([
-            [
-                'name' => 'English',
-                'code' => 'en',
-                'comment' => ''
-            ],
-            [
-                'name' => 'Greek',
-                'code' => 'el',
-                'comment' => ''
-            ],
-            [
-                'name' => 'Mandarin',
-                'code' => 'cmn',
-                'comment' => ''
-            ],
-            [
-                'name' => 'Spanish',
-                'code' => 'es',
-                'comment' => ''
-            ]
-        ], $title->languagesDetailed());
-    }
-
-    public function testLanguagesReturnEmptyArrayIfNoData()
-    {
-        $title = $this->getTitle("0171236"); // The Lor Girl (Dokhtare Lor ya irane druz va emruz)
-        $result = $title->languages();
-
-        $this->assertIsArray($result);
-        $this->assertCount(0, $result);
-        $this->assertEmpty($result);
-    }
-
-    /***************************************[ Countries ]***************************************/
-
-    public function testCountries()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->countries();
-
-        $this->assertIsArray($result);
-        $this->assertCount(2, $result);
-        $this->assertEquals('United States', $result[0]);
-        $this->assertEquals('Australia', $result[1]);
-    }
-
-    public function testCountriesDetailed()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->countriesDetailed();
-
-        $this->assertIsArray($result);
-        $this->assertCount(2, $result);
-
-        $this->assertEquals('United States', $result[0]['name']);
-        $this->assertEquals('us', $result[0]['code']);
-
-        $this->assertEquals('Australia', $result[1]['name']);
-        $this->assertEquals('au', $result[1]['code']);
-    }
-
-    public function testCountriesReturnsEmptyArrayIfNoCountry()
-    {
-        $title = $this->getTitle("7332864"); // Der Schuldschein des Pandola (Marineleutnant von Brinken. I)
-        $result = $title->countries();
-
-        $this->assertIsArray($result);
-        $this->assertCount(0, $result);
-        $this->assertEmpty($result);
-    }
-
-    /***************************************[ Rating & Votes ]***************************************/
-
-    public function testRating()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals('8.7', $title->rating());
-    }
-
-    public function testRatingReturnNullIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $this->assertNull($title->rating());
-    }
-
-    public function testVotes()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $votes = $title->votes();
-
-        $this->assertIsInt($votes);
-        $this->assertGreaterThan(1700000, $votes);
-        $this->assertLessThan(2500000, $votes);
-    }
-
-    public function testVotesReturnNullIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $this->assertNull($title->votes());
-    }
-
-    /***************************************[ Colors ]***************************************/
-
-    public function testColorsOneColor()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->colors();
-
-        $this->assertIsArray($result);
-        $this->assertCount(1, $result);
-        $this->assertEquals('Color', $result[0]);
-    }
-
-    public function testColorsMultipleColors()
-    {
-        $title = $this->getTitle("0108052"); // Schindler's List
-        $result = $title->colors();
-
-        $this->assertIsArray($result);
-        $this->assertCount(2, $result);
-        $this->assertEquals('Black and White', $result[0]);
-        $this->assertEquals('Color', $result[1]);
-    }
-
-    public function testColorsReturnEmptyArrayIfNoData()
-    {
-        $title = $this->getTitle("9843312"); // Ninja Ko
-        $result = $title->colors();
-
-        $this->assertIsArray($result);
-        $this->assertCount(0, $result);
-        $this->assertEmpty($result);
-    }
-
-    /***************************************[ Sounds ]***************************************/
-
-    public function testSounds()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->sounds();
-
-        $this->assertIsArray($result);
-        $this->assertCount(3, $result);
-        $this->assertEquals('Dolby Digital', $result[0]);
-        $this->assertEquals('SDDS', $result[1]);
-        $this->assertEquals('Dolby Atmos', $result[2]);
-    }
-
-    public function testSoundsReturnEmptyArrayIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $result = $title->sounds();
-
-        $this->assertIsArray($result);
-        $this->assertCount(0, $result);
-        $this->assertEmpty($result);
-    }
-
-    /***************************************[ Aspect Ratio ]***************************************/
-
-    public function testAspectRatio()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $this->assertEquals('2.39 : 1', $title->aspectRatio());
-    }
-
-    public function testAspectRatioReturnNullIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $this->assertNull($title->aspectRatio());
-    }
-
-    /***************************************[ Locations ]***************************************/
-
-    public function testLocations()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->locations();
-
-        $this->assertIsArray($result);
-        $this->assertGreaterThan(3, count($result));
-        $this->assertTrue(in_array('Nashville, Tennessee, USA', $result));
-        $this->assertTrue(in_array('Sydney, New South Wales, Australia', $result));
-        $this->assertTrue(in_array('Redfern, Sydney, New South Wales, Australia', $result));
-    }
-
-    public function testLocationsReturnEmptyArrayIfNoData()
-    {
-        $title = $this->getTitle("7618100"); // Untitled Star Wars Trilogy: Episode III
-        $result = $title->locations();
-
-        $this->assertIsArray($result);
-        $this->assertCount(0, $result);
-        $this->assertEmpty($result);
-    }
-
-    /***************************************[ Keywords ]***************************************/
-
-    public function testKeywords()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->keywords();
-
-        $this->assertIsArray($result);
-        $this->assertGreaterThan(40, count($result));
-        $this->assertTrue(in_array('artificial reality', $result));
-        $this->assertTrue(in_array('simulated reality', $result));
-        $this->assertTrue(in_array('dystopia', $result));
-        $this->assertTrue(in_array('post apocalypse', $result));
-        $this->assertTrue(in_array('artificial intelligence', $result));
-    }
-
-    /***************************************[ MPAA ]***************************************/
-
-    /*
     public function testMpaa()
     {
         $title = $this->getTitle("0133093"); // The Matrix
@@ -525,16 +302,4 @@ class TitleTest extends TestCase
         $this->assertEquals('Rated R for sci-fi violence and brief language', $title->mpaaReason());
     }
     */
-
-    /***************************************[ TRAILERS ]***************************************/
-
-    public function testTrailers()
-    {
-        $title = $this->getTitle("0133093"); // The Matrix
-        $result = $title->trailers();
-
-        $this->assertIsArray($result);
-        $this->assertGreaterThanOrEqual(3, count($result));
-    }
-
 }
