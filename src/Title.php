@@ -144,13 +144,6 @@ query Title(\$id: ID!) {
         genre {
           text
         }
-        subGenres {
-          keyword {
-            text {
-              text
-            }
-          }
-        }
       }
     }
     spokenLanguages {
@@ -709,13 +702,6 @@ query Genres(\$id: ID!) {
         genre {
           text
         }
-        subGenres {
-          keyword {
-            text {
-              text
-            }
-          }
-        }
       }
     }
   }
@@ -739,19 +725,7 @@ GRAPHQL;
     {
         if (!empty($data->title->titleGenres->genres)) {
             foreach ($data->title->titleGenres->genres as $edge) {
-                $subGenres = null;
-                if (isset($edge->subGenres) && is_array($edge->subGenres) && count($edge->subGenres) > 0) {
-                    foreach ($edge->subGenres as $subGenre) {
-                        if (!empty($subGenre->keyword->text->text)) {
-                            $subGenres[] = ucwords($subGenre->keyword->text->text);
-                        }
-                    }
-                }
-
-                $this->data['genres'][] = [
-                    'genre' => $edge->genre->text ?? null,
-                    'subs' => $subGenres
-                ];
+                $this->data['genres'][] = $edge->genre->text;
             }
         }
     }
@@ -1029,6 +1003,8 @@ GRAPHQL;
     /**
      * Get all available taglines for the title
      *
+     * @param string|null $videoContentType
+     * @param bool $videoIncludeMature
      * @return array|null
      * @throws Exception
      */
@@ -1062,12 +1038,19 @@ query Video(\$id: ID!) {
             width
             height
           }
+          createdDate
           primaryTitle {
+            id
             titleText {
               text
             }
             releaseYear {
               year
+            }
+            primaryImage {
+              url
+              width
+              height
             }
           }
         }
@@ -1093,14 +1076,20 @@ GRAPHQL;
 
                     $this->data['videos'][] = [
                         'id' => $edge->node->id,
-                        'type' => $edge->node->contentType->displayName->value ?? null,
-                        'title' => $edge->node->name->value ?? null,
-                        'runtime' => $edge->node->runtime->value ?? null,
+                        'playback_url' => $this->makeUrl('video', $edge->node->id),
+                        'created_date' => $edge->node->createdDate ?? null,
+                        'runtime_formatted' => $this->secondsToTimeFormat($edge->node->runtime->value),
+                        'runtime_seconds' => $edge->node->runtime->value ?? null,
+                        'title' => $edge->node->name->value,
                         'description' => $edge->node->description->value ?? null,
-                        'titleName' => $edge->node->primaryTitle->titleText->text ?? null,
-                        'titleYear' => $edge->node->primaryTitle->releaseYear->year ?? null,
-                        'playbackUrl' => !empty($videoId) ? 'https://www.imdb.com/video/vi' . $edge->node->id . '/' : null,
-                        'image' => $this->parseImage($edge->node->thumbnail)
+                        'content_type' => $edge->node->contentType->displayName->value,
+                        'thumbnail' => $this->parseImage($edge->node->thumbnail),
+                        'primary_title' => [
+                            'id' => $edge->node->primaryTitle->id,
+                            'title' => $edge->node->primaryTitle->titleText->text ?? null,
+                            'year' => $edge->node->primaryTitle->releaseYear->year ?? null,
+                            'image' => $this->parseImage($edge->node->primaryTitle->primaryImage)
+                        ],
                     ];
                 }
             }

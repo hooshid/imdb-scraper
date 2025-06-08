@@ -93,7 +93,7 @@ $image = new Image();
                     <?php if (!empty($title['genres'])) { ?>
                         <tr>
                             <td><b>All Genres:</b></td>
-                            <td><?php echo implode(', ', array_column($title['languages'], 'title')) ?></td>
+                            <td><?php echo implode(', ', $title['genres']) ?></td>
                         </tr>
                     <?php } ?>
 
@@ -125,7 +125,7 @@ $image = new Image();
                     <?php if ($title['year']) { ?>
                         <tr>
                             <td><b>Year:</b></td>
-                            <td><?php echo $title['year']; ?><?php if (['end_year']) {
+                            <td><?php echo $title['year']; ?><?php if ($title['end_year']) {
                                     echo "-" . $title['end_year'];
                                 } ?></td>
                         </tr>
@@ -172,7 +172,7 @@ $image = new Image();
                             <td>
                                 <ul>
                                     <?php foreach ($title['colors'] as $sound) { ?>
-                                        <li><?php echo $sound['type']; ?></li>
+                                        <li><?php echo $sound['value']; ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>
@@ -187,7 +187,7 @@ $image = new Image();
                             <td>
                                 <ul>
                                     <?php foreach ($title['sounds'] as $sound) { ?>
-                                        <li><?php echo $sound['type']; ?></li>
+                                        <li><?php echo $sound['value']; ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>
@@ -201,7 +201,7 @@ $image = new Image();
                             <td>
                                 <ul>
                                     <?php foreach ($title['aspect_ratio'] as $ar) { ?>
-                                        <li><?php echo $ar['type']; ?> <?php if (!empty($ar['attributes'])) { ?>(<?php echo $ar['attributes'][0]; ?>)<?php } ?></li>
+                                        <li><?php echo $ar['value']; ?> <?php if (!empty($ar['attributes'])) { ?>(<?php echo $ar['attributes'][0]; ?>)<?php } ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>
@@ -216,7 +216,7 @@ $image = new Image();
                             <td>
                                 <ul>
                                     <?php foreach ($title['cameras'] as $camera) { ?>
-                                        <li><?php echo $camera['type']; ?></li>
+                                        <li><?php echo $camera['value']; ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>
@@ -250,36 +250,44 @@ $image = new Image();
                             </td>
                         </tr>
                     <?php } ?>
-
-                    <!-- Trailers -->
-                    <?php if (!empty($title['videos'])) { ?>
-                        <tr>
-                            <td><b>Trailers:</b></td>
-                            <td class="trailers">
-                                <?php foreach ($title['videos'] as $video) { ?>
-                                    <a class="trailer-box" href="video.php?id=<?php echo $video['id']; ?>">
-                                        <div class="thumbnail">
-                                            <?php if ($video['thumbnail']) { ?>
-                                                <img src="<?php echo $video['thumbnail']; ?>"
-                                                     alt="<?php echo $video['video_title']; ?>" loading="lazy">
-                                            <?php } ?>
-
-                                            <div class="duration">
-                                                <?php echo $video['type']; ?> - <?php echo $video['duration']; ?>
-                                            </div>
-                                        </div>
-
-                                        <div class="title">
-                                            <?php echo $video['video_title']; ?>
-                                        </div>
-                                    </a>
-                                <?php } ?>
-                            </td>
-                        </tr>
-                    <?php } ?>
-
                 </table>
             </div>
+
+
+            <!-- Videos -->
+            <?php if (!empty($title['videos'])) { ?>
+                <div class="head-title">Videos</div>
+                <div class="grid-box-4">
+                    <?php foreach ($title['videos'] as $key => $item) { ?>
+                        <div class="video-box">
+                            <div class="thumbnail">
+                                <a href="video.php?id=<?php echo $item['id']; ?>">
+                                    <?php if ($item['thumbnail']) { ?>
+                                        <img src="<?php
+                                        echo $image->makeThumbnail($item['thumbnail']['url'], $item['thumbnail']['width'], $item['thumbnail']['height'], 500, 281);
+                                        ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
+                                    <?php } ?>
+
+                                    <div class="top-label"><?php echo date('Y-m-d H:i', strtotime($item['created_date'])); ?></div>
+
+                                    <div class="bottom-label"><?php echo $item['content_type']; ?>
+                                        - <?php echo $item['runtime_formatted']; ?></div>
+                                </a>
+                            </div>
+
+                            <a href="video.php?id=<?php echo $item['id']; ?>" class="title font-bold">
+                                <?php echo $item['title']; ?>
+                            </a>
+
+                            <a href="title.php?id=<?php echo $item['primary_title']['id']; ?>" class="title">
+                                <?php echo $item['primary_title']['title']; ?>
+                            </a>
+
+                            <time><?php echo $item['primary_title']['year']; ?></time>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
 
         </div>
     </div>
