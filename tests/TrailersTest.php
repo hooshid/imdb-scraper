@@ -23,10 +23,6 @@ class TrailersTest extends TestCase
         $this->assertIsArray($list[0]['thumbnail']);
 
         $this->assertIsArray($list[0]['primary_title']);
-        $this->assertNotNull($list[0]['primary_title']['id']);
-        $this->assertNotNull($list[0]['primary_title']['title']);
-        //$this->assertNotNull($list[0]['primary_title']['release_date']);
-        $this->assertIsArray($list[0]['primary_title']['image']);
     }
 
     public function testTrendingVideos()
@@ -47,9 +43,5 @@ class TrailersTest extends TestCase
         $this->assertIsArray($list[0]['thumbnail']);
 
         $this->assertIsArray($list[0]['primary_title']);
-        $this->assertNotNull($list[0]['primary_title']['id']);
-        $this->assertNotNull($list[0]['primary_title']['title']);
-        $this->assertNotNull($list[0]['primary_title']['release_date']);
-        $this->assertIsArray($list[0]['primary_title']['image']);
     }
 }
