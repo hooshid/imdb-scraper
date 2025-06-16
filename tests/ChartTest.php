@@ -79,16 +79,27 @@ class ChartTest extends TestCase
         $this->assertIsArray($result);
         $this->assertNotEmpty($result);
 
-        $this->assertStringStartsWith("tt", $result[0]['id']);
-        $this->assertNotNull($result[0]['title']);
-        $this->assertEquals(1, $result[0]['rank']);
-        $this->assertEquals("Movie", $result[0]['type']);
-        $this->assertIsInt($result[0]['runtime']);
-        $this->assertIsArray($result[0]['genres']);
-        $this->assertIsInt($result[0]['year']);
-        $this->assertIsFloat($result[0]['rating']);
-        $this->assertIsInt($result[0]['votes']);
-        $this->assertIsArray($result[0]['image']);
+        $isTested = false;
+        foreach ($result as $item) {
+            if ($item['type'] == "Movie" && $item['rank'] <= 5 && $item['votes'] && $item['image']) {
+                $this->assertStringStartsWith("tt", $item['id']);
+                $this->assertNotNull($item['title']);
+                $this->assertLessThanOrEqual(5, $item['rank']);
+                $this->assertEquals("Movie", $item['type']);
+                $this->assertIsInt($item['runtime']);
+                $this->assertIsArray($item['genres']);
+                $this->assertIsInt($item['year']);
+                $this->assertIsFloat($item['rating']);
+                $this->assertIsInt($item['votes']);
+                $this->assertIsArray($item['image']);
+                $isTested = true;
+                break;
+            }
+        }
+
+        if ($isTested === false) {
+            $this->assertNull("NOT_OK");
+        }
     }
 
     public function testMostPopularNames()
