@@ -23,7 +23,7 @@ class GraphQL
     private const API_ENDPOINT = 'https://api.graphql.imdb.com/';
 
     /**
-     * Constructor
+     * GraphQL constructor.
      *
      * @param Config $config Configuration object
      */
