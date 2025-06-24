@@ -2,6 +2,8 @@
 
 namespace Hooshid\ImdbScraper\Base;
 
+use InvalidArgumentException;
+
 /**
  * Image processing for IMDb-style thumbnails
  *
@@ -10,185 +12,162 @@ namespace Hooshid\ImdbScraper\Base;
  */
 class Image
 {
-    private const DEFAULT_QUALITY = 75;
-    private const MIN_CROP_VALUE = 0;
-
     /**
-     * Generate thumbnail url
+     * Generate thumbnail URL from original image
      *
-     * @param string $url original image url
-     * @param int $fullImageWidth Original image width in pixels
-     * @param int $fullImageHeight Original image height in pixels
-     * @param int $newImageWidth Desired thumbnail width
-     * @param int $newImageHeight Desired thumbnail height
-     * @return string new thumbnail url
+     * @param string $originalUrl Original image URL
+     * @param int $originalWidth Original image width in pixels
+     * @param int $originalHeight Original image height in pixels
+     * @param int $targetWidth Desired thumbnail width in pixels
+     * @param int $targetHeight Desired thumbnail height in pixels
+     * @param int $quality Thumbnail quality (1-100)
+     * @return string Generated thumbnail URL
+     * @throws InvalidArgumentException If invalid dimensions or quality are provided
      */
     public function makeThumbnail(
-        string $url,
-        int    $fullImageWidth,
-        int    $fullImageHeight,
-        int    $newImageWidth,
-        int    $newImageHeight): string
+        string $originalUrl,
+        int    $originalWidth,
+        int    $originalHeight,
+        int    $targetWidth,
+        int    $targetHeight,
+        int    $quality = 100
+    ): string
     {
-        $url = str_replace('.jpg', '', $url);
-        $parameter = $this->resultParameter($fullImageWidth, $fullImageHeight, $newImageWidth, $newImageHeight);
-        return $url . $parameter;
+        if ($originalWidth <= 0 || $originalHeight <= 0) {
+            throw new InvalidArgumentException('Original dimensions must be positive');
+        }
+
+        if ($targetWidth <= 0 || $targetHeight <= 0) {
+            throw new InvalidArgumentException('Target dimensions must be positive');
+        }
+
+        if ($quality < 1 || $quality > 100) {
+            throw new InvalidArgumentException('Quality must be between 1 and 100');
+        }
+
+        $parameters = $this->generateThumbnailParameters(
+            $originalWidth,
+            $originalHeight,
+            $targetWidth,
+            $targetHeight,
+            $quality
+        );
+        return str_replace('.jpg', '', $originalUrl) . $parameters;
     }
 
     /**
-     * Generate IMDb-style thumbnail URL parameters
+     * Generate thumbnail URL parameters based on dimensions
      *
-     * @param int $fullImageWidth Original image width in pixels
-     * @param int $fullImageHeight Original image height in pixels
-     * @param int $newImageWidth Desired thumbnail width
-     * @param int $newImageHeight Desired thumbnail height
-     * @return string URL parameters (e.g. 'QL75_SX190_CR0,15,190,281_.jpg')
-     *
-     * Structure:
-     * QL{quality} - Quality Level (75 default)
-     * SX/SY{size} - Scale axis and target size
-     * CR{crop} - Crop parameters (left,top,width,height)
+     * @param int $originalWidth Original image width
+     * @param int $originalHeight Original image height
+     * @param int $targetWidth Target thumbnail width
+     * @param int $targetHeight Target thumbnail height
+     * @param int $quality Image quality (1-100)
+     * @return string URL parameters (e.g. 'QL100_SX190_CR0,15,190,281_.jpg')
      */
-    public function resultParameter(
-        int $fullImageWidth,
-        int $fullImageHeight,
-        int $newImageWidth,
-        int $newImageHeight
+    public function generateThumbnailParameters(
+        int $originalWidth,
+        int $originalHeight,
+        int $targetWidth,
+        int $targetHeight,
+        int $quality = 100
     ): string
     {
-        $ratioOriginal = $fullImageWidth / $fullImageHeight;
-        $ratioNew = $newImageWidth / $newImageHeight;
+        $originalRatio = $originalWidth / $originalHeight;
+        $targetRatio = $targetWidth / $targetHeight;
 
-        if ($ratioNew < $ratioOriginal) {
+        if ($targetRatio < $originalRatio) {
             return $this->generateHorizontalCropParameters(
-                $fullImageWidth,
-                $fullImageHeight,
-                $newImageWidth,
-                $newImageHeight
+                $originalWidth,
+                $originalHeight,
+                $targetWidth,
+                $targetHeight,
+                $quality
             );
         }
 
         return $this->generateVerticalCropParameters(
-            $fullImageWidth,
-            $fullImageHeight,
-            $newImageWidth,
-            $newImageHeight
+            $originalWidth,
+            $originalHeight,
+            $targetWidth,
+            $targetHeight,
+            $quality
         );
     }
 
     /**
-     * Generate parameters for horizontally-cropped thumbnail
+     * Generate parameters for horizontally-cropped thumbnail (left/right crop)
      */
     private function generateHorizontalCropParameters(
-        int $fullWidth,
-        int $fullHeight,
-        int $newWidth,
-        int $newHeight
+        int $originalWidth,
+        int $originalHeight,
+        int $targetWidth,
+        int $targetHeight,
+        int $quality
     ): string
     {
-        $cropValue = $this->calculateHorizontalCrop(
-            $fullWidth,
-            $fullHeight,
-            $newWidth,
-            $newHeight
-        );
+        // Calculate horizontal (left/right) crop amount
+        $scaleFactor = $originalHeight / $targetHeight;
+        $scaledWidth = $originalWidth / $scaleFactor;
+        $totalCrop = $scaledWidth - $targetWidth;
+        $cropValue = max($this->roundInteger($totalCrop) / 2, 0);
 
         return sprintf(
             'QL%d_UY%d_CR%d,0,%d,%d_.jpg',
-            self::DEFAULT_QUALITY,
-            $newHeight,
+            $quality,
+            $targetHeight,
             $cropValue,
-            $newWidth,
-            $newHeight
+            $targetWidth,
+            $targetHeight
         );
     }
 
     /**
-     * Generate parameters for vertically-cropped thumbnail
+     * Generate parameters for vertically-cropped thumbnail (top/bottom crop)
      */
     private function generateVerticalCropParameters(
-        int $fullWidth,
-        int $fullHeight,
-        int $newWidth,
-        int $newHeight
+        int $originalWidth,
+        int $originalHeight,
+        int $targetWidth,
+        int $targetHeight,
+        int $quality
     ): string
     {
-        $cropValue = $this->calculateVerticalCrop(
-            $fullWidth,
-            $fullHeight,
-            $newWidth,
-            $newHeight
-        );
+        // Calculate vertical (top/bottom) crop amount
+        $scaleFactor = $originalWidth / $targetWidth;
+        $scaledHeight = $originalHeight / $scaleFactor;
+        $totalCrop = $scaledHeight - $targetHeight;
+        $cropValue = max($this->roundInteger($totalCrop) / 2, 0);
 
         return sprintf(
             'QL%d_UX%d_CR0,%d,%d,%d_.jpg',
-            self::DEFAULT_QUALITY,
-            $newWidth,
+            $quality,
+            $targetWidth,
             $cropValue,
-            $newWidth,
-            $newHeight
+            $targetWidth,
+            $targetHeight
         );
     }
 
     /**
-     * Calculate horizontal (left/right) crop value
+     * Rounds the crop value to the nearest even integer.
+     * If the fractional part is less than 0.5, it rounds to the previous even integer.
+     * Otherwise, it rounds to the next even integer.
+     *
+     * @param float $totalPixelCropSize Total number of pixels to crop.
+     * @return int Rounded even integer.
      */
-    public function calculateHorizontalCrop(
-        int $fullWidth,
-        int $fullHeight,
-        int $newWidth,
-        int $newHeight
-    ): int
+    private function roundInteger(float $totalPixelCropSize): int
     {
-        $scaleFactor = $fullHeight / $newHeight;
-        $scaledWidth = $fullWidth / $scaleFactor;
-        $totalCrop = $scaledWidth - $newWidth;
-
-        return max($this->roundToEven($totalCrop) / 2, self::MIN_CROP_VALUE);
-    }
-
-    /**
-     * Calculate vertical (top/bottom) crop value
-     */
-    public function calculateVerticalCrop(
-        int $fullWidth,
-        int $fullHeight,
-        int $newWidth,
-        int $newHeight
-    ): int
-    {
-        $scaleFactor = $fullWidth / $newWidth;
-        $scaledHeight = $fullHeight / $scaleFactor;
-        $totalCrop = $scaledHeight - $newHeight;
-
-        return max($this->roundToEven($totalCrop) / 2, self::MIN_CROP_VALUE);
-    }
-
-    /**
-     * Round to nearest even integer with special midpoint handling
-     */
-    private function roundToEven(float $value): int
-    {
-        $fraction = $value - floor($value);
+        $fraction = $totalPixelCropSize - floor($totalPixelCropSize);
 
         if ($fraction < 0.5) {
-            return (int)(2 * round($value / 2));
+            // Round down to previous even integer
+            return (int)(2 * floor($totalPixelCropSize / 2));
         }
 
-        $rounded = (int)ceil($value);
-        return $rounded % 2 === 0 ? $rounded : $rounded + 1;
-    }
-
-    /**
-     * Calculate proportional width for a given height
-     */
-    public function calculateProportionalWidth(
-        int $fullWidth,
-        int $fullHeight,
-        int $newHeight
-    ): int
-    {
-        $scaleFactor = $fullHeight / $newHeight;
-        return (int)ceil($fullWidth / $scaleFactor);
+        // Round up to next even integer
+        $roundedUp = (int)ceil($totalPixelCropSize);
+        return $roundedUp % 2 === 0 ? $roundedUp : $roundedUp + 1;
     }
 }
