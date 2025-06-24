@@ -289,8 +289,8 @@ GRAPHQL;
             $results[] = [
                 'index' => $index,
                 'id' => $id,
-                'url' => $this->getBaseUrl() . "/name/" . $id,
-                'name' => $this->cleanString($name),
+                'url' => $this->makeUrl("name", $id),
+                'name' => $name,
                 'image' => $this->parseImage($edge->node->name->primaryImage),
                 'professions' => $professions,
                 'bio' => $bio,

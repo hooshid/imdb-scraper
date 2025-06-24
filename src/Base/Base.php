@@ -8,10 +8,16 @@ use InvalidArgumentException;
 /**
  * Base class for IMDb Scraper functionality
  *
- * Provides common utility methods and configuration for all IMDb scraper classes.
+ * Provides common utility methods for:
+ * - String cleaning and sanitization
+ * - Image URL manipulation
+ * - Date/time formatting and validation
+ * - URL construction
  */
 class Base extends Config
 {
+    protected const IMDB_BASE_URL = 'https://www.imdb.com/';
+
     /** @var Config Configuration object */
     protected Config $config;
 
@@ -30,136 +36,83 @@ class Base extends Config
     }
 
     /**
-     * Clean and sanitize a string
+     * Parse image object into structured data
      *
-     * @param string|null $str The string to clean
-     * @param array|string|null $remove Strings to remove
-     * @return string|null Cleaned string or null if empty
+     * @param object|null $imageObject Object containing image data
+     * @return array{url: string|null, width: int|null, height: int|null}|null
+     * @throws InvalidArgumentException If URL is invalid
      */
-    protected function cleanString(?string $str, array|string $remove = null): ?string
+    protected function parseImage(?object $imageObject = null): ?array
     {
-        if (empty($str)) {
+        if (empty($imageObject)) {
             return null;
         }
 
-        // Remove specified strings
-        if (!empty($remove)) {
-            $str = str_replace((array)$remove, '', $str);
-        }
+        $url = $imageObject->url ?? null;
+        $width = $imageObject->width ?? null;
+        $height = $imageObject->height ?? null;
 
-        // Replace common HTML entities
-        $replacements = [
-            '&amp;' => '&',
-            '&nbsp;' => ' ',
-            '&quot;' => '"',
-            '&apos;' => "'"
-        ];
-
-        $str = strtr($str, $replacements);
-        $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5);
-
-        return trim(strip_tags($str)) ?: null;
-    }
-
-    /**
-     * Generate image URLs in various sizes from original URL
-     *
-     * @param string|null $url Original image URL
-     * @return array|null Array of image URLs or null if no URL provided
-     */
-    protected function imageUrl(?string $url = null): ?array
-    {
-        if (!$url) {
-            return null;
-        }
-
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if ($url && !filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException('Invalid image URL provided');
         }
 
         return [
-            "original" => $url,
-            "small" => @str_replace(".jpg", "UY74_CR41,0,50,74_.jpg", $url),
-            "120x120" => @str_replace(".jpg", "UX120_CR0,0,120,120_.jpg", $url),
-            "140" => @str_replace(".jpg", "UX140_.jpg", $url),
-        ];
-    }
-
-    /**
-     * Generate image URLs in various sizes from original URL
-     *
-     * @param object|null $obj
-     * @return array|null Array of image URLs or null if no URL provided
-     */
-    protected function parseImage(?object $obj = null): ?array
-    {
-        if (!$obj) {
-            return null;
-        }
-
-        $url = $obj->url ?? null;
-        $width = $obj->width ?? null;
-        $height = $obj->height ?? null;
-
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new InvalidArgumentException('Invalid image URL provided');
-        }
-
-        return [
-            "url" => $url,
-            "width" => $width,
-            "height" => $height
+            'url' => $url,
+            'width' => is_numeric($width) ? (int)$width : null,
+            'height' => is_numeric($height) ? (int)$height : null
         ];
     }
 
     /**
      * Validate a date string in Y-m-d format
      *
-     * @param string $date Date string to validate
-     * @return bool True if valid, false otherwise
+     * @param string $dateString Date string to validate
+     * @return bool True if valid date string, false otherwise
      */
-    protected function validateDate(string $date): bool
+    protected function validateDate(string $dateString): bool
     {
-        $d = DateTime::createFromFormat('Y-m-d', $date);
-        return $d && $d->format('Y-m-d') === $date;
+        $date = DateTime::createFromFormat('Y-m-d', $dateString);
+        return $date && $date->format('Y-m-d') === $dateString;
     }
 
     /**
-     * build date string in Y-m-d format
+     * Build date string in Y-m-d format from components
      *
-     * @param $day
-     * @param $month
-     * @param $year
-     * @return null|string
+     * @param int|string|null $day Day component
+     * @param int|string|null $month Month component
+     * @param int|string|null $year Year component
+     * @return string|null Formatted date string or null if any component is missing
      */
-    protected function buildDate($day, $month, $year): ?string
+    protected function buildDate(int|string|null $day, int|string|null $month, int|string|null $year): ?string
     {
-        if (!empty($day) && !empty($month) && !empty($year)) {
-            return $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($day, 2, '0', STR_PAD_LEFT);
-        } else {
+        if (empty($day) || empty($month) || empty($year)) {
             return null;
         }
+
+        return sprintf(
+            '%d-%02d-%02d',
+            (string)$year,
+            str_pad((string)$month, 2, '0', STR_PAD_LEFT),
+            str_pad((string)$day, 2, '0', STR_PAD_LEFT)
+        );
     }
 
     /**
      * Convert seconds to minutes
      *
-     * @param int|null $seconds
-     * @return int|null
+     * @param int|null $seconds Time in seconds
+     * @return int|null Time in minutes or null if input is empty
      */
-    protected function secondsToMinutes(int $seconds = null): ?int
+    protected function secondsToMinutes(?int $seconds): ?int
     {
-        if (empty($seconds)) {
-            return null;
-        }
-
-        return intval($seconds / 60);
+        return empty($seconds) ? null : (int)floor($seconds / 60);
     }
 
     /**
-     * Convert seconds to time format
-     * @param int|null $seconds
-     * @return string|null
+     * Convert seconds to HH:MM:SS or MM:SS time format
+     *
+     * @param int|null $seconds Time in seconds
+     * @return string|null Formatted time string or null if input is empty
      */
     protected function secondsToTimeFormat(?int $seconds): ?string
     {
@@ -167,29 +120,24 @@ class Base extends Config
             return null;
         }
 
-        // Calculate hours, minutes, and seconds
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
         $seconds = $seconds % 60;
 
-        // Determine the format based on whether there are hours
-        if ($hours > 0) {
-            return sprintf("%d:%d:%02d", $hours, $minutes, $seconds);
-        } else {
-            return sprintf("%d:%02d", $minutes, $seconds);
-        }
+        return $hours > 0
+            ? sprintf('%d:%02d:%02d', $hours, $minutes, $seconds)
+            : sprintf('%d:%02d', $minutes, $seconds);
     }
 
     /**
      * Make full IMDb url
      *
-     * @param ...$params
-     * @return string
+     * @param string ...$pathComponents URL paths
+     * @return string Complete IMDb URL
      */
-    protected function makeUrl(...$params): string
+    protected function makeUrl(string ...$pathComponents): string
     {
-        $baseUrl = "https://www.imdb.com/";
-        $path = implode('/', $params);
-        return rtrim($baseUrl . $path, '/') . '/';
+        $path = implode('/', array_filter($pathComponents));
+        return rtrim(self::IMDB_BASE_URL . $path, '/') . '/';
     }
 }

@@ -19,7 +19,7 @@ class TitleSearchTest extends TestCase
 
         // I Saw the Devil
         $this->assertEquals('tt1588170', $results[0]['id']);
-        $this->assertEquals('https://www.imdb.com/title/tt1588170', $results[0]['url']);
+        $this->assertEquals('https://www.imdb.com/title/tt1588170/', $results[0]['url']);
         $this->assertEquals('I Saw the Devil', $results[0]['title']);
         $this->assertEquals('Movie', $results[0]['type']);
         $this->assertEquals('2010', $results[0]['year']);

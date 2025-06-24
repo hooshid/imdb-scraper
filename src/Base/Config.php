@@ -11,13 +11,6 @@ namespace Hooshid\ImdbScraper\Base;
 class Config
 {
     /**
-     * Whether to use localization settings
-     *
-     * @var bool Set to true to use localization, false for US English
-     */
-    public bool $useLocalization = false;
-
-    /**
      * @var string country set country code
      * possible values:
      * CA (Canada)
@@ -44,31 +37,4 @@ class Config
      * es-MX (Spanisch Mexico)
      */
     public string $language = "en-US";
-
-    /**
-     * IMDB domain to use.
-     *
-     * @var string
-     */
-    protected string $imdbSiteUrl = "www.imdb.com";
-
-    /**
-     * Get the IMDB site URL
-     *
-     * @return string
-     */
-    public function getImdbSiteUrl(): string
-    {
-        return $this->imdbSiteUrl;
-    }
-
-    /**
-     * Get the base URL
-     *
-     * @return string
-     */
-    public function getBaseUrl(): string
-    {
-        return "https://" . $this->imdbSiteUrl;
-    }
 }

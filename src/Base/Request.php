@@ -13,16 +13,19 @@ use RuntimeException;
  */
 class Request
 {
-    /** @var CurlHandle|false cURL handle */
-    private false|CurlHandle $ch;
+    private const DEFAULT_TIMEOUT = 45;
+    private const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0';
 
-    /** @var string|bool Response body or false on failure */
-    private bool|string $page;
+    /** @var CurlHandle cURL handle */
+    private CurlHandle $ch;
 
-    /** @var array Request headers to be sent */
+    /** @var string|null Response body or null if request failed */
+    private ?string $page = null;
+
+    /** @var array<string> Request headers to be sent */
     private array $requestHeaders = [];
 
-    /** @var array Response headers received */
+    /** @var array<string> Response headers received */
     private array $responseHeaders = [];
 
     /**
@@ -33,12 +36,13 @@ class Request
      */
     public function __construct(string $url)
     {
-        $this->ch = curl_init($url);
+        $ch = curl_init($url);
 
-        if ($this->ch === false) {
+        if ($ch === false) {
             throw new RuntimeException('Failed to initialize cURL handle');
         }
 
+        $this->ch = $ch;
         $this->configureDefaultCurlOptions();
     }
 
@@ -51,8 +55,9 @@ class Request
             CURLOPT_ENCODING => "",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADERFUNCTION => [$this, "headerCallback"],
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
-            CURLOPT_TIMEOUT => 45,
+            CURLOPT_USERAGENT => self::DEFAULT_USER_AGENT,
+            CURLOPT_TIMEOUT => self::DEFAULT_TIMEOUT,
+            CURLOPT_FAILONERROR => true,
         ]);
     }
 
@@ -71,7 +76,7 @@ class Request
     /**
      * Send a POST request
      *
-     * @param array|string $content POST data
+     * @param array<string, mixed>|string $content POST data
      * @return bool True on success, false on failure
      */
     public function post(array|string $content): bool
@@ -92,14 +97,16 @@ class Request
     public function sendRequest(): bool
     {
         $this->responseHeaders = [];
+        $this->page = null;
 
         if (!empty($this->requestHeaders)) {
             curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->requestHeaders);
         }
 
-        $this->page = curl_exec($this->ch);
-
-        if ($this->page !== false) {
+        $response = curl_exec($this->ch);
+        curl_close($this->ch);
+        if (is_string($response)) {
+            $this->page = $response;
             return true;
         }
 
@@ -110,12 +117,13 @@ class Request
      * Get the response body
      *
      * @return string Response content
-     * @throws RuntimeException If no response is available
+     * @throws RuntimeException If no response is available or request failed
      */
     public function getResponseBody(): string
     {
-        if ($this->page === false) {
-            throw new RuntimeException('No response available');
+        if ($this->page === null) {
+            $error = curl_error($this->ch) ?: 'No response available';
+            throw new RuntimeException('Request failed: ' . $error);
         }
 
         return $this->page;
@@ -124,29 +132,26 @@ class Request
     /**
      * Get the HTTP status code of the last response
      *
-     * @return int|null HTTP status code or null if unavailable
+     * @return int HTTP status code
+     * @throws RuntimeException If status code cannot be determined
      */
-    public function getStatus(): ?int
+    public function getStatusCode(): int
     {
-        $headers = $this->getLastResponseHeaders();
+        $statusCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
 
-        if (empty($headers[0])) {
-            return null;
+        if ($statusCode === 0) {
+            throw new RuntimeException('Unable to determine HTTP status code');
         }
 
-        if (!preg_match("#^HTTP/[\d\.]+ (\d+)#i", $headers[0], $matches)) {
-            return null;
-        }
-
-        return (int)$matches[1];
+        return $statusCode;
     }
 
     /**
      * Get all response headers from the last request
      *
-     * @return array Response headers
+     * @return array<string> Response headers
      */
-    public function getLastResponseHeaders(): array
+    public function getResponseHeaders(): array
     {
         return $this->responseHeaders;
     }
@@ -155,27 +160,17 @@ class Request
      * cURL header callback function
      *
      * @param CurlHandle $ch cURL handle
-     * @param string $str Header line
+     * @param string $headerLine Header line
      * @return int Length of the header line
      */
-    private function headerCallback(CurlHandle $ch, string $str): int
+    private function headerCallback(CurlHandle $ch, string $headerLine): int
     {
-        $length = strlen($str);
+        $length = strlen($headerLine);
 
         if ($length > 0) {
-            $this->responseHeaders[] = $str;
+            $this->responseHeaders[] = $headerLine;
         }
 
         return $length;
-    }
-
-    /**
-     * Close the cURL handle when object is destroyed
-     */
-    public function __destruct()
-    {
-        if (is_resource($this->ch)) {
-            curl_close($this->ch);
-        }
     }
 }

@@ -275,7 +275,7 @@ GRAPHQL;
                 continue;
             }
 
-            $imdbId = $edge->node->title->id;
+            $id = $edge->node->title->id;
             $yearRange = null;
             if (isset($edge->node->title->releaseYear->year)) {
                 $yearRange .= $edge->node->title->releaseYear->year;
@@ -285,8 +285,8 @@ GRAPHQL;
             }
 
             $results[] = [
-                'id' => $imdbId,
-                'url' => $this->getBaseUrl() . "/title/" . $imdbId,
+                'id' => $id,
+                'url' => $this->makeUrl("title", $id),
                 'originalTitle' => $edge->node->title->titleText->text ?? null,
                 'title' => $edge->node->title->titleText->text ?? null,
                 'type' => $edge->node->title->titleType->text ?? null,

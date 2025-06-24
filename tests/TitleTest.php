@@ -118,7 +118,7 @@ class TitleTest extends TestCase
     public function testMovie3()
     {
         $title = new Title('tt9843312');
-        $data = $title->full(['keywords', 'colors', 'mpaas','videos']);
+        $data = $title->full(['keywords', 'colors', 'mpaas', 'videos']);
 
         $this->assertEquals('tt9843312', $data['imdb_id']);
         $this->assertEquals('https://www.imdb.com/title/tt9843312/', $data['main_url']);
@@ -167,7 +167,6 @@ class TitleTest extends TestCase
     public function testMovieInDifferentLanguage()
     {
         $config = new Config();
-        $config->useLocalization = true;
         $config->country = 'DE';
         $config->language = 'de-DE';
         $title = new Title('tt3110958', $config);
