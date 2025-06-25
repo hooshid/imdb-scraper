@@ -8,15 +8,60 @@ use Hooshid\ImdbScraper\Base\Base;
 class Company extends Base
 {
     /**
-     * Obtains information about Company
+     * Obtains detailed information about a company
      *
-     * @param string $companyId
-     * @return array
+     * This info is only available for imdbPro users but through GraphQL it is freely available!
+     *
+     * @param string $companyId IMDb company ID (e.g. "co0144901" for Netflix)
+     * @return array{
+     *     id: string,
+     *     name: string,
+     *     rank: array{
+     *         current_rank: int|null,
+     *         change_direction: string|null,
+     *         difference: int|null
+     *     },
+     *     country: string|null,
+     *     types: string[],
+     *     staff: array<int, array{
+     *         id: string,
+     *         name: string|null,
+     *         employments: array<int, array{
+     *             employment_title: string|null,
+     *             occupation: string|null,
+     *             branch: string|null
+     *         }>
+     *     }>,
+     *     known_for: array<int, array{
+     *         id: string,
+     *         title: string|null,
+     *         jobs: array<int, array{
+     *             category: string|null,
+     *             job: string|null
+     *         }>,
+     *         countries: string[],
+     *         year: int|null,
+     *         end_year: int|null
+     *     }>,
+     *     affiliations: array<int, array{
+     *         id: string|null,
+     *         name: string|null,
+     *         description: string|null
+     *     }>
+     * }|array{} Return format:
+     *     - Non-empty: Detailed company information including:
+     *         - Basic info (id, name, country, types)
+     *         - Ranking data (current rank and changes)
+     *         - Staff members with their employment history
+     *         - Known-for titles with production details
+     *         - Company affiliations/relationships
+     *     - Empty array if company not found or invalid ID
      * @throws Exception If GraphQL query fails
      */
     public function getInfo(string $companyId): array
     {
-        if (empty(trim($companyId))) {
+        $companyId = trim($companyId);
+        if (empty($companyId)) {
             return [];
         }
 
@@ -133,7 +178,7 @@ GRAPHQL;
                 if (!empty($keyStaff->node->summary->employment)) {
                     foreach ($keyStaff->node->summary->employment as $list) {
                         $employments[] = [
-                            'employmentTitle' => $list->title->text ?? null,
+                            'employment_title' => $list->title->text ?? null,
                             'occupation' => $list->occupation->text ?? null,
                             'branch' => $list->branch->text ?? null
                         ];

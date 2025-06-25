@@ -111,8 +111,8 @@ if (!empty($_GET['id'])) {
                                 <?php foreach ($result['staff'] as $staff) { ?>
                                     <li>
                                         <a href="name.php?id=<?php echo $staff['id']; ?>"><?php echo $staff['name']; ?></a>
-                                        <?php if ($staff['employments'] && $staff['employments'][0]['employmentTitle']) { ?>
-                                            (<?php echo $staff['employments'][0]['employmentTitle']; ?>)
+                                        <?php if ($staff['employments'] && $staff['employments'][0]['employment_title']) { ?>
+                                            (<?php echo $staff['employments'][0]['employment_title']; ?>)
                                         <?php } ?>
                                     </li>
                                 <?php } ?>
