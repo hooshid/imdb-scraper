@@ -22,10 +22,10 @@ class Request
     /** @var string|null Response body or null if request failed */
     private ?string $page = null;
 
-    /** @var array<string> Request headers to be sent */
+    /** @var array<int, string> Request headers to be sent */
     private array $requestHeaders = [];
 
-    /** @var array<string> Response headers received */
+    /** @var array<int, string> Response headers received */
     private array $responseHeaders = [];
 
     /**
@@ -149,7 +149,7 @@ class Request
     /**
      * Get all response headers from the last request
      *
-     * @return array<string> Response headers
+     * @return array<int, string> Response headers
      */
     public function getResponseHeaders(): array
     {

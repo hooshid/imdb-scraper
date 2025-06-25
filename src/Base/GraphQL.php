@@ -128,7 +128,7 @@ class GraphQL
                 );
             }
 
-            return $responseData->data;
+            return (object)$responseData->data;
         } catch (JsonException $e) {
             throw new Exception('Failed to decode JSON response: ' . $e->getMessage());
         }
