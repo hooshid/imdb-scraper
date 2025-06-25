@@ -8,26 +8,48 @@ use Hooshid\ImdbScraper\Base\Base;
 class CompanySearch extends Base
 {
     /**
-     * Search companies
+     * Search for companies matching input search string
      *
-     * @param string $company
-     * @param int $limit
-     * @return array
-     * @throws Exception
+     * @param string $company Company name to search for (e.g. "warner brothers")
+     * @param int $limit Maximum number of results to return (default: 50)
+     * @return array<int, array{
+     *     id: string,
+     *     name: string,
+     *     rank: array{
+     *         current_rank: int|null,
+     *         change_direction: string|null,
+     *         difference: int|null
+     *     },
+     *     country: string|null,
+     *     types: string[]
+     * }>|array{} Return format:
+     *     - Non-empty: A list of company results, each with:
+     *         - 'id' (string): IMDb company ID
+     *         - 'name' (string): Company name
+     *         - 'rank' (array): Ranking information containing:
+     *             - 'current_rank' (int|null): Current rank position
+     *             - 'change_direction' (string|null): Direction of rank change (UP/DOWN)
+     *             - 'difference' (int|null): Amount of rank change
+     *         - 'country' (string|null): Country of origin
+     *         - 'types' (string[]): Array of company types (e.g. ["Production", "Distributor"])
+     *     - Empty array if no results or invalid input
+     * @throws Exception On API request failure
+     * @throws Exception On API request failure
      */
     public function search(string $company, int $limit = 50): array
     {
-        if (empty(trim($company))) {
+        $company = trim($company);
+        if (empty($company)) {
             return [];
         }
-        $inputCompany = '"' . trim($company) . '"';
+        $searchTerm = '"' . $company . '"';
 
         $query = <<<GRAPHQL
 query CompanySearch {
   mainSearch(
-    first: $limit
+    first: {$limit}
     options: {
-      searchTerm: $inputCompany
+      searchTerm: {$searchTerm}
       type: COMPANY
       includeAdult: true
     }
@@ -63,34 +85,36 @@ GRAPHQL;
 
         $data = $this->graphql->query($query, "CompanySearch");
 
-        if (!isset($data->mainSearch->edges) || !is_array($data->mainSearch->edges)) {
+        if (!$this->hasArrayItems($data->mainSearch->edges)) {
             return [];
         }
 
         $results = [];
 
         foreach ($data->mainSearch->edges as $edge) {
-            if (empty($edge->node->entity->id) or empty($edge->node->entity->companyText->text)) {
+            $e = $edge->node->entity ?? null;
+
+            if (empty($e->id) or empty($e->companyText->text)) {
                 continue;
             }
 
             // Company Types
             $types = [];
-            if (isset($edge->node->entity->companyTypes)) {
-                foreach ($edge->node->entity->companyTypes as $companyType) {
+            if (isset($e->companyTypes)) {
+                foreach ($e->companyTypes as $companyType) {
                     $types[] = $companyType->text;
                 }
             }
 
             $results[] = [
-                'id' => $edge->node->entity->id,
-                'name' => $edge->node->entity->companyText->text,
+                'id' => $e->id,
+                'name' => $e->companyText->text,
                 'rank' => [
-                    'current_rank' => $edge->node->entity->meterRanking->currentRank ?? null,
-                    'change_direction' => $edge->node->entity->meterRanking->rankChange->changeDirection ?? null,
-                    'difference' => $edge->node->entity->meterRanking->rankChange->difference ?? null,
+                    'current_rank' => $e->meterRanking->currentRank ?? null,
+                    'change_direction' => $e->meterRanking->rankChange->changeDirection ?? null,
+                    'difference' => $e->meterRanking->rankChange->difference ?? null,
                 ],
-                'country' => $edge->node->entity->country->text ?? null,
+                'country' => $e->country->text ?? null,
                 'types' => $types
             ];
         }

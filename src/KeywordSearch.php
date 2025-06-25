@@ -66,16 +66,16 @@ GRAPHQL;
         $results = [];
 
         foreach ($data->mainSearch->edges as $edge) {
-            $entity = $edge->node->entity ?? null;
+            $e = $edge->node->entity ?? null;
 
-            if (empty($entity->id) || empty($entity->text->text) || empty($entity->titles->total)) {
+            if (empty($e->id) || empty($e->text->text) || empty($e->titles->total)) {
                 continue;
             }
 
             $results[] = [
-                'id' => $entity->id,
-                'keyword' => $entity->text->text,
-                'total_titles' => $entity->titles->total
+                'id' => $e->id,
+                'keyword' => $e->text->text,
+                'total_titles' => $e->titles->total
             ];
         }
 
