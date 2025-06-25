@@ -53,12 +53,12 @@ $image = new Image();
                                 <?php echo date('Y-m-d H:i', strtotime($item['date'])); ?>
                             </div>
 
-                            <a href="<?php echo $item['sourceHomeUrl']; ?>" target="_blank" class="sourceLabel">
-                                <?php echo $item['sourceLabel']; ?>
+                            <a href="<?php echo $item['source_home_url']; ?>" target="_blank" class="sourceLabel">
+                                <?php echo $item['source_label']; ?>
                             </a>
                         </div>
 
-                        <a href="<?php echo $item['sourceUrl']; ?>" target="_blank" class="title">
+                        <a href="<?php echo $item['source_url']; ?>" target="_blank" class="title">
                             <?php echo $item['title']; ?>
                         </a>
                     </div>

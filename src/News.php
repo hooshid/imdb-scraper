@@ -12,27 +12,48 @@ class News extends Base
      * Get the latest news for a specific category
      *
      * @param string $listType Category of news (MOVIE, TV, CELEBRITY, TOP, INDIE)
-     * @param int $limit Number of news items to retrieve
-     * @return array Array of news items
+     * @param int $limit Number of news items to retrieve (maximum 250)
+     * @return array<int, array{
+     *     id: string,
+     *     title: string,
+     *     author: string|null,
+     *     date: string|null,
+     *     source_url: string|null,
+     *     source_home_url: string|null,
+     *     source_label: string|null,
+     *     plain_html: string|null,
+     *     plain_text: string|null,
+     *     image: array{
+     *         url: string,
+     *         width: int,
+     *         height: int
+     *     }|null
+     * }>|array{} Return format:
+     *     - Non-empty: A list of news articles with:
+     *         - 'id' (string): Unique identifier for the news article
+     *         - 'title' (string): Article headline
+     *         - 'author' (string|null): Author byline if available
+     *         - 'date' (string|null): Publication date in ISO 8601 format
+     *         - 'source_url' (string|null): Direct URL to the article
+     *         - 'source_home_url' (string|null): Publisher's homepage URL
+     *         - 'source_label' (string|null): Name of the news source
+     *         - 'plain_html' (string|null): Formatted HTML content
+     *         - 'plain_text' (string|null): Plain text content
+     *         - 'image' (array|null): Associated image with URL and dimensions
+     *     - Empty array if no news found or invalid parameters
      * @throws InvalidArgumentException If invalid list type is provided
      * @throws Exception If GraphQL query fails
      */
     public function newsList(string $listType, int $limit = 250): array
     {
-        $types = ['MOVIE', 'TV', 'CELEBRITY', 'TOP', 'INDIE'];
-        if (!in_array($listType, $types)) {
-            throw new InvalidArgumentException(
-                sprintf(
-                    'Invalid list type "%s". Valid types are: %s',
-                    $listType,
-                    implode(', ', $types)
-                )
-            );
-        }
+        $this->validateListType($listType);
 
         $query = <<<GRAPHQL
 query News {
-  news(first: $limit, category: $listType) {
+  news(
+    first: {$limit},
+    category: {$listType}
+  ) {
     edges {
       node {
         id
@@ -64,31 +85,80 @@ query News {
 GRAPHQL;
         $data = $this->graphql->query($query, "News");
 
-        $newsListItems = [];
-        if (!isset($data->news->edges) || !is_array($data->news->edges)) {
-            return $newsListItems;
+        if (!$this->hasArrayItems($data->news->edges)) {
+            return [];
         }
 
-        foreach ($data->news->edges as $edge) {
-            if (empty($edge->node->id) or empty($edge->node->articleTitle->plainText)) {
+        return $this->parseNewsResults($data->news->edges);
+    }
+
+    /**
+     * Validate the news category type
+     *
+     * @throws InvalidArgumentException
+     */
+    private function validateListType(string $listType): void
+    {
+        $validTypes = ['MOVIE', 'TV', 'CELEBRITY', 'TOP', 'INDIE'];
+
+        if (!in_array($listType, $validTypes)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Invalid list type "%s". Valid types are: %s',
+                    $listType,
+                    implode(', ', $validTypes)
+                )
+            );
+        }
+    }
+
+    /**
+     * Process news results from GraphQL response
+     *
+     * @param array<object> $edges
+     * @return array<int, array{
+     *     id: string,
+     *     title: string,
+     *     author: string|null,
+     *     date: string|null,
+     *     source_url: string|null,
+     *     source_home_url: string|null,
+     *     source_label: string|null,
+     *     plain_html: string|null,
+     *     plain_text: string|null,
+     *     image: array{
+     *         url: string,
+     *         width: int,
+     *         height: int
+     *     }|null
+     * }>|array{}
+     */
+    public function parseNewsResults(array $edges): array
+    {
+        $results = [];
+
+        foreach ($edges as $edge) {
+            $node = $edge->node ?? null;
+
+            if (empty($node->id) || empty($node->articleTitle->plainText)) {
                 continue;
             }
 
-            $newsListItems[] = [
-                'id' => $edge->node->id,
-                'title' => $edge->node->articleTitle->plainText,
-                'author' => $edge->node->byline ?? null,
-                'date' => $edge->node->date ?? null,
-                'source_url' => $edge->node->externalUrl ?? null,
-                'source_home_url' => $edge->node->source->homepage->url ?? null,
-                'source_label' => $edge->node->source->homepage->label ?? null,
-                'plain_html' => $edge->node->text->plaidHtml ?? null,
-                'plain_text' => $edge->node->text->plainText ?? null,
-                'image' => $this->parseImage($edge->node->image)
+            $results[] = [
+                'id' => $node->id,
+                'title' => $node->articleTitle->plainText,
+                'author' => $node->byline ?? null,
+                'date' => $node->date ?? null,
+                'source_url' => $node->externalUrl ?? null,
+                'source_home_url' => $node->source->homepage->url ?? null,
+                'source_label' => $node->source->homepage->label ?? null,
+                'plain_html' => $node->text->plaidHtml ?? null,
+                'plain_text' => $node->text->plainText ?? null,
+                'image' => $this->parseImage($node->image ?? null)
             ];
         }
 
-        return $newsListItems;
+        return $results;
     }
 }
 
