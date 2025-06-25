@@ -92,29 +92,29 @@ GRAPHQL;
         $results = [];
 
         foreach ($data->mainSearch->edges as $edge) {
-            $e = $edge->node->entity ?? null;
+            $entity = $edge->node->entity ?? null;
 
-            if (empty($e->id) or empty($e->companyText->text)) {
+            if (empty($entity->id) or empty($entity->companyText->text)) {
                 continue;
             }
 
             // Company Types
             $types = [];
-            if (isset($e->companyTypes)) {
-                foreach ($e->companyTypes as $companyType) {
+            if (isset($entity->companyTypes)) {
+                foreach ($entity->companyTypes as $companyType) {
                     $types[] = $companyType->text;
                 }
             }
 
             $results[] = [
-                'id' => $e->id,
-                'name' => $e->companyText->text,
+                'id' => $entity->id,
+                'name' => $entity->companyText->text,
                 'rank' => [
-                    'current_rank' => $e->meterRanking->currentRank ?? null,
-                    'change_direction' => $e->meterRanking->rankChange->changeDirection ?? null,
-                    'difference' => $e->meterRanking->rankChange->difference ?? null,
+                    'current_rank' => $entity->meterRanking->currentRank ?? null,
+                    'change_direction' => $entity->meterRanking->rankChange->changeDirection ?? null,
+                    'difference' => $entity->meterRanking->rankChange->difference ?? null,
                 ],
-                'country' => $e->country->text ?? null,
+                'country' => $entity->country->text ?? null,
                 'types' => $types
             ];
         }
