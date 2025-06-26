@@ -43,7 +43,8 @@ class ChartTest extends TestCase
         $this->assertEquals("The Shawshank Redemption", $result[0]['title']);
         $this->assertEquals(1, $result[0]['rank']);
         $this->assertEquals("Movie", $result[0]['type']);
-        $this->assertEquals(142, $result[0]['runtime']);
+        $this->assertEquals(142, $result[0]['runtime_minutes']);
+        $this->assertEquals(8520, $result[0]['runtime_seconds']);
         $this->assertEquals(1994, $result[0]['year']);
         $this->assertGreaterThan(9, $result[0]['rating']);
         $this->assertGreaterThan(3000000, $result[0]['votes']);
@@ -63,7 +64,8 @@ class ChartTest extends TestCase
         $this->assertEquals("Breaking Bad", $result[0]['title']);
         $this->assertEquals(1, $result[0]['rank']);
         $this->assertEquals("TV Series", $result[0]['type']);
-        $this->assertEquals(45, $result[0]['runtime']);
+        $this->assertEquals(45, $result[0]['runtime_minutes']);
+        $this->assertEquals(2700, $result[0]['runtime_seconds']);
         $this->assertEquals(2008, $result[0]['year']);
         $this->assertGreaterThan(9, $result[0]['rating']);
         $this->assertGreaterThan(2300000, $result[0]['votes']);
@@ -86,7 +88,8 @@ class ChartTest extends TestCase
                 $this->assertNotNull($item['title']);
                 $this->assertLessThanOrEqual(5, $item['rank']);
                 $this->assertEquals("Movie", $item['type']);
-                $this->assertIsInt($item['runtime']);
+                $this->assertIsInt($item['runtime_minutes']);
+                $this->assertIsInt($item['runtime_seconds']);
                 $this->assertIsArray($item['genres']);
                 $this->assertIsInt($item['year']);
                 $this->assertIsFloat($item['rating']);

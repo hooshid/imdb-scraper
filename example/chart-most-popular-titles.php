@@ -64,7 +64,7 @@ $image = new Image();
                             <?php } ?>
                         </td>
                         <td><a href="title.php?id=<?php echo $row['id']; ?>"><?php echo $row['title']; ?></a></td>
-                        <td><?php echo $row['runtime']; ?>m</td>
+                        <td><?php echo $row['runtime_minutes']; ?>m</td>
                         <td><?php echo $row['year']; ?></td>
                         <td><?php echo $row['rating']; ?></td>
                         <td><?php echo number_format($row['votes']); ?></td>
