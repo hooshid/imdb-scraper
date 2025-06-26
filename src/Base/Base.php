@@ -87,6 +87,24 @@ class Base extends Config
     }
 
     /**
+     * ReFormat date string
+     *
+     * @param string $dateString
+     * @return string
+     */
+    protected function reformatDate(string $dateString): string
+    {
+        try {
+            $dateTime = new DateTime($dateString);
+            $formattedDate = $dateTime->format('Y-m-d H:i:s');
+        } catch (\Exception){
+            $formattedDate = $dateString;
+        }
+
+        return $formattedDate;
+    }
+
+    /**
      * Build date string in Y-m-d format from components
      *
      * @param int|string|null $day Day component
