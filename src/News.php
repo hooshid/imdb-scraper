@@ -33,7 +33,7 @@ class News extends Base
      *         - 'id' (string): Unique identifier for the news article
      *         - 'title' (string): Article headline
      *         - 'author' (string|null): Author byline if available
-     *         - 'date' (string|null): Publication date in ISO 8601 format
+     *         - 'date' (string|null): Publication date in Y-m-d H:i:s format
      *         - 'source_url' (string|null): Direct URL to the article
      *         - 'source_home_url' (string|null): Publisher's homepage URL
      *         - 'source_label' (string|null): Name of the news source
@@ -148,7 +148,7 @@ GRAPHQL;
                 'id' => $node->id,
                 'title' => $node->articleTitle->plainText,
                 'author' => $node->byline ?? null,
-                'date' => $node->date ?? null,
+                'date' => $node->date ? $this->reformatDate($node->date) : null,
                 'source_url' => $node->externalUrl ?? null,
                 'source_home_url' => $node->source->homepage->url ?? null,
                 'source_label' => $node->source->homepage->label ?? null,
