@@ -8,45 +8,49 @@ use Hooshid\ImdbScraper\Base\Base;
 class Calendar extends Base
 {
     /**
-     * Get upcoming movie releases
+     * Get upcoming movie/TV releases
      *
-     * @param array $params
-     *  Example: [
-     *      'type' => 'MOVIE',
-     *      'region' => 'US',
-     *      'disablePopularityFilter' => 'true',
-     *      'startDateOverride' => 0,
-     *      'endDateOverride' => 90
-     *  ]
-     * @return array
-     * @throws Exception
+     * @param array{
+     *     type?: string,
+     *     region?: string,
+     *     disablePopularityFilter?: string,
+     *     startDateOverride?: int,
+     *     endDateOverride?: int
+     * } $params Optional parameters:
+     *     - type: Content type (MOVIE, TV, TV_EPISODE) - default: MOVIE
+     *     - region: Region code (e.g. US) - default: US
+     *     - disablePopularityFilter: Whether to disable popularity filter (true/false) - default: true
+     *     - startDateOverride: Days from today for start date - default: 0 (today)
+     *     - endDateOverride: Days from today for end date - default: 90
+     * @return array<int, array{
+     *     id: string,
+     *     title: string,
+     *     release_date: string,
+     *     genres: string[],
+     *     cast: string[],
+     *     image: array{
+     *         url: string,
+     *         width: int,
+     *         height: int
+     *     }|null
+     * }> Returns list of upcoming releases with:
+     *     - 'id': IMDb title ID
+     *     - 'title': Title name
+     *     - 'release_date': Date in YYYY-MM-DD format
+     *     - 'genres': Array of genre names
+     *     - 'cast': Array of principal cast members
+     *     - 'image': Primary image with dimensions
+     * @throws Exception If API request fails
      */
     public function comingSoon(array $params = []): array
     {
-        // Define default values for the parameters
-        $defaults = [
-            'type' => 'MOVIE',
-            'region' => 'US',
-            'disablePopularityFilter' => 'true',
-            'startDateOverride' => 0,
-            'endDateOverride' => 90
-        ];
+        $params = $this->normalizeParameters($params);
 
-        // Merge the defaults with the incoming parameters
-        $params = array_merge($defaults, $params);
-
-        // Extract the parameters
-        $type = strtoupper($params['type']);
-        $region = strtoupper($params['region']);
-        $disablePopularityFilter = $params['disablePopularityFilter'];
-        $startDateOverride = $params['startDateOverride'];
-        $endDateOverride = $params['endDateOverride'];
-
-        $startDate = date('Y-m-d', strtotime($startDateOverride . ' day', time()));
-        $futureDate = date('Y-m-d', strtotime($endDateOverride . ' day', time()));
+        $startDate = date('Y-m-d', strtotime($params['startDateOverride'] . ' day'));
+        $endDate = date('Y-m-d', strtotime($params['endDateOverride'] . ' day'));
 
         $types = ['MOVIE', 'TV', 'TV_EPISODE'];
-        if (!in_array($type, $types)) {
+        if (!in_array($params['type'], $types)) {
             return [];
         }
 
@@ -54,11 +58,11 @@ class Calendar extends Base
 query ComingSoon {
     comingSoon(
       first: 9999
-      comingSoonType: $type
-      disablePopularityFilter: $disablePopularityFilter
-      regionOverride: "$region"
+      comingSoonType: {$params['type']}
+      disablePopularityFilter: {$params['disablePopularityFilter']}
+      regionOverride: "{$params['region']}"
       releasingOnOrAfter: "$startDate"
-      releasingOnOrBefore: "$futureDate"
+      releasingOnOrBefore: "$endDate"
       sort: {sortBy: RELEASE_DATE, sortOrder: ASC}) {
     edges {
       node {
@@ -99,13 +103,14 @@ query ComingSoon {
 GRAPHQL;
         $data = $this->graphql->query($query, "ComingSoon");
 
-        $list = [];
-        if (!isset($data->comingSoon->edges) || !is_array($data->comingSoon->edges)) {
-            return $list;
+        if (!$this->hasArrayItems($data->comingSoon->edges)) {
+            return [];
         }
 
+        $list = [];
+
         foreach ($data->comingSoon->edges as $edge) {
-            if (empty($edge->node->id) or empty($edge->node->titleText->text)) {
+            if (empty($edge->node->id) || empty($edge->node->titleText->text)) {
                 continue;
             }
 
@@ -119,7 +124,9 @@ GRAPHQL;
             $genres = [];
             if (isset($edge->node->titleGenres)) {
                 foreach ($edge->node->titleGenres->genres as $genre) {
-                    $genres[] = $genre->genre->text;
+                    if (!empty($genre->genre->text)) {
+                        $genres[] = $genre->genre->text;
+                    }
                 }
             }
 
@@ -127,7 +134,9 @@ GRAPHQL;
             $cast = [];
             if (isset($edge->node->principalCredits[0])) {
                 foreach ($edge->node->principalCredits[0]->credits as $credit) {
-                    $cast[] = $credit->name->nameText->text;
+                    if (!empty($credit->name->nameText->text)) {
+                        $cast[] = $credit->name->nameText->text;
+                    }
                 }
             }
 
@@ -137,10 +146,43 @@ GRAPHQL;
                 "release_date" => $releaseDate,
                 "genres" => $genres,
                 "cast" => $cast,
-                "image" => $this->parseImage($edge->node->primaryImage)
+                "image" => $this->parseImage($edge->node->primaryImage ?? null)
             ];
         }
 
         return $list;
+    }
+
+    /**
+     * Normalize and validate parameters
+     *
+     * @param array $params
+     * @return array{
+     *     type: string,
+     *     region: string,
+     *     disablePopularityFilter: string,
+     *     startDateOverride: int,
+     *     endDateOverride: int
+     * }
+     */
+    private function normalizeParameters(array $params): array
+    {
+        $defaults = [
+            'type' => 'MOVIE',
+            'region' => 'US',
+            'disablePopularityFilter' => 'true',
+            'startDateOverride' => 0,
+            'endDateOverride' => 90
+        ];
+
+        $merged = array_merge($defaults, $params);
+
+        return [
+            'type' => strtoupper($merged['type']),
+            'region' => strtoupper($merged['region']),
+            'disablePopularityFilter' => $merged['disablePopularityFilter'],
+            'startDateOverride' => (int)$merged['startDateOverride'],
+            'endDateOverride' => (int)$merged['endDateOverride']
+        ];
     }
 }
