@@ -21,32 +21,32 @@ class Company extends Base
      *         change_direction: string|null,
      *         difference: int|null
      *     },
-     *     country: string|null,
+     *     country: string,
      *     types: string[],
      *     staff: array<int, array{
      *         id: string,
-     *         name: string|null,
+     *         name: string,
      *         employments: array<int, array{
-     *             employment_title: string|null,
-     *             occupation: string|null,
+     *             employment_title: string,
+     *             occupation: string,
      *             branch: string|null
      *         }>
      *     }>,
      *     known_for: array<int, array{
      *         id: string,
-     *         title: string|null,
+     *         title: string,
      *         jobs: array<int, array{
-     *             category: string|null,
-     *             job: string|null
+     *             category: string,
+     *             job: string
      *         }>,
      *         countries: string[],
      *         year: int|null,
      *         end_year: int|null
      *     }>,
      *     affiliations: array<int, array{
-     *         id: string|null,
-     *         name: string|null,
-     *         description: string|null
+     *         id: string,
+     *         name: string,
+     *         description: string
      *     }>
      * }|array{} Return format:
      *     - Non-empty: Detailed company information including:
@@ -173,20 +173,28 @@ GRAPHQL;
         $staff = [];
         if (!empty($data->company->keyStaff->edges)) {
             foreach ($data->company->keyStaff->edges as $keyStaff) {
+                if (empty($keyStaff->node->name->id) || empty($keyStaff->node->name->nameText->text)) {
+                    continue;
+                }
+
                 // Employments
                 $employments = [];
                 if (!empty($keyStaff->node->summary->employment)) {
                     foreach ($keyStaff->node->summary->employment as $list) {
+                        if (empty($list->title->text) || empty($list->occupation->text)) {
+                            continue;
+                        }
+
                         $employments[] = [
-                            'employment_title' => $list->title->text ?? null,
-                            'occupation' => $list->occupation->text ?? null,
+                            'employment_title' => $list->title->text,
+                            'occupation' => $list->occupation->text,
                             'branch' => $list->branch->text ?? null
                         ];
                     }
                 }
                 $staff[] = [
                     'id' => $keyStaff->node->name->id,
-                    'name' => $keyStaff->node->name->nameText->text ?? null,
+                    'name' => $keyStaff->node->name->nameText->text,
                     'employments' => $employments
                 ];
             }
@@ -196,13 +204,21 @@ GRAPHQL;
         $knownFor = [];
         if (!empty($data->company->knownForTitles->edges)) {
             foreach ($data->company->knownForTitles->edges as $title) {
+                if (empty($title->node->title->id) || empty($title->node->title->titleText->text)) {
+                    continue;
+                }
+
                 // Jobs
                 $jobs = [];
                 if (!empty($title->node->summary->jobs)) {
                     foreach ($title->node->summary->jobs as $job) {
+                        if (empty($job->category->text) || empty($job->job->text)) {
+                            continue;
+                        }
+
                         $jobs[] = [
-                            'category' => $job->category->text ?? null,
-                            'job' => $job->job->text ?? null
+                            'category' => $job->category->text,
+                            'job' => $job->job->text
                         ];
                     }
                 }
@@ -219,7 +235,7 @@ GRAPHQL;
 
                 $knownFor[] = [
                     'id' => $title->node->title->id,
-                    'title' => $title->node->title->titleText->text ?? null,
+                    'title' => $title->node->title->titleText->text,
                     'jobs' => $jobs,
                     'countries' => $countries,
                     'year' => $title->node->summary->yearRange->year ?? null,
@@ -232,10 +248,14 @@ GRAPHQL;
         $affiliations = [];
         if (!empty($data->company->affiliations->edges)) {
             foreach ($data->company->affiliations->edges as $affiliation) {
+                if (empty($affiliation->node->company->id) || empty($affiliation->node->company->companyText->text) || empty($affiliation->node->text)) {
+                    continue;
+                }
+
                 $affiliations[] = [
-                    'id' => $affiliation->node->company->id ?? null,
-                    'name' => $affiliation->node->company->companyText->text ?? null,
-                    'description' => $affiliation->node->text ?? null
+                    'id' => $affiliation->node->company->id,
+                    'name' => $affiliation->node->company->companyText->text,
+                    'description' => $affiliation->node->text
                 ];
             }
         }
@@ -248,7 +268,7 @@ GRAPHQL;
                 'change_direction' => $data->company->meterRanking->rankChange->changeDirection ?? null,
                 'difference' => $data->company->meterRanking->rankChange->difference ?? null,
             ],
-            'country' => $data->company->country->text ?? null,
+            'country' => $data->company->country->text,
             'types' => $types,
             'staff' => $staff,
             'known_for' => $knownFor,
