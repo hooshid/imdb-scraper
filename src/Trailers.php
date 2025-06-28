@@ -10,9 +10,49 @@ class Trailers extends Base
     /**
      * Get the latest trailers as seen on IMDb https://www.imdb.com/trailers/
      *
-     * @param int $limit
-     * @return array
-     * @throws Exception
+     * @param int $limit Maximum number of trailers to retrieve (default: 100)
+     * @return array<int, array{
+     *     id: string,
+     *     playback_url: string,
+     *     created_date: string|null,
+     *     runtime_formatted: string|null,
+     *     runtime_seconds: int|null,
+     *     title: string|null,
+     *     description: string|null,
+     *     content_type: string|null,
+     *     thumbnail: array{
+     *         url: string,
+     *         width: int,
+     *         height: int
+     *     }|null,
+     *     primary_title: array{
+     *         id: string,
+     *         title: string|null,
+     *         release_date: string|null,
+     *         release_date_displayable: string|null,
+     *         image: array{
+     *             url: string,
+     *             width: int,
+     *             height: int
+     *         }|null
+     *     }
+     * }> Returns list of recent trailers with:
+     *     - 'id': Video ID
+     *     - 'playback_url': Full URL to watch the trailer
+     *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
+     *     - 'runtime_formatted': Human-readable runtime (MM:SS)
+     *     - 'runtime_seconds': Runtime in seconds
+     *     - 'title': Trailer title
+     *     - 'description': Trailer description
+     *     - 'content_type': Type of video content (e.g. "Trailer")
+     *     - 'thumbnail': Thumbnail image with dimensions
+     *     - 'primary_title': Associated movie/TV show information with:
+     *         - 'id': IMDb title ID
+     *         - 'title': Title name
+     *         - 'release_date': Formatted release date (YYYY-MM-DD) (e.g. "2025-08-01")
+     *         - 'release_date_displayable': Formatted release date (F j, YYYY) (e.g. "August 1, 2025")
+     *         - 'image': Primary title image with dimensions
+     * @throws Exception If API request fails
      */
     public function recentVideos(int $limit = 100): array
     {
@@ -50,6 +90,9 @@ query RecentVideo {
           text
         }
         releaseDate {
+          day
+          month
+          year
           displayableProperty {
             value {
               plainText
@@ -68,20 +111,27 @@ query RecentVideo {
 GRAPHQL;
         $data = $this->graphql->query($query, "RecentVideo");
 
-        $items = [];
-        if (!isset($data->recentVideos->videos) || !is_array($data->recentVideos->videos)) {
-            return $items;
+        if (!$this->hasArrayItems($data->recentVideos->videos)) {
+            return [];
         }
+
+        $items = [];
 
         foreach ($data->recentVideos->videos as $edge) {
             if (empty($edge->id) or empty($edge->primaryTitle->id)) {
                 continue;
             }
 
+            $releaseDate = $this->buildDate(
+                $edge->primaryTitle->releaseDate->day ?? null,
+                $edge->primaryTitle->releaseDate->month ?? null,
+                $edge->primaryTitle->releaseDate->year ?? null
+            );
+
             $items[] = [
                 'id' => $edge->id,
                 'playback_url' => $this->makeUrl('video', $edge->id),
-                'created_date' => $edge->createdDate ?? null,
+                'created_date' => $edge->createdDate ? $this->reformatDate($edge->createdDate) : null,
                 'runtime_formatted' => $this->secondsToTimeFormat($edge->runtime->value),
                 'runtime_seconds' => $edge->runtime->value ?? null,
                 'title' => $edge->name->value ?? null,
@@ -91,8 +141,9 @@ GRAPHQL;
                 'primary_title' => [
                     'id' => $edge->primaryTitle->id,
                     'title' => $edge->primaryTitle->titleText->text ?? null,
-                    'release_date' => $edge->primaryTitle->releaseDate->displayableProperty->value->plainText ?? null,
-                    'image' => $this->parseImage($edge->primaryTitle->primaryImage)
+                    'release_date' => $releaseDate,
+                    'release_date_displayable' => $edge->primaryTitle->releaseDate->displayableProperty->value->plainText ?? null,
+                    'image' => $this->parseImage($edge->primaryTitle->primaryImage ?? null)
                 ],
             ];
         }
@@ -103,9 +154,49 @@ GRAPHQL;
     /**
      * Get trending trailers as seen on IMDb https://www.imdb.com/trailers/
      *
-     * @param int $limit
-     * @return array
-     * @throws Exception
+     * @param int $limit Maximum number of trending trailers to retrieve (default: 250)
+     * @return array<int, array{
+     *     id: string,
+     *     playback_url: string,
+     *     created_date: string|null,
+     *     runtime_formatted: string|null,
+     *     runtime_seconds: int|null,
+     *     title: string|null,
+     *     description: string|null,
+     *     content_type: string|null,
+     *     thumbnail: array{
+     *         url: string,
+     *         width: int,
+     *         height: int
+     *     }|null,
+     *     primary_title: array{
+     *         id: string,
+     *         title: string|null,
+     *         release_date: string|null,
+     *         release_date_displayable: string|null,
+     *         image: array{
+     *             url: string,
+     *             width: int,
+     *             height: int
+     *         }|null
+     *     }
+     * }> Returns list of trending trailers with:
+     *     - 'id': Video ID
+     *     - 'playback_url': Full URL to watch the trailer
+     *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
+     *     - 'runtime_formatted': Human-readable runtime (MM:SS)
+     *     - 'runtime_seconds': Runtime in seconds
+     *     - 'title': Trailer title
+     *     - 'description': Detailed trailer description
+     *     - 'content_type': Type of video content (e.g. "Trailer")
+     *     - 'thumbnail': Thumbnail image with dimensions
+     *     - 'primary_title': Associated movie/TV show information with:
+     *         - 'id': IMDb title ID
+     *         - 'title': Title name
+     *         - 'release_date': Formatted release date (YYYY-MM-DD) (e.g. "2025-08-01")
+     *         - 'release_date_displayable': Formatted release date (F j, YYYY) (e.g. "August 1, 2025")
+     *         - 'image': Primary title image with dimensions
+     * @throws Exception If API request fails
      */
     public function trendingVideos(int $limit = 250): array
     {
@@ -118,6 +209,9 @@ query TrendingVideo {
         text
       }
       releaseDate {
+        day
+        month
+        year
         displayableProperty {
           value {
             plainText
@@ -158,20 +252,27 @@ query TrendingVideo {
 GRAPHQL;
         $data = $this->graphql->query($query, "TrendingVideo");
 
-        $items = [];
-        if (!isset($data->trendingTitles->titles) || !is_array($data->trendingTitles->titles)) {
-            return $items;
+        if (!$this->hasArrayItems($data->trendingTitles->titles)) {
+            return [];
         }
 
+        $items = [];
+
         foreach ($data->trendingTitles->titles as $edge) {
-            if (empty($edge->latestTrailer->id) or empty($edge->id)) {
+            if (empty($edge->latestTrailer->id) || empty($edge->id)) {
                 continue;
             }
+
+            $releaseDate = $this->buildDate(
+                $edge->releaseDate->day ?? null,
+                $edge->releaseDate->month ?? null,
+                $edge->releaseDate->year ?? null
+            );
 
             $items[] = [
                 'id' => $edge->latestTrailer->id,
                 'playback_url' => $this->makeUrl('video', $edge->latestTrailer->id),
-                'created_date' => $edge->latestTrailer->createdDate ?? null,
+                'created_date' => $edge->latestTrailer->createdDate ? $this->reformatDate($edge->latestTrailer->createdDate) : null,
                 'runtime_formatted' => $this->secondsToTimeFormat($edge->latestTrailer->runtime->value),
                 'runtime_seconds' => $edge->latestTrailer->runtime->value ?? null,
                 'title' => $edge->latestTrailer->name->value ?? null,
@@ -181,8 +282,9 @@ GRAPHQL;
                 'primary_title' => [
                     'id' => $edge->id,
                     'title' => $edge->titleText->text ?? null,
-                    'release_date' => $edge->releaseDate->displayableProperty->value->plainText ?? null,
-                    'image' => $this->parseImage($edge->primaryImage)
+                    'release_date' => $releaseDate,
+                    'release_date_displayable' => $edge->releaseDate->displayableProperty->value->plainText ?? null,
+                    'image' => $this->parseImage($edge->primaryImage ?? null)
                 ],
             ];
         }
