@@ -4,29 +4,69 @@ namespace Hooshid\ImdbScraper;
 
 use Exception;
 use Hooshid\ImdbScraper\Base\Base;
+use stdClass;
 
 class TitleSearch extends Base
 {
     /**
-     * @param array $params
-     *  Example: [
-     *      'searchTerm' => '',
-     *      'types' => '',
-     *      'genres' => '',
-     *      'creditId' => '',
-     *      'startDate' => '',
-     *      'endDate' => '',
-     *      'countries' => '',
-     *      'languages' => '',
-     *      'companies' => '',
-     *      'keywords' => '',
-     *      'adult' => 'EXCLUDE_ADULT',
-     *      'limit' => 50,
-     *      'sortBy' => 'POPULARITY',
-     *      'sortOrder' => 'ASC'
-     *  ]
-     * @return array
-     * @throws Exception
+     * Search for titles on IMDb with advanced filtering
+     *
+     * @param array{
+     *     searchTerm?: string,
+     *     types?: string,
+     *     genres?: string,
+     *     creditId?: string,
+     *     startDate?: string,
+     *     endDate?: string,
+     *     countries?: string,
+     *     languages?: string,
+     *     companies?: string,
+     *     keywords?: string,
+     *     adult?: string,
+     *     limit?: int,
+     *     sortBy?: string,
+     *     sortOrder?: string
+     * } $params Search parameters:
+     *     - searchTerm: Title to search for
+     *     - types: Comma-separated title types (movie,tvSeries,etc)
+     *     - genres: Comma-separated genres (Action,Adventure,etc)
+     *     - creditId: Comma-separated name IDs to filter by
+     *     - startDate/endDate: Release date range (YYYY-MM-DD)
+     *     - countries: Comma-separated country codes
+     *     - languages: Comma-separated language codes
+     *     - companies: Comma-separated company IDs
+     *     - keywords: Comma-separated keywords
+     *     - adult: Content filter (EXCLUDE_ADULT/INCLUDE_ADULT)
+     *     - limit: Results per page (default: 50)
+     *     - sortBy: Field to sort by (POPULARITY,RELEASE_DATE,etc)
+     *     - sortOrder: Sort direction (ASC/DESC)
+     * @return array{
+     *     results: array<int, array{
+     *         id: string,
+     *         url: string,
+     *         title: string,
+     *         originalTitle: string|null,
+     *         type: string|null,
+     *         year: int|null,
+     *         end_year: int|null,
+     *         plot: string|null,
+     *         runtime_formatted: string|null,
+     *         runtime_minutes: int|null,
+     *         runtime_seconds: int|null,
+     *         rating: float|null,
+     *         votes: int|null,
+     *         metacritic: int|null,
+     *         image: array{
+     *             url: string,
+     *             width: int,
+     *             height: int
+     *         }|null
+     *     }>,
+     *     total: int
+     * } Returns search results containing:
+     *     - results: Array of matched titles with detailed info
+     *     - total: Total number of matching results
+     * @throws Exception If API request fails
      */
     public function search(array $params = []): array
     {
@@ -34,7 +74,10 @@ class TitleSearch extends Base
         $constraints = $this->buildConstraints($params);
 
         if (empty($constraints)) {
-            return [];
+            return [
+                'results' => [],
+                'total' => 0
+            ];
         }
 
         $query = $this->buildGraphQLQuery($params, $constraints);
@@ -46,16 +89,31 @@ class TitleSearch extends Base
     /**
      * Normalize and validate search parameters
      *
-     * @param array $params
-     * @return array
+     * @param array<string, mixed> $params
+     * @return array{
+     *     searchTerm: string,
+     *     types: string,
+     *     genres: string,
+     *     creditId: string,
+     *     startDate: string,
+     *     endDate: string,
+     *     countries: string,
+     *     languages: string,
+     *     companies: string,
+     *     keywords: string,
+     *     adult: string,
+     *     limit: int,
+     *     sortBy: string,
+     *     sortOrder: string
+     * }
      */
     private function normalizeParameters(array $params): array
     {
         // Define default values for the parameters
         $defaults = [
             'searchTerm' => '',
-            'types' => '',
-            'genres' => '',
+            'types' => '', // movie, tvSeries, short, tvEpisode, tvMiniSeries, tvMovie, tvSpecial, tvShort, videoGame, video, musicVideo, podcastSeries, podcastEpisode
+            'genres' => '', // Action, Adult, Adventure, Animation, Biography, Comedy, Crime, Documentary, Drama, Family, Fantasy, Film-Noir, Game-Show, History, Horror, Music, Musical, Mystery, News, Reality-TV,Romance, Sci-Fi, Short, Sport, Talk-Show, Thriller, War, Western
             'creditId' => '',
             'startDate' => '',
             'endDate' => '',
@@ -94,8 +152,20 @@ class TitleSearch extends Base
     /**
      * Build GraphQL constraints from parameters
      *
-     * @param array $params
-     * @return string
+     * @param array{
+     *     searchTerm: string,
+     *     types: string,
+     *     genres: string,
+     *     creditId: string,
+     *     startDate: string,
+     *     endDate: string,
+     *     countries: string,
+     *     languages: string,
+     *     companies: string,
+     *     keywords: string,
+     *     adult: string
+     * } $params
+     * @return string GraphQL's constraints string
      */
     private function buildConstraints(array $params): string
     {
@@ -166,9 +236,9 @@ class TitleSearch extends Base
     /**
      * Build release date constraint
      *
-     * @param string $startDate
-     * @param string $endDate
-     * @return string|null
+     * @param string $startDate Start date (YYYY-MM-DD)
+     * @param string $endDate End date (YYYY-MM-DD)
+     * @return string|null Formatted GraphQL constraint
      */
     private function buildReleaseDateConstraint(string $startDate, string $endDate): ?string
     {
@@ -194,11 +264,15 @@ class TitleSearch extends Base
     }
 
     /**
-     * Build the GraphQL query
+     * Build the GraphQL query string
      *
-     * @param array $params
-     * @param string $constraints
-     * @return string
+     * @param array{
+     *     limit: int,
+     *     sortBy: string,
+     *     sortOrder: string
+     * } $params
+     * @param string $constraints GraphQL constraints
+     * @return string Complete GraphQL query
      */
     private function buildGraphQLQuery(array $params, string $constraints): string
     {
@@ -260,43 +334,47 @@ GRAPHQL;
     }
 
     /**
-     * Process GraphQL response into standardized results
+     * Process GraphQL response into standardized format
+     *
+     * @param stdClass $data Raw GraphQL response
+     * @return array{
+     *     results: array<int, array>,
+     *     total: int
+     * }
      */
-    private function processSearchResults(\stdClass $data): array
+    private function processSearchResults(stdClass $data): array
     {
-        if (!isset($data->advancedTitleSearch->edges) || !is_array($data->advancedTitleSearch->edges)) {
-            return [];
+        if (!$this->hasArrayItems($data->advancedTitleSearch->edges)) {
+            return [
+                'results' => [],
+                'total' => 0
+            ];
         }
 
         $results = [];
 
         foreach ($data->advancedTitleSearch->edges as $edge) {
-            if (empty($edge->node->title->id)) {
+            $title = $edge->node->title ?? null;
+            if (empty($title->id) || empty($title->titleText->text)) {
                 continue;
             }
 
-            $id = $edge->node->title->id;
-            $yearRange = null;
-            if (isset($edge->node->title->releaseYear->year)) {
-                $yearRange .= $edge->node->title->releaseYear->year;
-                if (isset($edge->node->title->releaseYear->endYear)) {
-                    $yearRange .= '-' . $edge->node->title->releaseYear->endYear;
-                }
-            }
-
             $results[] = [
-                'id' => $id,
-                'url' => $this->makeUrl("title", $id),
-                'originalTitle' => $edge->node->title->titleText->text ?? null,
-                'title' => $edge->node->title->titleText->text ?? null,
-                'type' => $edge->node->title->titleType->text ?? null,
-                'year' => $yearRange,
-                'plot' => $edge->node->title->plot->plotText->plainText ?? null,
-                'runtime' => $this->secondsToMinutes($edge->node->title->runtime->seconds ?? null),
-                'rating' => $edge->node->title->ratingsSummary->aggregateRating ?? null,
-                'votes' => $edge->node->title->ratingsSummary->voteCount ?? null,
-                'metacritic' => $edge->node->title->metacritic->metascore->score ?? null,
-                'image' => $this->parseImage($edge->node->title->primaryImage)
+                'id' => $title->id,
+                'url' => $this->makeUrl("title", $title->id),
+                'title' => $title->titleText->text,
+                'original_title' => $title->originalTitleText->text ?? null,
+                'type' => $title->titleType->text ?? null,
+                'year' => $title->releaseYear->year ?? null,
+                'end_year' => $title->releaseYear->endYear ?? null,
+                'plot' => $title->plot->plotText->plainText ?? null,
+                'runtime_formatted' => $this->secondsToTimeFormat($title->runtime->seconds ?? null),
+                'runtime_minutes' => $this->secondsToMinutes($title->runtime->seconds ?? null),
+                'runtime_seconds' => $title->runtime->seconds ?? null,
+                'rating' => $title->ratingsSummary->aggregateRating ?? null,
+                'votes' => $title->ratingsSummary->voteCount ?? null,
+                'metacritic' => $title->metacritic->metascore->score ?? null,
+                'image' => $this->parseImage($title->primaryImage)
             ];
         }
 
