@@ -9,25 +9,67 @@ use stdClass;
 class NameSearch extends Base
 {
     /**
-     * Search for names on IMDb
+     * Search for names on IMDb with advanced filtering
      *
-     * @param array $params
-     *  Example: [
-     *      'name' => '',
-     *      'birthMonthDay' => '',
-     *      'birthDateRangeStart' => '',
-     *      'birthDateRangeEnd' => '',
-     *      'deathDateRangeStart' => '',
-     *      'deathDateRangeEnd' => '',
-     *      'birthPlace' => '',
-     *      'gender' => '',
-     *      'adult' => 'EXCLUDE_ADULT',
-     *      'limit' => 50,
-     *      'sortBy' => 'POPULARITY',
-     *      'sortOrder' => 'ASC'
-     *  ]
-     * @return array
-     * @throws Exception
+     * @param array{
+     *     name?: string,
+     *     birthMonthDay?: string,
+     *     birthDateRangeStart?: string,
+     *     birthDateRangeEnd?: string,
+     *     deathDateRangeStart?: string,
+     *     deathDateRangeEnd?: string,
+     *     birthPlace?: string,
+     *     gender?: string,
+     *     adult?: string,
+     *     limit?: int,
+     *     sortBy?: string,
+     *     sortOrder?: string
+     * } $params Search parameters:
+     *     - name: Full or partial name to search
+     *     - birthMonthDay: Month and day in MM-DD format (e.g. "04-02")
+     *     - birthDateRangeStart: Birth date range start (YYYY-MM-DD)
+     *     - birthDateRangeEnd: Birth date range end (YYYY-MM-DD)
+     *     - deathDateRangeStart: Death date range start (YYYY-MM-DD)
+     *     - deathDateRangeEnd: Death date range end (YYYY-MM-DD)
+     *     - birthPlace: Birth place location
+     *     - gender: Gender filter (MALE/FEMALE/NON_BINARY)
+     *     - adult: Adult content filter (INCLUDE_ADULT/EXCLUDE_ADULT)
+     *     - limit: Maximum results (default: 50)
+     *     - sortBy: Sort field (POPULARITY/NAME/BIRTH_DATE)
+     *     - sortOrder: Sort direction (ASC/DESC)
+     * @return array{
+     *     results: array<int, array{
+     *         index: int,
+     *         id: string,
+     *         url: string,
+     *         name: string,
+     *         image: array{
+     *             url: string,
+     *             width: int,
+     *             height: int
+     *         }|null,
+     *         professions: string[],
+     *         bio: string|null,
+     *         known_for: array<int, array{
+     *             id: string,
+     *             title: string,
+     *             year: int|null,
+     *             end_year: int|null
+     *         }>
+     *     }>,
+     *     total: int
+     * } Returns search results with:
+     *     - results: Array of matched names containing:
+     *         - index: Result position
+     *         - id: IMDb name ID
+     *         - url: Full IMDb URL
+     *         - name: Full name
+     *         - image: Primary image with dimensions
+     *         - professions: Array of primary professions
+     *         - bio: Biography text
+     *         - known_for: Notable works with title IDs and years
+     *     - total: Total number of matching results
+     * @throws Exception If API request fails
      */
     public function search(array $params = []): array
     {
@@ -35,7 +77,10 @@ class NameSearch extends Base
         $constraints = $this->buildConstraints($params);
 
         if (empty($constraints)) {
-            return [];
+            return [
+                'results' => [],
+                'total' => 0
+            ];
         }
 
         $query = $this->buildGraphQLQuery($params, $constraints);
@@ -47,8 +92,21 @@ class NameSearch extends Base
     /**
      * Normalize and validate search parameters
      *
-     * @param array $params
-     * @return array
+     * @param array<string, mixed> $params
+     * @return array{
+     *     name: string,
+     *     birthMonthDay: string,
+     *     birthDateRangeStart: string,
+     *     birthDateRangeEnd: string,
+     *     deathDateRangeStart: string,
+     *     deathDateRangeEnd: string,
+     *     birthPlace: string,
+     *     gender: string,
+     *     adult: string,
+     *     limit: int,
+     *     sortBy: string,
+     *     sortOrder: string
+     * }
      */
     private function normalizeParameters(array $params): array
     {
@@ -91,8 +149,18 @@ class NameSearch extends Base
     /**
      * Build GraphQL constraints from parameters
      *
-     * @param array $params
-     * @return string
+     * @param array{
+     *     name: string,
+     *     birthMonthDay: string,
+     *     birthDateRangeStart: string,
+     *     birthDateRangeEnd: string,
+     *     deathDateRangeStart: string,
+     *     deathDateRangeEnd: string,
+     *     birthPlace: string,
+     *     gender: string,
+     *     adult: string
+     * } $params
+     * @return string GraphQL's constraints string
      */
     private function buildConstraints(array $params): string
     {
@@ -139,12 +207,12 @@ class NameSearch extends Base
     }
 
     /**
-     * Generic date constraint builder
+     * Build date range constraint for GraphQL
      *
-     * @param string $type (birthDate, deathDate)
-     * @param string|null $startDate (searches between startDate and present date) iso date string ('1975-01-01')
-     * @param string|null $endDate (searches between endDate and earlier) iso date string ('1975-01-01')
-     * @return string|null
+     * @param 'birthDate'|'deathDate' $type Date type to constrain
+     * @param string|null $startDate Start date (YYYY-MM-DD)
+     * @param string|null $endDate End date (YYYY-MM-DD)
+     * @return string|null Formatted GraphQL constraint or null if invalid
      */
     private function buildDateConstraint(string $type, ?string $startDate, ?string $endDate): ?string
     {
@@ -170,11 +238,15 @@ class NameSearch extends Base
     }
 
     /**
-     * Build the GraphQL query
+     * Build the GraphQL query string
      *
-     * @param array $params
-     * @param string $constraints
-     * @return string
+     * @param array{
+     *     limit: int,
+     *     sortBy: string,
+     *     sortOrder: string
+     * } $params
+     * @param string $constraints GraphQL's constraints string
+     * @return string Complete GraphQL query
      */
     private function buildGraphQLQuery(array $params, string $constraints): string
     {
@@ -207,7 +279,7 @@ query AdvancedNameSearch {
           }
           primaryProfessions {
             category {
-                text
+              text
             }
           }
           knownFor(first: 5) {
@@ -237,25 +309,31 @@ GRAPHQL;
     }
 
     /**
-     * Process GraphQL response into standardized results
+     * Process GraphQL response into standardized format
      *
-     * @param stdClass $data
-     * @return array
+     * @param stdClass $data Raw GraphQL response
+     * @return array{
+     *     results: array<int, array>,
+     *     total: int
+     * }
      */
     private function processSearchResults(stdClass $data): array
     {
-        if (!isset($data->advancedNameSearch->edges) || !is_array($data->advancedNameSearch->edges)) {
-            return [];
+        if (!$this->hasArrayItems($data->advancedNameSearch->edges)) {
+            return [
+                'results' => [],
+                'total' => 0
+            ];
         }
 
         $results = [];
-
         $index = 1;
+
         foreach ($data->advancedNameSearch->edges as $edge) {
             $id = $edge->node->name->id ?? null;
             $name = $edge->node->name->nameText->text ?? null;
 
-            if (empty($id) or empty($name)) {
+            if (empty($id) || empty($name)) {
                 continue;
             }
 
@@ -277,9 +355,12 @@ GRAPHQL;
             $knownFor = [];
             if (!empty($edge->node->name->knownFor->edges)) {
                 foreach ($edge->node->name->knownFor->edges as $known) {
+                    if (empty($known->node->credit->title->id) || empty($known->node->credit->title->titleText->text)) {
+                        continue;
+                    }
                     $knownFor[] = [
-                        'id' => $known->node->credit->title->id ?? null,
-                        'title' => $known->node->credit->title->titleText->text ?? null,
+                        'id' => $known->node->credit->title->id,
+                        'title' => $known->node->credit->title->titleText->text,
                         'year' => $known->node->credit->title->releaseYear->year ?? null,
                         'end_year' => $known->node->credit->title->releaseYear->endYear ?? null
                     ];
