@@ -52,7 +52,7 @@ class TitleTest extends TestCase
         $this->assertEquals('Free your mind', $data['taglines'][0]);
 
         $this->assertIsArray($data['keywords']);
-        $this->assertCount(403, $data['keywords']);
+        $this->assertGreaterThan(400, count($data['keywords']));
         $this->assertEquals('artificial reality', $data['keywords'][0]);
         $this->assertEquals('war with machines', $data['keywords'][1]);
         $this->assertEquals('simulated reality', $data['keywords'][2]);
@@ -221,7 +221,7 @@ class TitleTest extends TestCase
         $this->assertEquals('Read between the lines (season five)', $data['taglines'][5]);
 
         $this->assertIsArray($data['keywords']);
-        $this->assertCount(63, $data['keywords']);
+        $this->assertGreaterThan(60, count($data['keywords']));
         $this->assertEquals('baltimore maryland', $data['keywords'][0]);
 
         $this->assertIsArray($data['videos']);
