@@ -34,7 +34,7 @@ class VideoTest extends TestCase
         $this->assertEquals('2020-09-03', $vi['primary_title']['release_date']);
         $this->assertEquals('September 3, 2020', $vi['primary_title']['release_date_displayable']);
         $this->assertEquals(2020, $vi['primary_title']['year']);
-        $this->assertIsArray($vi['image']);
+        $this->assertIsArray($vi['primary_title']['image']);
 
         // playback urls
         $this->assertCount(5, $vi['urls']);
