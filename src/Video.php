@@ -2,92 +2,101 @@
 
 namespace Hooshid\ImdbScraper;
 
-use Hooshid\ImdbScraper\Base\Old\Base;
-use Hooshid\ImdbScraper\Base\Config;
+use Hooshid\ImdbScraper\Base\Base;
 
 class Video extends Base
 {
-    protected array $data = [
-        'result' => [],
-    ];
 
     /**
-     * @param Config|null $config OPTIONAL override default config
-     */
-    public function __construct(Config $config = null)
-    {
-        parent::__construct($config);
-    }
-
-    /**
-     * Search name
+     * Process videos results from GraphQL response
      *
-     * @param string $id
-     * @return array
+     * @param array<object> $edges
+     * @return array<int, array{
+     *     id: string,
+     *     playback_url: string,
+     *     created_date: string|null,
+     *     runtime_formatted: string|null,
+     *     runtime_seconds: int|null,
+     *     title: string|null,
+     *     description: string|null,
+     *     content_type: string|null,
+     *     thumbnail: array{
+     *         url: string,
+     *         width: int,
+     *         height: int
+     *     }|null,
+     *     primary_title: array{
+     *         id: string,
+     *         title: string|null,
+     *         release_date: string|null,
+     *         release_date_displayable: string|null,
+     *         year: int|null,
+     *         image: array{
+     *             url: string,
+     *             width: int,
+     *             height: int
+     *         }|null
+     *     }
+     * }> Returns list of videos with:
+     *     - 'id': Video ID
+     *     - 'playback_url': Full URL to watch the trailer
+     *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
+     *     - 'runtime_formatted': Human-readable runtime (MM:SS)
+     *     - 'runtime_seconds': Runtime in seconds
+     *     - 'title': Trailer title
+     *     - 'description': Detailed trailer description
+     *     - 'content_type': Type of video content (e.g. "Trailer")
+     *     - 'thumbnail': Thumbnail image with dimensions
+     *     - 'primary_title': Associated movie/TV show information with:
+     *         - 'id': IMDb title ID
+     *         - 'title': Title name
+     *         - 'release_date': Formatted release date (YYYY-MM-DD) (e.g. "2025-08-01")
+     *         - 'release_date_displayable': Formatted release date (F j, YYYY) (e.g. "August 1, 2025")
+     *         - 'year': Release year (YYYY) (e.g. "2025")
+     *         - 'image': Primary title image with dimensions
      */
-    public function video(string $id): array
+    public function parseVideoResults(array $edges): array
     {
-        // if id is empty or null
-        if (empty($id)) {
-            return [];
-        }
+        $results = [];
 
-        // if result exist
-        if ($this->data['result']) {
-            return $this->data['result'];
-        }
-
-        $dom = $this->getHtmlDomParser("/video/" . $id . "/");
-
-        $list = $dom->find('#__NEXT_DATA__', 0);
-        $jsonLD = json_decode($list->innerText());
-        //print_r($jsonLD->props->pageProps->videoPlaybackData);
-
-        $urls = [];
-        if ($jsonLD->props->pageProps->videoPlaybackData->video->playbackURLs) {
-            foreach ($jsonLD->props->pageProps->videoPlaybackData->video->playbackURLs as $url) {
-                $urls[] = [
-                    'quality' => $url->displayName->value,
-                    'mime_type' => $url->videoMimeType,
-                    'url' => $url->url,
-                ];
+        foreach ($edges as $edge) {
+            $node = $edge->node ?? null;
+            if (empty($node)) {
+                $node = $edge ?? null;
             }
+
+            if (empty($node->id) || empty($node->name->value)) {
+                continue;
+            }
+
+            $releaseDate = $this->buildDate(
+                $edge->primaryTitle->releaseDate->day ?? null,
+                $edge->primaryTitle->releaseDate->month ?? null,
+                $edge->primaryTitle->releaseDate->year ?? null
+            );
+
+            $results[] = [
+                'id' => $node->id,
+                'playback_url' => $this->makeUrl('video', $node->id),
+                'created_date' => $node->createdDate ? $this->reformatDate($node->createdDate) : null,
+                'runtime_formatted' => $this->secondsToTimeFormat($node->runtime->value),
+                'runtime_seconds' => $node->runtime->value ?? null,
+                'title' => $node->name->value,
+                'description' => $node->description->value ?? null,
+                'content_type' => $node->contentType->displayName->value,
+                'thumbnail' => $this->parseImage($node->thumbnail),
+                'primary_title' => [
+                    'id' => $node->primaryTitle->id,
+                    'title' => $node->primaryTitle->titleText->text ?? null,
+                    'release_date' => $releaseDate,
+                    'release_date_displayable' => $edge->primaryTitle->releaseDate->displayableProperty->value->plainText ?? null,
+                    'year' => $node->primaryTitle->releaseYear->year ?? null,
+                    'image' => $this->parseImage($node->primaryTitle->primaryImage ?? null)
+                ],
+            ];
         }
 
-        $this->data['result'] = [
-            'id' => $jsonLD->props->pageProps->videoPlaybackData->video->id,
-            'type' => $jsonLD->props->pageProps->videoPlaybackData->video->contentType->displayName->value,
-            'title_id' => $jsonLD->props->pageProps->videoPlaybackData->video->primaryTitle->id,
-            'title' => @$jsonLD->props->pageProps->videoPlaybackData->video->primaryTitle->titleText->text,
-            'video_title' => $jsonLD->props->pageProps->videoPlaybackData->video->name->value,
-            'description' => @$jsonLD->props->pageProps->videoPlaybackData->video->description->value,
-            'caption' => @$jsonLD->props->pageProps->videoPlaybackData->video->primaryTitle->primaryImage->caption->plainText,
-            'thumbnail' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->url,
-            'thumbnail_width' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->width,
-            'thumbnail_height' => $jsonLD->props->pageProps->videoPlaybackData->video->thumbnail->height,
-            'aspect_ratio' => @$jsonLD->props->pageProps->videoPlaybackData->video->videoDimensions->aspectRatio,
-            'runtime' => $this->secondsToTimeFormat($jsonLD->props->pageProps->videoPlaybackData->video->runtime->value),
-            'runtime_sec' => $jsonLD->props->pageProps->videoPlaybackData->video->runtime->value,
-            'created_date' => $jsonLD->props->pageProps->videoPlaybackData->video->createdDate,
-            'urls' => $urls,
-        ];
-
-        return $this->data['result'];
-    }
-
-    private function secondsToTimeFormat($seconds): string
-    {
-        // Calculate hours, minutes, and seconds
-        $hours = floor($seconds / 3600);
-        $minutes = floor(($seconds % 3600) / 60);
-        $seconds = $seconds % 60;
-
-        // Determine the format based on whether there are hours
-        if ($hours > 0) {
-            return sprintf("%d:%d:%02d", $hours, $minutes, $seconds);
-        } else {
-            return sprintf("%d:%02d", $minutes, $seconds);
-        }
+        return $results;
     }
 }
 
