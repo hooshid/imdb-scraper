@@ -25,7 +25,7 @@ if (isset($id) and preg_match('/^(vi\d+|\d+)$/', $id)) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="googlebot" content="noindex">
-    <title><?php echo $video['video_title']; ?></title>
+    <title><?php echo $video['title']; ?></title>
     <link rel="stylesheet" href="/example/style.css">
 </head>
 <body>
@@ -36,24 +36,21 @@ if (isset($id) and preg_match('/^(vi\d+|\d+)$/', $id)) {
 <div class="container">
     <div class="boxed">
         <!-- Title -->
-        <h2 class="text-center pb-30"><?php echo $video['title']; ?> - <?php echo $video['video_title']; ?></h2>
+        <h2 class="text-center pb-30"><?php echo $video['primary_title']['title']; ?> - <?php echo $video['title']; ?></h2>
 
         <div class="flex-container">
             <div class="col-25" style="padding: 0 5px;">
-                <p><b>Video Title: </b><?php echo $video['video_title']; ?></p>
+                <p><b>Video Title: </b><?php echo $video['title']; ?></p>
                 <br>
-                <p><b>Title: </b><a
-                            href="title.php?id=<?php echo $video['title_id']; ?>"><?php echo $video['title']; ?></a></p>
+                <p><b>Title: </b><a href="title.php?id=<?php echo $video['primary_title']['id']; ?>"><?php echo $video['primary_title']['title']; ?></a></p>
                 <br>
                 <p><b>Description: </b><?php echo $video['description']; ?></p>
                 <br>
-                <p><b>Caption: </b><?php echo $video['caption']; ?></p>
+                <p><b>Type: </b><?php echo $video['content_type']; ?></p>
                 <br>
-                <p><b>Type: </b><?php echo $video['type']; ?></p>
+                <p><b>Runtime: </b><?php echo $video['runtime_formatted']; ?></p>
                 <br>
-                <p><b>Runtime: </b><?php echo $video['runtime']; ?></p>
-                <br>
-                <p><b>Aspect Ratio: </b><?php echo $video['aspect_ratio']; ?></p>
+                <p><b>Aspect Ratio: </b><?php echo $video['video_aspect_ratio']; ?></p>
                 <br>
                 <p><b>Created Date: </b><?php
                     $date = new DateTime($video['created_date']);
@@ -63,7 +60,7 @@ if (isset($id) and preg_match('/^(vi\d+|\d+)$/', $id)) {
             </div>
 
             <div class="col-75">
-                <video aria-label="trailer video" controls playsinline poster="<?php echo $video['thumbnail']; ?>"
+                <video aria-label="trailer video" controls playsinline poster="<?php echo $video['thumbnail']['url']; ?>"
                        preload="none" class="video">
                     <?php foreach ($video['urls'] as $url) { ?>
                         <source src="<?php echo $url['url']; ?>" type="video/mp4"
