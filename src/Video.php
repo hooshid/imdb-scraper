@@ -70,9 +70,9 @@ class Video extends Base
             }
 
             $releaseDate = $this->buildDate(
-                $edge->primaryTitle->releaseDate->day ?? null,
-                $edge->primaryTitle->releaseDate->month ?? null,
-                $edge->primaryTitle->releaseDate->year ?? null
+                $node->primaryTitle->releaseDate->day ?? null,
+                $node->primaryTitle->releaseDate->month ?? null,
+                $node->primaryTitle->releaseDate->year ?? null
             );
 
             $results[] = [
@@ -89,7 +89,7 @@ class Video extends Base
                     'id' => $node->primaryTitle->id,
                     'title' => $node->primaryTitle->titleText->text ?? null,
                     'release_date' => $releaseDate,
-                    'release_date_displayable' => $edge->primaryTitle->releaseDate->displayableProperty->value->plainText ?? null,
+                    'release_date_displayable' => $node->primaryTitle->releaseDate->displayableProperty->value->plainText ?? null,
                     'year' => $node->primaryTitle->releaseYear->year ?? null,
                     'image' => $this->parseImage($node->primaryTitle->primaryImage ?? null)
                 ],
