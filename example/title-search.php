@@ -216,7 +216,7 @@ $image = new Image();
                             </td>
                             <td><a href="title.php?id=<?php echo $result['id']; ?>"><?php echo $result['title']; ?></a>
                             </td>
-                            <td><?php echo $result['originalTitle']; ?></td>
+                            <td><?php echo $result['original_title']; ?></td>
                             <td><?php echo $result['year']; ?></td>
                             <td><?php echo $result['type']; ?></td>
                         </tr>
