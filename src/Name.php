@@ -32,10 +32,10 @@ class Name extends Base
         'children' => null,
         'parents' => null,
         'relatives' => null,
-        'salaries' => null,
         'trivia' => null,
         'quotes' => null,
         'trademarks' => null,
+        'salaries' => null,
         'images' => null,
         'videos' => null,
         'news' => null,
@@ -90,10 +90,11 @@ class Name extends Base
     /**
      * This function returns the full extracted data in a single JSON-compatible array.
      *
+     * @param array|null $methods
      * @return array
      * @throws Exception
      */
-    public function full(): array
+    public function full(?array $methods = []): array
     {
         if ($this->isFullCalled) {
             return $this->data;
@@ -203,6 +204,15 @@ GRAPHQL;
         $this->bodyHeightParse($data);
         $this->bioParse($data);
         $this->professionsParse($data);
+
+        if (count($methods)) {
+            foreach ($methods as $method) {
+                $camelCaseMethod = lcfirst(str_replace('_', '', ucwords($method, '_')));
+                if (method_exists($this, $camelCaseMethod)) {
+                    $this->$camelCaseMethod();
+                }
+            }
+        }
 
         return $this->data;
     }
@@ -597,7 +607,7 @@ GRAPHQL;
      */
     private function nickNamesParse($data): void
     {
-        if (!empty($data->name->nickNames)) {
+        if ($this->hasArrayItems($data->name->nickNames)) {
             foreach ($data->name->nickNames as $nickName) {
                 $this->data['nick_names'][] = $nickName->text;
             }
@@ -641,7 +651,7 @@ GRAPHQL;
      */
     private function akaNamesParse($data): void
     {
-        if (!empty($data->name->akas->edges)) {
+        if ($this->hasArrayItems($data->name->akas->edges)) {
             foreach ($data->name->akas->edges as $edge) {
                 $this->data['aka_names'][] = $edge->node->text;
             }
@@ -747,10 +757,14 @@ GRAPHQL;
      */
     private function bioParse($data): void
     {
-        if (!empty($data->name->bios->edges)) {
+        if ($this->hasArrayItems($data->name->bios->edges)) {
             foreach ($data->name->bios->edges as $edge) {
+                if (empty($edge->node->text->plainText)) {
+                    continue;
+                }
+
                 $this->data['bio'][] = [
-                    'text' => $edge->node->text->plainText ?? null,
+                    'text' => $edge->node->text->plainText,
                     'author' => $edge->node->author->plainText ?? null,
                 ];
             }
@@ -792,7 +806,7 @@ GRAPHQL;
      */
     private function professionsParse($data): void
     {
-        if (!empty($data->name->primaryProfessions)) {
+        if ($this->hasArrayItems($data->name->primaryProfessions)) {
             foreach ($data->name->primaryProfessions as $primaryProfession) {
                 $this->data['professions'][] = $primaryProfession->category->text;
             }
@@ -864,7 +878,7 @@ GRAPHQL;
      */
     private function spousesParse($data): void
     {
-        if (!empty($data->name->spouses)) {
+        if ($this->hasArrayItems($data->name->spouses)) {
             foreach ($data->name->spouses as $spouse) {
                 if (empty($spouse->spouse->name->id)) {
                     continue;
@@ -887,8 +901,8 @@ GRAPHQL;
                 // Comments and children
                 $comment = [];
                 $children = 0;
-                if (isset($spouse->attributes) && is_array($spouse->attributes) && count($spouse->attributes) > 0) {
-                    foreach ($spouse->attributes as $key => $attribute) {
+                if ($this->hasArrayItems($spouse->attributes)) {
+                    foreach ($spouse->attributes as $attribute) {
                         if (!empty($attribute->text)) {
                             if (stripos($attribute->text, "child") !== false) {
                                 $children = (int)preg_replace('/[^0-9]/', '', $attribute->text);
@@ -904,7 +918,7 @@ GRAPHQL;
                     'name' => $spouse->spouse->asMarkdown->plainText ?? null,
                     'from' => $fromDate,
                     'to' => $toDate,
-                    'date_text' => $spouse->timeRange->displayableProperty->value->plainText ?? null,
+                    'date' => $spouse->timeRange->displayableProperty->value->plainText ?? null,
                     'comment' => $comment,
                     'children' => $children,
                     'current' => $spouse->current
@@ -1014,10 +1028,10 @@ GRAPHQL;
         if (empty($this->data['salaries'])) {
             $query = <<<GRAPHQL
 title {
+  id
   titleText {
     text
   }
-  id
   releaseYear {
     year
   }
@@ -1129,7 +1143,7 @@ GRAPHQL;
      */
     private function imagesParse($data): void
     {
-        if (!empty($data->name->images->edges)) {
+        if ($this->hasArrayItems($data->name->images->edges)) {
             $images = [];
             foreach ($data->name->images->edges as $edge) {
                 if (empty($edge->node->id) || empty($edge->node->url)) {
@@ -1140,9 +1154,13 @@ GRAPHQL;
                 $titles = [];
                 if (!empty($edge->node->titles)) {
                     foreach ($edge->node->titles as $title) {
+                        if (empty($title->id) || empty($title->titleText->text)) {
+                            continue;
+                        }
+
                         $titles[] = [
-                            'id' => $title->id ?? null,
-                            'title' => $title->titleText->text ?? null
+                            'id' => $title->id,
+                            'title' => $title->titleText->text
                         ];
                     }
                 }
@@ -1151,9 +1169,13 @@ GRAPHQL;
                 $names = [];
                 if (!empty($edge->node->names)) {
                     foreach ($edge->node->names as $name) {
+                        if (empty($name->id) || empty($name->nameText->text)) {
+                            continue;
+                        }
+
                         $names[] = [
-                            'id' => $name->id ?? null,
-                            'name' => $name->nameText->text ?? null
+                            'id' => $name->id,
+                            'name' => $name->nameText->text
                         ];
                     }
                 }
@@ -1214,6 +1236,16 @@ query Video(\$id: ID!) {
             titleText {
               text
             }
+            releaseDate {
+              day
+              month
+              year
+              displayableProperty {
+                value {
+                  plainText
+                }
+              }
+            }
             releaseYear {
               year
             }
@@ -1230,48 +1262,14 @@ query Video(\$id: ID!) {
 }
 GRAPHQL;
             $data = $this->graphql->query($query, "Video", ["id" => $this->imdb_id]);
-            $this->videosParse($data);
+
+            if ($this->hasArrayItems($data->name->primaryVideos->edges)) {
+                $videoClass = new Video();
+                $this->data['videos'] = $videoClass->parseVideoResults($data->name->primaryVideos->edges);
+            }
         }
 
         return $this->data['videos'];
-    }
-
-    /**
-     * Parse videos
-     *
-     * @param $data
-     * @return void
-     */
-    private function videosParse($data): void
-    {
-        if (!empty($data->name->primaryVideos->edges)) {
-            $videos = [];
-            foreach ($data->name->primaryVideos->edges as $edge) {
-                if (empty($edge->node->id) or empty($edge->node->name->value)) {
-                    continue;
-                }
-
-                $videos[] = [
-                    'id' => $edge->node->id,
-                    'playback_url' => $this->makeUrl('video', $edge->node->id),
-                    'created_date' => $edge->node->createdDate ?? null,
-                    'runtime_formatted' => $this->secondsToTimeFormat($edge->node->runtime->value),
-                    'runtime_seconds' => $edge->node->runtime->value ?? null,
-                    'title' => $edge->node->name->value,
-                    'description' => $edge->node->description->value ?? null,
-                    'content_type' => $edge->node->contentType->displayName->value,
-                    'thumbnail' => $this->parseImage($edge->node->thumbnail),
-                    'primary_title' => [
-                        'id' => $edge->node->primaryTitle->id,
-                        'title' => $edge->node->primaryTitle->titleText->text ?? null,
-                        'year' => $edge->node->primaryTitle->releaseYear->year ?? null,
-                        'image' => $this->parseImage($edge->node->primaryTitle->primaryImage)
-                    ],
-                ];
-            }
-
-            $this->data['videos'] = $videos;
-        }
     }
 
     /**
@@ -1319,43 +1317,13 @@ query News(\$id: ID!) {
 }
 GRAPHQL;
             $data = $this->graphql->query($query, "News", ["id" => $this->imdb_id]);
-            $this->newsParse($data);
+            if ($this->hasArrayItems($data->name->news->edges)) {
+                $newsClass = new News();
+                $this->data['news'] = $newsClass->parseNewsResults($data->name->news->edges);
+            }
         }
 
         return $this->data['news'];
-    }
-
-    /**
-     * Parse news
-     *
-     * @param $data
-     * @return void
-     */
-    private function newsParse($data): void
-    {
-        if (!empty($data->name->news->edges)) {
-            $newsListItems = [];
-            foreach ($data->name->news->edges as $edge) {
-                if (empty($edge->node->id) or empty($edge->node->articleTitle->plainText)) {
-                    continue;
-                }
-
-                $newsListItems[] = [
-                    'id' => $edge->node->id,
-                    'title' => $edge->node->articleTitle->plainText,
-                    'author' => $edge->node->byline ?? null,
-                    'date' => $edge->node->date ?? null,
-                    'source_url' => $edge->node->externalUrl ?? null,
-                    'source_home_url' => $edge->node->source->homepage->url ?? null,
-                    'source_label' => $edge->node->source->homepage->label ?? null,
-                    'plain_html' => $edge->node->text->plaidHtml ?? null,
-                    'plain_text' => $edge->node->text->plainText ?? null,
-                    'image' => $this->parseImage($edge->node->image)
-                ];
-            }
-
-            $this->data['news'] = $newsListItems;
-        }
     }
 
     /**
@@ -1417,15 +1385,15 @@ GRAPHQL;
      */
     private function creditKnownForParse($data): void
     {
-        if (!empty($data->name->knownFor->edges)) {
+        if ($this->hasArrayItems($data->name->knownFor->edges)) {
             $items = [];
             foreach ($data->name->knownFor->edges as $edge) {
-                if (empty($edge->node->credit->title->id) or empty($edge->node->credit->title->titleText->text)) {
+                if (empty($edge->node->credit->title->id) || empty($edge->node->credit->title->titleText->text)) {
                     continue;
                 }
 
                 $characters = [];
-                if (isset($edge->node->credit->characters)) {
+                if ($this->hasArrayItems($edge->node->credit->characters)) {
                     foreach ($edge->node->credit->characters as $character) {
                         if (!empty($character->name)) {
                             $characters[] = $character->name;
@@ -1568,14 +1536,14 @@ GRAPHQL;
      */
     private function creditsParse($data): void
     {
-        if (!empty($data)) {
+        if ($this->hasArrayItems($data)) {
             foreach ($data as $edge) {
                 if (empty($edge->node->title->id)) {
                     continue;
                 }
 
                 $characters = [];
-                if (isset($edge->node->characters)) {
+                if (isset($edge->node->characters) && $this->hasArrayItems($edge->node->characters)) {
                     foreach ($edge->node->characters as $character) {
                         if (!empty($character->name)) {
                             $characters[] = $character->name;
@@ -1584,7 +1552,7 @@ GRAPHQL;
                 }
 
                 $jobs = [];
-                if (isset($edge->node->jobs)) {
+                if (isset($edge->node->jobs) && $this->hasArrayItems($edge->node->jobs)) {
                     foreach ($edge->node->jobs as $job) {
                         if (!empty($job->text)) {
                             $jobs[] = $job->text;
@@ -1671,7 +1639,7 @@ GRAPHQL;
 
                     // credited titles
                     $titles = [];
-                    if (isset($edge->node->awardedEntities->secondaryAwardTitles)) {
+                    if (isset($edge->node->awardedEntities->secondaryAwardTitles) && $this->hasArrayItems($edge->node->awardedEntities->secondaryAwardTitles)) {
                         foreach ($edge->node->awardedEntities->secondaryAwardTitles as $title) {
                             $titles[] = [
                                 'id' => $title->title->id,
@@ -1971,8 +1939,8 @@ GRAPHQL;
                     ];
                     $this->data['other_works'][] = [
                         "category" => $edge->node->category->text ?? null,
-                        "fromDate" => $fromDate,
-                        "toDate" => $toDate,
+                        "from" => $fromDate,
+                        "to" => $toDate,
                         "text" => $edge->node->text->plainText ?? null
                     ];
                 }
@@ -2000,7 +1968,7 @@ GRAPHQL;
 
         if (empty($this->data['external_sites'])) {
             foreach ($categoryIds as $categoryId) {
-                $this->data['external_sites'][$categoryId] = array();
+                $this->data['external_sites'][$categoryId] = [];
             }
             $query = <<<GRAPHQL
 label
@@ -2195,7 +2163,7 @@ GRAPHQL;
                 ];
 
                 $authors = [];
-                if (isset($edge->node->authors)) {
+                if (isset($edge->node->authors) && $this->hasArrayItems($edge->node->authors)) {
                     foreach ($edge->node->authors as $author) {
                         if (!empty($author->plainText)) {
                             $authors[] = $author->plainText;
@@ -2205,7 +2173,7 @@ GRAPHQL;
 
                 $results[] = [
                     'publication' => $edge->node->publication ?? null,
-                    'regionId' => $edge->node->region->id ?? null,
+                    'region_id' => $edge->node->region->id ?? null,
                     'title' => $edge->node->title->text ?? null,
                     'date' => $date,
                     'reference' => $edge->node->reference ?? null,
@@ -2216,7 +2184,6 @@ GRAPHQL;
 
         return $results;
     }
-
 
 }
 

@@ -8,21 +8,10 @@ require __DIR__ . "/../vendor/autoload.php";
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(nm\d+|\d+)$/', $id)) {
     $name = new Name($id);
-    $name->spouses();
-    $name->children();
-    $name->parents();
-    $name->relatives();
-    $name->trivia();
-    $name->quotes();
-    $name->trademarks();
-    $name->salaries();
     $name->images(8);
     $name->videos(8);
     $name->news(8);
-    $name->creditKnownFor();
-    $name->credits();
-    $name->awards();
-    $person = $name->full();
+    $person = $name->full(['spouses', 'children', 'parents', 'relatives', 'trivia', 'quotes', 'trademarks', 'salaries', 'creditKnownFor', 'credits', 'awards']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($person);
@@ -223,7 +212,7 @@ $image = new Image();
                                     <?php foreach ($person['spouses'] as $spouse) { ?>
                                         <li>
                                             <a href="name.php?id=<?php echo $spouse['id']; ?>"><?php echo $spouse['name']; ?></a>
-                                            (<?php echo $spouse['date_text']; ?>) -
+                                            (<?php echo $spouse['date']; ?>) -
                                             <?php if (!empty($spouse['children'])) { ?>Children: <?php echo $spouse['children']; ?> -<?php } ?>
                                             <?php if (!empty($spouse['comment'])) { ?><?php echo $spouse['comment'][0]; ?><?php } ?>
                                         </li>
@@ -459,12 +448,16 @@ $image = new Image();
 
             <!-- Awards -->
             <?php if (!empty($person['awards'])) { ?>
-                <div class="head-title">Awards & Events - <?php echo $person['awards']['stats']['win']; ?> wins & <?php echo $person['awards']['stats']['nom']; ?> nominations</div>
+                <div class="head-title">Awards & Events - <?php echo $person['awards']['stats']['win']; ?> wins
+                    & <?php echo $person['awards']['stats']['nom']; ?> nominations
+                </div>
                 <div class="w-full">
                     <?php foreach ($person['awards']['events'] as $items) { ?>
                         <?php if (count($items)) { ?>
                             <details>
-                                <summary><?php echo $items[0]['event_name']; ?> (<?php echo $items[0]['name']; ?>) (<?php echo $items[0]['id']; ?>)</summary>
+                                <summary><?php echo $items[0]['event_name']; ?> (<?php echo $items[0]['name']; ?>)
+                                    (<?php echo $items[0]['id']; ?>)
+                                </summary>
                                 <div>
                                     <ul>
                                         <?php foreach ($items as $item) { ?>
