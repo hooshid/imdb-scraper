@@ -17,6 +17,7 @@ class Trailers extends Base
      *     created_date: string|null,
      *     runtime_formatted: string|null,
      *     runtime_seconds: int|null,
+     *     video_aspect_ratio: float|null,
      *     title: string|null,
      *     description: string|null,
      *     content_type: string|null,
@@ -43,6 +44,7 @@ class Trailers extends Base
      *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
      *     - 'runtime_formatted': Human-readable runtime (MM:SS)
      *     - 'runtime_seconds': Runtime in seconds
+     *     - 'video_aspect_ratio': Video aspect ratio
      *     - 'title': Trailer title
      *     - 'description': Trailer description
      *     - 'content_type': Type of video content (e.g. "Trailer")
@@ -71,6 +73,9 @@ query RecentVideo {
       }
       runtime {
         value
+      }
+      videoDimensions {
+        aspectRatio
       }
       contentType {
         displayName {
@@ -134,6 +139,7 @@ GRAPHQL;
      *     created_date: string|null,
      *     runtime_formatted: string|null,
      *     runtime_seconds: int|null,
+     *     video_aspect_ratio: float|null,
      *     title: string|null,
      *     description: string|null,
      *     content_type: string|null,
@@ -160,6 +166,7 @@ GRAPHQL;
      *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
      *     - 'runtime_formatted': Human-readable runtime (MM:SS)
      *     - 'runtime_seconds': Runtime in seconds
+     *     - 'video_aspect_ratio': Video aspect ratio
      *     - 'title': Trailer title
      *     - 'description': Detailed trailer description
      *     - 'content_type': Type of video content (e.g. "Trailer")
@@ -209,6 +216,9 @@ query TrendingVideo {
         runtime {
           value
         }
+        videoDimensions {
+          aspectRatio
+        }
         contentType {
           displayName {
             value
@@ -253,6 +263,7 @@ GRAPHQL;
                 'created_date' => $edge->latestTrailer->createdDate ? $this->reformatDate($edge->latestTrailer->createdDate) : null,
                 'runtime_formatted' => $this->secondsToTimeFormat($edge->latestTrailer->runtime->value),
                 'runtime_seconds' => $edge->latestTrailer->runtime->value ?? null,
+                'video_aspect_ratio' => $edge->latestTrailer->videoDimensions->aspectRatio ?? null,
                 'title' => $edge->latestTrailer->name->value ?? null,
                 'description' => $edge->latestTrailer->description->value ?? null,
                 'content_type' => $edge->latestTrailer->contentType->displayName->value ?? null,

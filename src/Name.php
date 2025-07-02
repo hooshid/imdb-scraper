@@ -1217,6 +1217,9 @@ query Video(\$id: ID!) {
           runtime {
             value
           }
+          videoDimensions {
+            aspectRatio
+          }
           contentType {
             displayName {
               value
