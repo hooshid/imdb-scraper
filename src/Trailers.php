@@ -30,6 +30,7 @@ class Trailers extends Base
      *         title: string|null,
      *         release_date: string|null,
      *         release_date_displayable: string|null,
+     *         year: int|null,
      *         image: array{
      *             url: string,
      *             width: int,
@@ -51,6 +52,7 @@ class Trailers extends Base
      *         - 'title': Title name
      *         - 'release_date': Formatted release date (YYYY-MM-DD) (e.g. "2025-08-01")
      *         - 'release_date_displayable': Formatted release date (F j, YYYY) (e.g. "August 1, 2025")
+     *         - 'year': Release year (YYYY) (e.g. "2025")
      *         - 'image': Primary title image with dimensions
      * @throws Exception If API request fails
      */
@@ -99,6 +101,9 @@ query RecentVideo {
             }
           }
         }
+        releaseYear {
+          year
+        }
         primaryImage {
           url
           width
@@ -115,40 +120,8 @@ GRAPHQL;
             return [];
         }
 
-        $items = [];
-
-        foreach ($data->recentVideos->videos as $edge) {
-            if (empty($edge->id) or empty($edge->primaryTitle->id)) {
-                continue;
-            }
-
-            $releaseDate = $this->buildDate(
-                $edge->primaryTitle->releaseDate->day ?? null,
-                $edge->primaryTitle->releaseDate->month ?? null,
-                $edge->primaryTitle->releaseDate->year ?? null
-            );
-
-            $items[] = [
-                'id' => $edge->id,
-                'playback_url' => $this->makeUrl('video', $edge->id),
-                'created_date' => $edge->createdDate ? $this->reformatDate($edge->createdDate) : null,
-                'runtime_formatted' => $this->secondsToTimeFormat($edge->runtime->value),
-                'runtime_seconds' => $edge->runtime->value ?? null,
-                'title' => $edge->name->value ?? null,
-                'description' => $edge->description->value ?? null,
-                'content_type' => $edge->contentType->displayName->value ?? null,
-                'thumbnail' => $this->parseImage($edge->thumbnail),
-                'primary_title' => [
-                    'id' => $edge->primaryTitle->id,
-                    'title' => $edge->primaryTitle->titleText->text ?? null,
-                    'release_date' => $releaseDate,
-                    'release_date_displayable' => $edge->primaryTitle->releaseDate->displayableProperty->value->plainText ?? null,
-                    'image' => $this->parseImage($edge->primaryTitle->primaryImage ?? null)
-                ],
-            ];
-        }
-
-        return $items;
+        $videoClass = new Video();
+        return $videoClass->parseVideoResults($data->recentVideos->videos);
     }
 
     /**
@@ -174,6 +147,7 @@ GRAPHQL;
      *         title: string|null,
      *         release_date: string|null,
      *         release_date_displayable: string|null,
+     *         year: int|null,
      *         image: array{
      *             url: string,
      *             width: int,
@@ -195,6 +169,7 @@ GRAPHQL;
      *         - 'title': Title name
      *         - 'release_date': Formatted release date (YYYY-MM-DD) (e.g. "2025-08-01")
      *         - 'release_date_displayable': Formatted release date (F j, YYYY) (e.g. "August 1, 2025")
+     *         - 'year': Release year (YYYY) (e.g. "2025")
      *         - 'image': Primary title image with dimensions
      * @throws Exception If API request fails
      */
@@ -217,6 +192,9 @@ query TrendingVideo {
             plainText
           }
         }
+      }
+      releaseYear {
+        year
       }
       primaryImage {
         url
@@ -284,6 +262,7 @@ GRAPHQL;
                     'title' => $edge->titleText->text ?? null,
                     'release_date' => $releaseDate,
                     'release_date_displayable' => $edge->releaseDate->displayableProperty->value->plainText ?? null,
+                    'year' => $edge->releaseYear->year ?? null,
                     'image' => $this->parseImage($edge->primaryImage ?? null)
                 ],
             ];
