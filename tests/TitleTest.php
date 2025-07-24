@@ -89,13 +89,13 @@ class TitleTest extends TestCase
 
     public function testMovie2()
     {
-        $title = new Title('tt7618100');
+        $title = new Title('tt7617048');
         $data = $title->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras']);
 
-        $this->assertEquals('tt7618100', $data['imdb_id']);
-        $this->assertEquals('https://www.imdb.com/title/tt7618100/', $data['main_url']);
+        $this->assertEquals('tt7617048', $data['imdb_id']);
+        $this->assertEquals('https://www.imdb.com/title/tt7617048/', $data['main_url']);
         $this->assertNull($data['canonical_id']);
-        $this->assertEquals('Untitled Star Wars Trilogy: Episode III', $data['title']);
+        $this->assertEquals('Untitled Star Wars Trilogy: Episode I', $data['title']);
         $this->assertNull($data['original_title']);
         $this->assertEquals('Movie', $data['type']);
         $this->assertNull($data['year']);
