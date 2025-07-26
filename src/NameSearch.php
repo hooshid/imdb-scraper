@@ -35,7 +35,19 @@ class NameSearch extends Base
      *     - gender: Gender filter (MALE/FEMALE/NON_BINARY)
      *     - adult: Adult content filter (INCLUDE_ADULT/EXCLUDE_ADULT)
      *     - limit: Maximum results (default: 50)
-     *     - sortBy: Sort field (POPULARITY/NAME/BIRTH_DATE)
+     *     - sortBy: Sort field (POPULARITY/NAME/BIRTH_DATE/DEATH_DATE)
+     *          - POPULARITY
+     *               Sort Names based on their starMeterCurrentWeekRank
+     *               ASC: Lower popularity score means that the name is more popular, so the most popular names will be first.
+     *          - NAME
+     *               Sort Names alphabetically
+     *               ASC: A-Z
+     *          - BIRTH_DATE
+     *               Sort names based on their birth date
+     *               ASC: Earliest dates to Highest dates (Oldest - Youngest)
+     *          - DEATH_DATE
+     *               Sort names based on their death date
+     *               ASC: Earliest dates to last dates (Died First - Died Last)
      *     - sortOrder: Sort direction (ASC/DESC)
      * @return array{
      *     results: array<int, array{
