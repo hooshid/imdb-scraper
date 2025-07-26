@@ -2138,7 +2138,7 @@ GRAPHQL;
      */
     protected function pubOtherListing(string $listingType): array
     {
-        $results = array();
+        $results = [];
         $filter = ', filter: {categories: ["' . lcfirst($listingType) . '"]}';
         $query = <<<GRAPHQL
 ... on $listingType {

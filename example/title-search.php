@@ -121,8 +121,8 @@ $image = new Image();
                 <select id="types" name="types" class="form-field">
                     <option value="">All</option>
                     <?php foreach ($titleTypes as $value => $label): ?>
-                        <option value="<?= htmlspecialchars($value) ?>" <?= $selectedType == $value ? "selected" : "" ?>>
-                            <?= htmlspecialchars($label) ?>
+                        <option value="<?php echo htmlspecialchars($value); ?>" <?= $selectedType == $value ? "selected" : "" ?>>
+                            <?php echo htmlspecialchars($label); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -157,8 +157,8 @@ $image = new Image();
                 <select id="genres" name="genres" class="form-field">
                     <option value="" <?= empty($selectedGenre) ? "selected" : "" ?>>All</option>
                     <?php foreach ($genreIDs as $label): ?>
-                        <option value="<?= htmlspecialchars($label) ?>" <?= $selectedGenre == $label ? "selected" : "" ?>>
-                            <?= htmlspecialchars($label) ?>
+                        <option value="<?php echo htmlspecialchars($label); ?>" <?= $selectedGenre == $label ? "selected" : "" ?>>
+                            <?php echo htmlspecialchars($label); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

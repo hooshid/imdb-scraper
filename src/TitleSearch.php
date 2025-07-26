@@ -38,14 +38,14 @@ class TitleSearch extends Base
      *     - keywords: Comma-separated keywords
      *     - adult: Content filter (EXCLUDE_ADULT/INCLUDE_ADULT)
      *     - limit: Results per page (default: 50)
-     *     - sortBy: Field to sort by (POPULARITY,RELEASE_DATE,etc)
+     *     - sortBy: Field to sort by (POPULARITY,RELEASE_DATE,RANKING,RUNTIME,TITLE_REGIONAL,METACRITIC_SCORE,BOX_OFFICE_GROSS_DOMESTIC,YEAR)
      *     - sortOrder: Sort direction (ASC/DESC)
      * @return array{
      *     results: array<int, array{
      *         id: string,
      *         url: string,
      *         title: string,
-     *         originalTitle: string|null,
+     *         original_title: string|null,
      *         type: string|null,
      *         year: int|null,
      *         end_year: int|null,

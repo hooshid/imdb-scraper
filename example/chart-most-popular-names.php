@@ -48,8 +48,8 @@ $image = new Image();
                         <td><?php echo $row['rank']; ?></td>
                         <td>
                             <?php if ($row['image']) { ?>
-                                <img class="name-image" src="<?php
-                                echo $image->makeThumbnail($row['image']['url'], $row['image']['width'], $row['image']['height'], 120, 120);
+                                <img class="medium-image" src="<?php
+                                echo $image->makeThumbnail($row['image']['url'], $row['image']['width'], $row['image']['height'], 140, 207);
                                 ?>" alt="<?php echo $row['name']; ?>" loading="lazy">
                             <?php } ?>
                         </td>

@@ -100,7 +100,7 @@ GRAPHQL;
                 continue;
             }
 
-            $list[] = array(
+            $list[] = [
                 'id' => $edge->title->id,
                 'title' => $edge->title->titleText->text,
                 'rating' => $edge->title->ratingsSummary->aggregateRating ?? null,
@@ -111,7 +111,7 @@ GRAPHQL;
                 'weekend_gross_currency' => $edge->weekendGross->total->currency ?? null,
                 'weeks_released' => $this->calculateWeeksReleased($edge->title->releaseDate ?? null),
                 'image' => $this->parseImage($edge->title->primaryImage ?? null)
-            );
+            ];
         }
 
         return [

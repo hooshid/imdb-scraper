@@ -150,8 +150,8 @@ $image = new Image();
                             <td><?php echo $result['index']; ?></td>
                             <td>
                                 <?php if ($result['image']) { ?>
-                                    <img class="name-image" src="<?php
-                                    echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 120, 120);
+                                    <img class="medium-image" src="<?php
+                                    echo $image->makeThumbnail($result['image']['url'], $result['image']['width'], $result['image']['height'], 140, 207);
                                     ?>" alt="<?php echo $result['name']; ?>" loading="lazy">
                                 <?php } ?>
                             </td>
