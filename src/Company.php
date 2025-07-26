@@ -165,7 +165,9 @@ GRAPHQL;
         $types = [];
         if (isset($data->company->companyTypes)) {
             foreach ($data->company->companyTypes as $companyType) {
-                $types[] = $companyType->text;
+                if (!empty($companyType->text)) {
+                    $types[] = $companyType->text;
+                }
             }
         }
 

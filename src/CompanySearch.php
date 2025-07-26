@@ -34,7 +34,6 @@ class CompanySearch extends Base
      *         - 'types' (string[]): Array of company types (e.g. ["Production", "Distributor"])
      *     - Empty array if no results or invalid input
      * @throws Exception On API request failure
-     * @throws Exception On API request failure
      */
     public function search(string $company, int $limit = 50): array
     {

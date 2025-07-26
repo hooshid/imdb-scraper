@@ -53,7 +53,7 @@ if (!empty($_GET['company'])) {
                         <td><?php echo $result['rank']['current_rank']; ?></td>
                         <td>
                             <a href="company.php?id=<?php echo $result['id']; ?>"><?php echo $result['name']; ?></a>
-                            (<a href="title-search.php?companies=<?php echo $result['id']; ?>">Search</a>)
+                            (<a href="title-search.php?companies=<?php echo $result['id']; ?>">Title Search</a>)
                         </td>
                         <td><?php echo $result['country']; ?></td>
                         <td><?php echo implode(", ", $result['types']); ?></td>
