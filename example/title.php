@@ -50,7 +50,7 @@ $image = new Image();
                 <div class="photo">
                     <?php if ($title['image']) { ?>
                         <img src="<?php
-                        echo $image->makeThumbnail($title['image']['url'], $title['image']['width'], $title['image']['height'], 190, 281);
+                        echo $image->makeThumbnail($title['image']['url'], $title['image']['width'], $title['image']['height'], 280, 414);
                         ?>" alt="<?php echo $title['title']; ?>" loading="lazy">
                     <?php } else { ?>
                         No photo available
