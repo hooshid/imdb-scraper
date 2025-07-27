@@ -34,14 +34,14 @@ class TitleTest extends TestCase
 
         $this->assertIsArray($data['languages']);
         $this->assertCount(1, $data['languages']);
-        $this->assertEquals('en', $data['languages'][0]['code']);
+        $this->assertEquals('en', $data['languages'][0]['id']);
         $this->assertEquals('English', $data['languages'][0]['name']);
 
         $this->assertIsArray($data['countries']);
         $this->assertCount(2, $data['countries']);
-        $this->assertEquals('US', $data['countries'][0]['code']);
+        $this->assertEquals('US', $data['countries'][0]['id']);
         $this->assertEquals('United States', $data['countries'][0]['name']);
-        $this->assertEquals('AU', $data['countries'][1]['code']);
+        $this->assertEquals('AU', $data['countries'][1]['id']);
         $this->assertEquals('Australia', $data['countries'][1]['name']);
 
         $this->assertEquals(136, $data['runtime']);
@@ -118,7 +118,7 @@ class TitleTest extends TestCase
     public function testMovie3()
     {
         $title = new Title('tt9843312');
-        $data = $title->full(['keywords', 'colors', 'mpaas', 'videos']);
+        $data = $title->full(['keywords', 'colors', 'certificates', 'videos']);
 
         $this->assertEquals('tt9843312', $data['imdb_id']);
         $this->assertEquals('https://www.imdb.com/title/tt9843312/', $data['main_url']);
@@ -131,7 +131,7 @@ class TitleTest extends TestCase
         $this->assertNull($data['rank']);
         $this->assertIsArray($data['keywords']);
         $this->assertNull($data['colors']);
-        $this->assertNull($data['mpaas']);
+        $this->assertNull($data['certificates']);
         $this->assertNull($data['videos']);
     }
 
@@ -199,12 +199,12 @@ class TitleTest extends TestCase
 
         $this->assertIsArray($data['languages']);
         $this->assertCount(4, $data['languages']);
-        $this->assertEquals('en', $data['languages'][0]['code']);
+        $this->assertEquals('en', $data['languages'][0]['id']);
         $this->assertEquals('English', $data['languages'][0]['name']);
 
         $this->assertIsArray($data['countries']);
         $this->assertCount(1, $data['countries']);
-        $this->assertEquals('US', $data['countries'][0]['code']);
+        $this->assertEquals('US', $data['countries'][0]['id']);
         $this->assertEquals('United States', $data['countries'][0]['name']);
 
         $this->assertEquals(60, $data['runtime']);

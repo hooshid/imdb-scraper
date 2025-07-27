@@ -24,11 +24,11 @@ class Title extends Base
         'image' => null,
         'ratings' => null,
         'rank' => null,
+        'runtime' => null,
+        'runtimes' => null,
         'genres' => null,
         'languages' => null,
         'countries' => null,
-        'runtime' => null,
-        'runtimes' => null,
         'taglines' => null,
         'keywords' => null,
         'locations' => null,
@@ -36,7 +36,7 @@ class Title extends Base
         'colors' => null,
         'aspect_ratio' => null,
         'cameras' => null,
-        'mpaas' => null,
+        'certificates' => null,
         'videos' => null,
     ];
 
@@ -224,7 +224,7 @@ GRAPHQL;
     }
 
     /**
-     * Parse redirects
+     * Parse redirect
      *
      * @param $data
      * @return void
@@ -334,7 +334,7 @@ GRAPHQL;
     }
 
     /**
-     * Get movie/series type.
+     * Get title type.
      * it can be returned (Movie, TV Series, TV Episode, TV Special, TV Movie, TV Mini-Series, Video Game, TV Short, Video)
      *
      * @return string|null
@@ -560,7 +560,7 @@ GRAPHQL;
     }
 
     /**
-     * Parse rank
+     * Parse runtime
      *
      * @param $data
      * @return void
@@ -616,10 +616,10 @@ GRAPHQL;
      */
     private function runtimesParse($data): void
     {
-        if (!empty($data->title->runtimes->edges)) {
+        if ($this->hasArrayItems($data->title->runtimes->edges)) {
             foreach ($data->title->runtimes->edges as $edge) {
                 $attributes = [];
-                if (!empty($edge->node->attributes)) {
+                if ($this->hasArrayItems($edge->node->attributes)) {
                     foreach ($edge->node->attributes as $attribute) {
                         if (!empty($attribute->text)) {
                             $attributes[] = $attribute->text;
@@ -632,55 +632,6 @@ GRAPHQL;
                     'annotations' => $attributes,
                     'country' => $edge->node->country->text ?? null
                 ];
-            }
-        }
-    }
-
-    /**
-     * Get all spoken languages spoken in this title
-     *
-     * @return array|null
-     * @throws Exception
-     */
-    public function languages(): ?array
-    {
-        if (!$this->isFullCalled && empty($this->data['languages'])) {
-            $query = <<<GRAPHQL
-query Languages(\$id: ID!) {
-  title(id: \$id) {
-    spokenLanguages {
-      spokenLanguages {
-        id
-        text
-      }
-    }
-  }
-}
-GRAPHQL;
-
-            $data = $this->graphql->query($query, "Languages", ["id" => $this->imdb_id]);
-            $this->languagesParse($data);
-        }
-
-        return $this->data['languages'];
-    }
-
-    /**
-     * Parse languages
-     *
-     * @param $data
-     * @return void
-     */
-    private function languagesParse($data): void
-    {
-        if (!empty($data->title->spokenLanguages->spokenLanguages)) {
-            foreach ($data->title->spokenLanguages->spokenLanguages as $language) {
-                if (!empty($language->text)) {
-                    $this->data['languages'][] = [
-                        'code' => $language->id,
-                        'name' => $language->text
-                    ];
-                }
             }
         }
     }
@@ -723,9 +674,58 @@ GRAPHQL;
      */
     private function genresParse($data): void
     {
-        if (!empty($data->title->titleGenres->genres)) {
+        if ($this->hasArrayItems($data->title->titleGenres->genres)) {
             foreach ($data->title->titleGenres->genres as $edge) {
                 $this->data['genres'][] = $edge->genre->text;
+            }
+        }
+    }
+
+    /**
+     * Get all spoken languages spoken in this title
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function languages(): ?array
+    {
+        if (!$this->isFullCalled && empty($this->data['languages'])) {
+            $query = <<<GRAPHQL
+query Languages(\$id: ID!) {
+  title(id: \$id) {
+    spokenLanguages {
+      spokenLanguages {
+        id
+        text
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Languages", ["id" => $this->imdb_id]);
+            $this->languagesParse($data);
+        }
+
+        return $this->data['languages'];
+    }
+
+    /**
+     * Parse languages
+     *
+     * @param $data
+     * @return void
+     */
+    private function languagesParse($data): void
+    {
+        if ($this->hasArrayItems($data->title->spokenLanguages->spokenLanguages)) {
+            foreach ($data->title->spokenLanguages->spokenLanguages as $language) {
+                if (!empty($language->text)) {
+                    $this->data['languages'][] = [
+                        'id' => $language->id,
+                        'name' => $language->text
+                    ];
+                }
             }
         }
     }
@@ -767,11 +767,11 @@ GRAPHQL;
      */
     private function countriesParse($data): void
     {
-        if (!empty($data->title->countriesOfOrigin->countries)) {
+        if ($this->hasArrayItems($data->title->countriesOfOrigin->countries)) {
             foreach ($data->title->countriesOfOrigin->countries as $country) {
                 if (!empty($country->text)) {
                     $this->data['countries'][] = [
-                        'code' => $country->id,
+                        'id' => $country->id,
                         'name' => $country->text
                     ];
                 }
@@ -817,7 +817,7 @@ GRAPHQL;
      */
     private function taglinesParse($data): void
     {
-        if (!empty($data->title->taglines->edges)) {
+        if ($this->hasArrayItems($data->title->taglines->edges)) {
             foreach ($data->title->taglines->edges as $edge) {
                 $this->data['taglines'][] = $edge->node->text;
             }
@@ -842,7 +842,7 @@ keyword {
 GRAPHQL;
 
             $data = $this->getAllData("Keywords", "keywords", $query);
-            if (count($data) > 0) {
+            if ($this->hasArrayItems($data)) {
                 foreach ($data as $edge) {
                     if (!empty($edge->node->keyword->text->text)) {
                         $this->data['keywords'][] = $edge->node->keyword->text->text;
@@ -875,10 +875,10 @@ displayableProperty {
 GRAPHQL;
 
             $data = $this->getAllData("FilmingLocations", "filmingLocations", $query);
-            if (count($data) > 0) {
+            if ($this->hasArrayItems($data)) {
                 foreach ($data as $edge) {
                     $scenes = null;
-                    if (isset($edge->node->displayableProperty->qualifiersInMarkdownList)) {
+                    if ($this->hasArrayItems($edge->node->displayableProperty->qualifiersInMarkdownList)) {
                         foreach ($edge->node->displayableProperty->qualifiersInMarkdownList as $attribute) {
                             if (!empty($attribute->plainText)) {
                                 $scenes[] = $attribute->plainText;
@@ -958,14 +958,14 @@ GRAPHQL;
     }
 
     /**
-     * Get the MPAA rating / Parental Guidance / Age rating for this title by country
+     * Get all certificates / Parental Guidance / Age rating for this title by country
      *
      * @return array|null
      * @throws Exception
      */
-    public function mpaas(): ?array
+    public function certificates(): ?array
     {
-        if (empty($this->data['mpaas'])) {
+        if (empty($this->data['certificates'])) {
             $query = <<<GRAPHQL
 country {
   text
@@ -977,10 +977,10 @@ attributes {
 GRAPHQL;
 
             $data = $this->getAllData("Mpaa", "certificates", $query);
-            if (count($data) > 0) {
+            if ($this->hasArrayItems($data)) {
                 foreach ($data as $edge) {
                     $comments = null;
-                    if (isset($edge->node->attributes)) {
+                    if ($this->hasArrayItems($edge->node->attributes)) {
                         foreach ($edge->node->attributes as $attribute) {
                             if (!empty($attribute->text)) {
                                 $comments[] = $attribute->text;
@@ -988,7 +988,7 @@ GRAPHQL;
                         }
                     }
 
-                    $this->data['mpaas'][] = [
+                    $this->data['certificates'][] = [
                         'country' => $edge->node->country->text ?? null,
                         'rating' => $edge->node->rating ?? null,
                         'comment' => $comments
@@ -997,25 +997,26 @@ GRAPHQL;
             }
         }
 
-        return $this->data['mpaas'];
+        return $this->data['certificates'];
     }
 
     /**
-     * Get all available taglines for the title
+     * Get all videos
      *
+     * @param int $limit
      * @param string|null $videoContentType
      * @param bool $videoIncludeMature
      * @return array|null
      * @throws Exception
      */
-    public function videos(string $videoContentType = null, bool $videoIncludeMature = false): ?array
+    public function videos(int $limit = 9999, string $videoContentType = null, bool $videoIncludeMature = false): ?array
     {
         if (empty($this->data['videos'])) {
             $filter = $videoIncludeMature === true ? ',filter:{maturityLevel:INCLUDE_MATURE}' : '';
             $query = <<<GRAPHQL
 query Video(\$id: ID!) {
   title(id: \$id) {
-    videoStrip(first:9999$filter) {
+    videoStrip(first:$limit $filter) {
       edges {
         node {
           id
@@ -1024,6 +1025,9 @@ query Video(\$id: ID!) {
           }
           runtime {
             value
+          }
+          videoDimensions {
+            aspectRatio
           }
           contentType {
             displayName {
@@ -1039,10 +1043,21 @@ query Video(\$id: ID!) {
             height
           }
           createdDate
+          isMature
           primaryTitle {
             id
             titleText {
               text
+            }
+            releaseDate {
+              day
+              month
+              year
+              displayableProperty {
+                value {
+                  plainText
+                }
+              }
             }
             releaseYear {
               year
@@ -1062,36 +1077,9 @@ GRAPHQL;
 
             $data = $this->graphql->query($query, "Video", ["id" => $this->imdb_id]);
 
-            if (isset($data->title->videoStrip->edges) &&
-                is_array($data->title->videoStrip->edges) &&
-                count($data->title->videoStrip->edges) > 0
-            ) {
-                foreach ($data->title->videoStrip->edges as $edge) {
-                    if (!empty($videoContentType) &&
-                        isset($edge->node->contentType->displayName->value) &&
-                        $edge->node->contentType->displayName->value !== $videoContentType
-                    ) {
-                        continue;
-                    }
-
-                    $this->data['videos'][] = [
-                        'id' => $edge->node->id,
-                        'playback_url' => $this->makeUrl('video', $edge->node->id),
-                        'created_date' => $edge->node->createdDate ?? null,
-                        'runtime_formatted' => $this->secondsToTimeFormat($edge->node->runtime->value),
-                        'runtime_seconds' => $edge->node->runtime->value ?? null,
-                        'title' => $edge->node->name->value,
-                        'description' => $edge->node->description->value ?? null,
-                        'content_type' => $edge->node->contentType->displayName->value,
-                        'thumbnail' => $this->parseImage($edge->node->thumbnail),
-                        'primary_title' => [
-                            'id' => $edge->node->primaryTitle->id,
-                            'title' => $edge->node->primaryTitle->titleText->text ?? null,
-                            'year' => $edge->node->primaryTitle->releaseYear->year ?? null,
-                            'image' => $this->parseImage($edge->node->primaryTitle->primaryImage)
-                        ],
-                    ];
-                }
+            if ($this->hasArrayItems($data->title->videoStrip->edges)) {
+                $videoClass = new Video();
+                $this->data['videos'] = $videoClass->parseVideoResults($data->title->videoStrip->edges, $videoContentType, $videoIncludeMature);
             }
         }
 
@@ -1171,10 +1159,10 @@ query TechSpec(\$id: ID!) {
 GRAPHQL;
         $data = $this->graphql->query($query, "TechSpec", ["id" => $this->imdb_id]);
 
-        if (isset($data->title->technicalSpecifications->$type->items)) {
+        if ($this->hasArrayItems($data->title->technicalSpecifications->$type->items)) {
             foreach ($data->title->technicalSpecifications->$type->items as $item) {
                 $attributes = null;
-                if (isset($item->attributes)) {
+                if ($this->hasArrayItems($item->attributes)) {
                     foreach ($item->attributes as $attribute) {
                         if (!empty($attribute->text)) {
                             $attributes[] = $attribute->text;

@@ -8,7 +8,7 @@ require __DIR__ . "/../vendor/autoload.php";
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj = new Title($id);
-    $title = $titleObj->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'mpaas', 'videos']);
+    $title = $titleObj->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'videos']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -237,14 +237,14 @@ $image = new Image();
                         </tr>
                     <?php } ?>
 
-                    <!-- Mpaa full list -->
-                    <?php if (!empty($title['mpaas'])) { ?>
+                    <!-- Certificates -->
+                    <?php if (!empty($title['certificates'])) { ?>
                         <tr>
-                            <td><b>mpaa:</b></td>
+                            <td><b>Certificates:</b></td>
                             <td>
                                 <ul>
-                                    <?php foreach ($title['mpaas'] as $mpaa) { ?>
-                                        <li><?php echo $mpaa['country']; ?> : <?php echo $mpaa['rating']; ?></li>
+                                    <?php foreach ($title['certificates'] as $certificate) { ?>
+                                        <li><?php echo $certificate['country']; ?> : <?php echo $certificate['rating']; ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>
