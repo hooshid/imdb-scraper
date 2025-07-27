@@ -37,7 +37,9 @@ class Title extends Base
         'aspect_ratio' => null,
         'cameras' => null,
         'certificates' => null,
+        'images' => null,
         'videos' => null,
+        'news' => null,
     ];
 
     /**
@@ -1001,6 +1003,114 @@ GRAPHQL;
     }
 
     /**
+     * Get all images
+     *
+     * @param int $limit
+     * @return array|null
+     * @throws Exception
+     */
+    public function images(int $limit = 9999): ?array
+    {
+        if (empty($this->data['images'])) {
+            $query = <<<GRAPHQL
+query Images(\$id: ID!) {
+  title(id: \$id) {
+    images(first: $limit) {
+      edges {
+        node {
+          id
+          url
+          width
+          height
+          caption {
+            plainText
+          }
+          copyright
+          titles {
+            id
+            titleText {
+              text
+            }
+          }
+          names {
+            id
+            nameText {
+              text
+            }
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+            $data = $this->graphql->query($query, "Images", ["id" => $this->imdb_id]);
+            $this->imagesParse($data);
+        }
+
+        return $this->data['images'];
+    }
+
+    /**
+     * Parse images
+     *
+     * @param $data
+     * @return void
+     */
+    private function imagesParse($data): void
+    {
+        if ($this->hasArrayItems($data->title->images->edges)) {
+            $images = [];
+            foreach ($data->title->images->edges as $edge) {
+                if (empty($edge->node->id) || empty($edge->node->url)) {
+                    continue;
+                }
+
+                // Titles
+                $titles = [];
+                if (!empty($edge->node->titles)) {
+                    foreach ($edge->node->titles as $title) {
+                        if (empty($title->id) || empty($title->titleText->text)) {
+                            continue;
+                        }
+
+                        $titles[] = [
+                            'id' => $title->id,
+                            'title' => $title->titleText->text
+                        ];
+                    }
+                }
+
+                // Names
+                $names = [];
+                if (!empty($edge->node->names)) {
+                    foreach ($edge->node->names as $name) {
+                        if (empty($name->id) || empty($name->nameText->text)) {
+                            continue;
+                        }
+
+                        $names[] = [
+                            'id' => $name->id,
+                            'name' => $name->nameText->text
+                        ];
+                    }
+                }
+
+                $images[] = [
+                    'id' => $edge->node->id,
+                    'caption' => $edge->node->caption->plainText ?? null,
+                    'copyright' => $edge->node->copyright ?? null,
+                    'image' => $this->parseImage($edge->node),
+                    'titles' => $titles,
+                    'names' => $names,
+                ];
+            }
+
+            $this->data['images'] = $images;
+        }
+    }
+
+    /**
      * Get all videos
      *
      * @param int $limit
@@ -1084,6 +1194,60 @@ GRAPHQL;
         }
 
         return $this->data['videos'];
+    }
+
+    /**
+     * Get news items about this title, max 100 items!
+     *
+     * @param int $limit
+     * @return array|null
+     * @throws Exception
+     */
+    public function news(int $limit = 100): ?array
+    {
+        if (empty($this->data['news'])) {
+            $query = <<<GRAPHQL
+query News(\$id: ID!) {
+  title(id: \$id) {
+    news(first: $limit) {
+      edges {
+        node {
+          id
+          articleTitle {
+            plainText
+          }
+          byline
+          date
+          externalUrl
+          image {
+            url
+            width
+            height
+          }
+          source {
+            homepage {
+              label
+              url
+            }
+          }
+          text {
+            plainText
+            plaidHtml
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+            $data = $this->graphql->query($query, "News", ["id" => $this->imdb_id]);
+            if ($this->hasArrayItems($data->title->news->edges)) {
+                $newsClass = new News();
+                $this->data['news'] = $newsClass->parseNewsResults($data->title->news->edges);
+            }
+        }
+
+        return $this->data['news'];
     }
 
     /***************************************[ Helper Methods ]***************************************/

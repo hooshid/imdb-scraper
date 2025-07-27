@@ -8,7 +8,10 @@ require __DIR__ . "/../vendor/autoload.php";
 $id = $_GET["id"];
 if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj = new Title($id);
-    $title = $titleObj->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'videos']);
+    $titleObj->images(8);
+    $titleObj->videos(8);
+    $titleObj->news(8);
+    $title = $titleObj->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -253,6 +256,31 @@ $image = new Image();
                 </table>
             </div>
 
+            <!-- Images -->
+            <?php if (!empty($title['images'])) { ?>
+                <div class="head-title">Images</div>
+                <div class="grid-box-4">
+                    <?php foreach ($title['images'] as $key => $item) { ?>
+                        <div class="video-box">
+                            <div class="thumbnail">
+                                <?php if ($item['image']) { ?>
+                                    <img src="<?php
+                                    echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 500, 300);
+                                    ?>" alt="<?php echo $item['caption']; ?>" loading="lazy">
+                                <?php } ?>
+
+                                <?php if ($item['copyright']) { ?>
+                                    <div class="bottom-label">© <?php echo $item['copyright']; ?></div>
+                                <?php } ?>
+                            </div>
+
+                            <div class="title font-bold">
+                                <?php echo $item['caption']; ?>
+                            </div>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
 
             <!-- Videos -->
             <?php if (!empty($title['videos'])) { ?>
@@ -284,6 +312,36 @@ $image = new Image();
                             </a>
 
                             <time><?php echo $item['primary_title']['year']; ?></time>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+
+            <!-- News -->
+            <?php if (!empty($title['news'])) { ?>
+                <div class="head-title">News</div>
+                <div class="grid-box-4">
+                    <?php foreach ($title['news'] as $key => $item) { ?>
+                        <div class="news-box">
+                            <div class="thumbnail">
+                                <?php if ($item['image']) { ?>
+                                    <img src="<?php
+                                    echo $image->makeThumbnail($item['image']['url'], $item['image']['width'], $item['image']['height'], 500, 281);
+                                    ?>" alt="<?php echo $item['title']; ?>" loading="lazy">
+                                <?php } ?>
+
+                                <div class="date">
+                                    <?php echo date('Y-m-d H:i', strtotime($item['date'])); ?>
+                                </div>
+
+                                <a href="<?php echo $item['source_home_url']; ?>" target="_blank" class="sourceLabel">
+                                    <?php echo $item['source_label']; ?>
+                                </a>
+                            </div>
+
+                            <a href="<?php echo $item['source_url']; ?>" target="_blank" class="title">
+                                <?php echo $item['title']; ?>
+                            </a>
                         </div>
                     <?php } ?>
                 </div>
