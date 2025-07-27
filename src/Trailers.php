@@ -15,6 +15,7 @@ class Trailers extends Base
      *     id: string,
      *     playback_url: string,
      *     created_date: string|null,
+     *     is_mature: bool|null,
      *     runtime_formatted: string|null,
      *     runtime_seconds: int|null,
      *     video_aspect_ratio: float|null,
@@ -42,6 +43,7 @@ class Trailers extends Base
      *     - 'id': Video ID
      *     - 'playback_url': Full URL to watch the trailer
      *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
+     *     - 'is_mature': True or False for maturity
      *     - 'runtime_formatted': Human-readable runtime (MM:SS)
      *     - 'runtime_seconds': Runtime in seconds
      *     - 'video_aspect_ratio': Video aspect ratio
@@ -91,6 +93,7 @@ query RecentVideo {
         height
       }
       createdDate
+      isMature
       primaryTitle {
         id
         titleText {
@@ -137,6 +140,7 @@ GRAPHQL;
      *     id: string,
      *     playback_url: string,
      *     created_date: string|null,
+     *     is_mature: bool|null,
      *     runtime_formatted: string|null,
      *     runtime_seconds: int|null,
      *     video_aspect_ratio: float|null,
@@ -164,6 +168,7 @@ GRAPHQL;
      *     - 'id': Video ID
      *     - 'playback_url': Full URL to watch the trailer
      *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
+     *     - 'is_mature': True or False for maturity
      *     - 'runtime_formatted': Human-readable runtime (MM:SS)
      *     - 'runtime_seconds': Runtime in seconds
      *     - 'video_aspect_ratio': Video aspect ratio
@@ -233,6 +238,7 @@ query TrendingVideo {
           height
         }
         createdDate
+        isMature
       }
     }
   }
@@ -261,6 +267,7 @@ GRAPHQL;
                 'id' => $edge->latestTrailer->id,
                 'playback_url' => $this->makeUrl('video', $edge->latestTrailer->id),
                 'created_date' => $edge->latestTrailer->createdDate ? $this->reformatDate($edge->latestTrailer->createdDate) : null,
+                'is_mature' => $edge->latestTrailer->isMature ?? null,
                 'runtime_formatted' => $this->secondsToTimeFormat($edge->latestTrailer->runtime->value),
                 'runtime_seconds' => $edge->latestTrailer->runtime->value ?? null,
                 'video_aspect_ratio' => $edge->latestTrailer->videoDimensions->aspectRatio ?? null,

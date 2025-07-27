@@ -16,6 +16,7 @@ class Video extends Base
      *     id: string,
      *     playback_url: string,
      *     created_date: string|null,
+     *     is_mature: bool|null,
      *     runtime_formatted: string|null,
      *     runtime_seconds: int|null,
      *     video_aspect_ratio: float|null,
@@ -48,6 +49,7 @@ class Video extends Base
      *     - 'id': Video ID
      *     - 'playback_url': Full URL to watch the trailer
      *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
+     *     - 'is_mature': True or False for maturity
      *     - 'runtime_formatted': Human-readable runtime (MM:SS)
      *     - 'runtime_seconds': Runtime in seconds
      *     - 'video_aspect_ratio': Video aspect ratio
@@ -106,6 +108,7 @@ query Video(\$id: ID!) {
       height
     }
     createdDate
+    isMature
     primaryTitle {
       id
       titleText {
@@ -170,6 +173,7 @@ GRAPHQL;
             'id' => $node->id,
             'playback_url' => $this->makeUrl('video', $node->id),
             'created_date' => $node->createdDate ? $this->reformatDate($node->createdDate) : null,
+            'is_mature' => $node->isMature ?? null,
             'runtime_formatted' => $this->secondsToTimeFormat($node->runtime->value),
             'runtime_seconds' => $node->runtime->value ?? null,
             'video_aspect_ratio' => $node->videoDimensions->aspectRatio ?? null,
@@ -192,10 +196,13 @@ GRAPHQL;
      * Process videos results from GraphQL response
      *
      * @param array<object> $edges
+     * @param string|null $videoContentType
+     * @param bool|null $videoIncludeMature
      * @return array<int, array{
      *     id: string,
      *     playback_url: string,
      *     created_date: string|null,
+     *     is_mature: bool|null,
      *     runtime_formatted: string|null,
      *     runtime_seconds: int|null,
      *     video_aspect_ratio: float|null,
@@ -223,6 +230,7 @@ GRAPHQL;
      *     - 'id': Video ID
      *     - 'playback_url': Full URL to watch the trailer
      *     - 'created_date': Formatted creation date (YYYY-MM-DD HH:MM:SS)
+     *     - 'is_mature': True or False for maturity
      *     - 'runtime_formatted': Human-readable runtime (MM:SS)
      *     - 'runtime_seconds': Runtime in seconds
      *     - 'video_aspect_ratio': Video aspect ratio
@@ -238,7 +246,7 @@ GRAPHQL;
      *         - 'year': Release year (YYYY) (e.g. "2025")
      *         - 'image': Primary title image with dimensions
      */
-    public function parseVideoResults(array $edges): array
+    public function parseVideoResults(array $edges, string $videoContentType = null, bool $videoIncludeMature = null): array
     {
         $results = [];
 
@@ -249,6 +257,17 @@ GRAPHQL;
             }
 
             if (empty($node->id) || empty($node->name->value)) {
+                continue;
+            }
+
+            if (!empty($videoContentType) &&
+                isset($node->contentType->displayName->value) &&
+                $node->contentType->displayName->value !== $videoContentType
+            ) {
+                continue;
+            }
+
+            if (!empty($videoIncludeMature) && isset($node->isMature) && $node->isMature !== $videoIncludeMature) {
                 continue;
             }
 

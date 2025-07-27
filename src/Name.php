@@ -243,7 +243,7 @@ GRAPHQL;
     }
 
     /**
-     * Parse redirects
+     * Parse redirect
      *
      * @param $data
      * @return void
@@ -1198,10 +1198,12 @@ GRAPHQL;
      * Get all videos
      *
      * @param int $limit
+     * @param string|null $videoContentType
+     * @param bool $videoIncludeMature
      * @return array|null
      * @throws Exception
      */
-    public function videos(int $limit = 9999): ?array
+    public function videos(int $limit = 9999, string $videoContentType = null, bool $videoIncludeMature = false): ?array
     {
         if (empty($this->data['videos'])) {
             $query = <<<GRAPHQL
@@ -1234,6 +1236,7 @@ query Video(\$id: ID!) {
             height
           }
           createdDate
+          isMature
           primaryTitle {
             id
             titleText {
@@ -1268,7 +1271,7 @@ GRAPHQL;
 
             if ($this->hasArrayItems($data->name->primaryVideos->edges)) {
                 $videoClass = new Video();
-                $this->data['videos'] = $videoClass->parseVideoResults($data->name->primaryVideos->edges);
+                $this->data['videos'] = $videoClass->parseVideoResults($data->name->primaryVideos->edges, $videoContentType, $videoIncludeMature);
             }
         }
 

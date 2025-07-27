@@ -12,10 +12,11 @@ class VideoTest extends TestCase
         $vi = $video->video('vi3067265305'); // Tenet - Official Trailer
 
         $this->assertIsArray($vi);
-        $this->assertCount(12, $vi);
+        $this->assertCount(13, $vi);
         $this->assertEquals('vi3067265305', $vi['id']);
         $this->assertEquals('https://www.imdb.com/video/vi3067265305/', $vi['playback_url']);
         $this->assertEquals('2020-10-31 17:04:10', $vi['created_date']);
+        $this->assertFalse($vi['is_mature']);
         $this->assertEquals('2:03', $vi['runtime_formatted']);
         $this->assertEquals(123, $vi['runtime_seconds']);
         $this->assertEquals(1.777778, $vi['video_aspect_ratio']);
