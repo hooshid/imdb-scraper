@@ -84,6 +84,22 @@ $image = new Image();
                         </tr>
                     <?php } ?>
 
+                    <!-- Adult -->
+                    <?php if ($title['is_adult']) { ?>
+                        <tr>
+                            <td><b>Adult status:</b></td>
+                            <td>Title is adult</td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Production_status -->
+                    <?php if ($title['production_status']) { ?>
+                        <tr>
+                            <td><b>Production status:</b></td>
+                            <td><?php echo $title['production_status']; ?></td>
+                        </tr>
+                    <?php } ?>
+
                     <!-- Type -->
                     <?php if ($title['type']) { ?>
                         <tr>

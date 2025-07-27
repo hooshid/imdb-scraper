@@ -24,6 +24,8 @@ class Title extends Base
         'image' => null,
         'ratings' => null,
         'rank' => null,
+        'is_adult' => null,
+        'production_status' => null,
         'runtime' => null,
         'runtimes' => null,
         'genres' => null,
@@ -125,6 +127,12 @@ query Title(\$id: ID!) {
         difference
       }
     }
+    isAdult
+    productionStatus {
+      currentProductionStage {
+        text
+      }
+    }
     runtime {
       seconds
     }
@@ -181,6 +189,8 @@ GRAPHQL;
         $this->imageParse($data);
         $this->ratingVotesParse($data);
         $this->rankParse($data);
+        $this->isAdultParse($data);
+        $this->productionStatusParse($data);
         $this->runtimeParse($data);
         $this->runtimesParse($data);
         $this->genresParse($data);
@@ -532,6 +542,84 @@ GRAPHQL;
             $this->data['rank']['current_rank'] = $data->title->meterRanking->currentRank ?? null;
             $this->data['rank']['change_direction'] = $data->title->meterRanking->rankChange->changeDirection ?? null;
             $this->data['rank']['difference'] = $data->title->meterRanking->rankChange->difference ?? null;
+        }
+    }
+
+    /**
+     * Get adult status of a title
+     *
+     * @return bool|null
+     * @throws Exception
+     */
+    public function isAdult(): ?bool
+    {
+        if (!$this->isFullCalled && empty($this->data['is_adult'])) {
+            $query = <<<GRAPHQL
+query Adult(\$id: ID!) {
+  title(id: \$id) {
+    isAdult
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Adult", ["id" => $this->imdb_id]);
+            $this->isAdultParse($data);
+        }
+
+        return $this->data['is_adult'];
+    }
+
+    /**
+     * Parse adult status
+     *
+     * @param $data
+     * @return void
+     */
+    private function isAdultParse($data): void
+    {
+        if (isset($data->title->isAdult)) {
+            $this->data['is_adult'] = $data->title->isAdult;
+        }
+    }
+
+    /**
+     * Get current production status of a title e.g. Released, In Development, Pre-Production, Complete, Production etc
+     *
+     * @return string|null
+     * @throws Exception
+     */
+    public function productionStatus(): ?string
+    {
+        if (!$this->isFullCalled && empty($this->data['production_status'])) {
+            $query = <<<GRAPHQL
+query ProductionStatus(\$id: ID!) {
+  title(id: \$id) {
+    productionStatus {
+      currentProductionStage {
+        text
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "ProductionStatus", ["id" => $this->imdb_id]);
+            $this->productionStatusParse($data);
+        }
+
+        return $this->data['production_status'];
+    }
+
+    /**
+     * Parse production status
+     *
+     * @param $data
+     * @return void
+     */
+    private function productionStatusParse($data): void
+    {
+        if (isset($data->title->productionStatus->currentProductionStage->text)) {
+            $this->data['production_status'] = $data->title->productionStatus->currentProductionStage->text;
         }
     }
 
