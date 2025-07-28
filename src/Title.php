@@ -35,6 +35,7 @@ class Title extends Base
         'taglines' => null,
         'plot' => null,
         'plots' => null,
+        'release_dates' => null,
         'keywords' => null,
         'locations' => null,
         'sounds' => null,
@@ -1082,6 +1083,56 @@ GRAPHQL;
         }
 
         return $this->data['keywords'];
+    }
+
+    /**
+     * Get all release dates for this title
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function releaseDates(): ?array
+    {
+        if (empty($this->data['release_dates'])) {
+            $query = <<<GRAPHQL
+country {
+  text
+}
+day
+month
+year
+attributes {
+  text
+}
+GRAPHQL;
+
+            $data = $this->getAllData("ReleaseDates", "releaseDates", $query);
+            if ($this->hasArrayItems($data)) {
+                foreach ($data as $edge) {
+                    $attributes = [];
+                    if ($this->hasArrayItems($edge->node->attributes)) {
+                        foreach ($edge->node->attributes as $attribute) {
+                            if (!empty($attribute->text)) {
+                                $attributes[] = $attribute->text;
+                            }
+                        }
+                    }
+
+                    $releaseDate = $this->buildDate($edge->node->day ?? null, $edge->node->month?? null, $edge->node->year?? null);
+
+                    $this->data['release_dates'][] = [
+                        'country' => $edge->node->country->text ?? null,
+                        'release_date' => $releaseDate,
+                        'day' => $edge->node->day ?? null,
+                        'month' => $edge->node->month ?? null,
+                        'year' => $edge->node->year ?? null,
+                        'attributes' => $attributes
+                    ];
+                }
+            }
+        }
+
+        return $this->data['release_dates'];
     }
 
     /**

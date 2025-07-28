@@ -11,7 +11,7 @@ if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj->images(8);
     $titleObj->videos(8);
     $titleObj->news(8);
-    $title = $titleObj->full(['keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates']);
+    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -194,6 +194,24 @@ $image = new Image();
                                 <ul>
                                     <?php foreach ($title['taglines'] as $tagline) { ?>
                                         <li><?php echo $tagline; ?></li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Release Dates -->
+                    <?php if (!empty($title['release_dates'])) { ?>
+                        <tr>
+                            <td><b>Release Dates:</b></td>
+                            <td>
+                                <ul>
+                                    <?php foreach ($title['release_dates'] as $rd) { ?>
+                                        <li><?php echo $rd['release_date']; ?>: <?php echo $rd['country']; ?>
+                                            <?php if (!empty($rd['attributes'])) { ?>
+                                                (<?php echo implode(', ', $rd['attributes']) ?>)
+                                            <?php } ?>
+                                        </li>
                                     <?php } ?>
                                 </ul>
                             </td>
