@@ -108,6 +108,14 @@ $image = new Image();
                         </tr>
                     <?php } ?>
 
+                    <!-- Plot -->
+                    <?php if ($title['plot']) { ?>
+                        <tr>
+                            <td><b>Plot:</b></td>
+                            <td><?php echo $title['plot']; ?></td>
+                        </tr>
+                    <?php } ?>
+
                     <!-- Genres -->
                     <?php if (!empty($title['genres'])) { ?>
                         <tr>

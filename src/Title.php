@@ -32,6 +32,8 @@ class Title extends Base
         'languages' => null,
         'countries' => null,
         'taglines' => null,
+        'plot' => null,
+        'plots' => null,
         'keywords' => null,
         'locations' => null,
         'sounds' => null,
@@ -175,6 +177,11 @@ query Title(\$id: ID!) {
         }
       }
     }
+    plot {
+      plotText {
+        plainText
+      }
+    }
   }
 }
 GRAPHQL;
@@ -197,6 +204,7 @@ GRAPHQL;
         $this->languagesParse($data);
         $this->countriesParse($data);
         $this->taglinesParse($data);
+        $this->plotParse($data);
 
         if (count($methods)) {
             foreach ($methods as $method) {
@@ -912,6 +920,91 @@ GRAPHQL;
                 $this->data['taglines'][] = $edge->node->text;
             }
         }
+    }
+
+    /**
+     * Get the main Plot outline for the movie as displayed on top of title page
+     *
+     * @return string|null
+     * @throws Exception
+     */
+    public function plot(): ?string
+    {
+        if (!$this->isFullCalled && empty($this->data['plot'])) {
+            $query = <<<GRAPHQL
+query PlotOutline(\$id: ID!) {
+  title(id: \$id) {
+    plot {
+      plotText {
+        plainText
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "PlotOutline", ["id" => $this->imdb_id]);
+            $this->plotParse($data);
+        }
+
+        return $this->data['plot'];
+    }
+
+    /**
+     * Parse main plot
+     *
+     * @param $data
+     * @return void
+     */
+    private function plotParse($data): void
+    {
+        if (!empty($data->title->plot->plotText->plainText)) {
+            $this->data['plot'] = $data->title->plot->plotText->plainText;
+        }
+    }
+
+    /**
+     * Get all plots
+     *
+     * @param bool $spoil
+     * @return array|null
+     * @throws Exception
+     */
+    public function plots(bool $spoil = false): ?array
+    {
+        if (empty($this->data['plots'])) {
+            $filter = $spoil === false ? ',filter:{spoilers:EXCLUDE_SPOILERS}' : '';
+            $query = <<<GRAPHQL
+query Plots(\$id: ID!) {
+  title(id: \$id) {
+    plots(first: 9999$filter) {
+      edges {
+        node {
+          author
+          plotText {
+            plainText
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Plots", ["id" => $this->imdb_id]);
+            if ($this->hasArrayItems($data->title->plots->edges)) {
+                foreach ($data->title->plots->edges as $edge) {
+                    if (!empty($edge->node->plotText->plainText)) {
+                        $this->data['plots'][] = [
+                            'plot' => $edge->node->plotText->plainText,
+                            'author' => $edge->node->author ?? null
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $this->data['plots'];
     }
 
     /**
