@@ -118,6 +118,20 @@ table a:visited {
     width: 100%;
 }
 
+.hidden-items {
+    display: none;
+}
+
+.show-more {
+    color: blue;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.show-more:hover {
+    color: darkblue;
+}
+
 .boxed {
     width: 100%;
     padding: 20px;

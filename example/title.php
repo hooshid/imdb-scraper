@@ -152,7 +152,7 @@ $image = new Image();
                     <?php if (!empty($title['keywords'])) { ?>
                         <tr>
                             <td><b>Keywords:</b></td>
-                            <td><?php echo implode(', ', $title['keywords']) ?></td>
+                            <td><?php echo implode(', ', array_slice($title['keywords'], 0, 50)) ?></td>
                         </tr>
                     <?php } ?>
 
@@ -205,7 +205,7 @@ $image = new Image();
                         <tr>
                             <td><b>Release Dates:</b></td>
                             <td>
-                                <ul>
+                                <ul class="expandable-list">
                                     <?php foreach ($title['release_dates'] as $rd) { ?>
                                         <li><?php echo $rd['release_date']; ?>: <?php echo $rd['country']; ?>
                                             <?php if (!empty($rd['attributes'])) { ?>
@@ -281,7 +281,7 @@ $image = new Image();
                         <tr>
                             <td><b>Filming Locations:</b></td>
                             <td>
-                                <ul>
+                                <ul class="expandable-list">
                                     <?php foreach ($title['locations'] as $location) { ?>
                                         <li><?php echo $location['real']; ?></li>
                                     <?php } ?>
@@ -295,7 +295,7 @@ $image = new Image();
                         <tr>
                             <td><b>Certificates:</b></td>
                             <td>
-                                <ul>
+                                <ul class="expandable-list">
                                     <?php foreach ($title['certificates'] as $certificate) { ?>
                                         <li><?php echo $certificate['country']; ?>
                                             : <?php echo $certificate['rating']; ?></li>
@@ -401,6 +401,46 @@ $image = new Image();
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const lists = document.querySelectorAll('ul.expandable-list');
+        const maxVisible = 5;
+
+        lists.forEach(list => {
+            const items = list.querySelectorAll('li:not(.show-more)'); // Exclude any existing more items
+
+            if (items.length > maxVisible) {
+                // Hide items beyond the maxVisible count
+                items.forEach((item, index) => {
+                    if (index >= maxVisible) {
+                        item.classList.add('hidden-items');
+                    }
+                });
+
+                // Create and append the "more..." element if it doesn't exist
+                if (!list.querySelector('.show-more')) {
+                    const moreItem = document.createElement('li');
+                    moreItem.textContent = 'more...';
+                    moreItem.classList.add('show-more');
+
+                    moreItem.addEventListener('click', function() {
+                        // Show all hidden items in this list only
+                        const hiddenItems = list.querySelectorAll('.hidden-items');
+                        hiddenItems.forEach(item => {
+                            item.classList.remove('hidden-items');
+                        });
+
+                        // Remove the "more..." item
+                        list.removeChild(moreItem);
+                    });
+
+                    list.appendChild(moreItem);
+                }
+            }
+        });
+    });
+</script>
 
 </body>
 </html>
