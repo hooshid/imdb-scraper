@@ -46,6 +46,7 @@ class Title extends Base
         'videos' => null,
         'news' => null,
         'metacritic' => null,
+        'faq' => null,
     ];
 
     /**
@@ -1537,6 +1538,42 @@ GRAPHQL;
         }
 
         return $this->data['metacritic'];
+    }
+
+    /**
+     * Get movie frequently asked questions, it includes questions with and without answer
+     *
+     * @param bool $spoil (true or false) to include spoilers or not, isSpoiler indicates if this question is spoiler or not
+     * @return array|null
+     * @throws Exception
+     */
+    public function faq(bool $spoil = false): ?array
+    {
+        if (empty($this->data['faq'])) {
+            $filter = $spoil === false ? ', filter: {spoilers: EXCLUDE_SPOILERS}' : '';
+            $query = <<<GRAPHQL
+question {
+  plainText
+}
+answer {
+  plainText
+}
+isSpoiler
+GRAPHQL;
+
+            $data = $this->getAllData("Faq", "faqs", $query, $filter);
+            if ($this->hasArrayItems($data)) {
+                foreach ($data as $edge) {
+                    $this->data['faq'][] = [
+                        'question' => $edge->node->question->plainText ?? null,
+                        'answer' => $edge->node->answer->plainText ?? null,
+                        'is_spoiler' => $edge->node->isSpoiler
+                    ];
+                }
+            }
+        }
+
+        return $this->data['faq'];
     }
 
     /***************************************[ Helper Methods ]***************************************/
