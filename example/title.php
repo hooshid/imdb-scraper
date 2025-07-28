@@ -96,7 +96,15 @@ $image = new Image();
                     <?php if ($title['production_status']) { ?>
                         <tr>
                             <td><b>Production status:</b></td>
-                            <td><?php echo $title['production_status']; ?></td>
+                            <td><?php echo $title['production_status']; ?>
+                                &nbsp; <?php
+                                if ($title['is_ongoing'] === true) {
+                                    echo "(Series is ongoing!)";
+                                } else if ($title['is_ongoing'] === false) {
+                                    echo "(Series is finished!)";
+                                }
+                                ?>
+                            </td>
                         </tr>
                     <?php } ?>
 
@@ -271,7 +279,8 @@ $image = new Image();
                             <td>
                                 <ul>
                                     <?php foreach ($title['certificates'] as $certificate) { ?>
-                                        <li><?php echo $certificate['country']; ?> : <?php echo $certificate['rating']; ?></li>
+                                        <li><?php echo $certificate['country']; ?>
+                                            : <?php echo $certificate['rating']; ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>

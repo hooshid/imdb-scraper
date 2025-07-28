@@ -26,6 +26,7 @@ class Title extends Base
         'rank' => null,
         'is_adult' => null,
         'production_status' => null,
+        'is_ongoing' => null,
         'runtime' => null,
         'runtimes' => null,
         'genres' => null,
@@ -135,6 +136,9 @@ query Title(\$id: ID!) {
         text
       }
     }
+    episodes {
+      isOngoing
+    }
     runtime {
       seconds
     }
@@ -198,6 +202,7 @@ GRAPHQL;
         $this->rankParse($data);
         $this->isAdultParse($data);
         $this->productionStatusParse($data);
+        $this->isOngoingParse($data);
         $this->runtimeParse($data);
         $this->runtimesParse($data);
         $this->genresParse($data);
@@ -628,6 +633,46 @@ GRAPHQL;
     {
         if (isset($data->title->productionStatus->currentProductionStage->text)) {
             $this->data['production_status'] = $data->title->productionStatus->currentProductionStage->text;
+        }
+    }
+
+    /**
+     * IsOngoing TV Series
+     * false if ended, true if still running or null (not a tv series)
+     *
+     * @return bool|null
+     * @throws Exception
+     */
+    public function isOngoing(): ?bool
+    {
+        if (!$this->isFullCalled && empty($this->data['is_ongoing'])) {
+            $query = <<<GRAPHQL
+query IsOngoing(\$id: ID!) {
+  title(id: \$id) {
+    episodes {
+      isOngoing
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "IsOngoing", ["id" => $this->imdb_id]);
+            $this->isOngoingParse($data);
+        }
+
+        return $this->data['is_ongoing'];
+    }
+
+    /**
+     * Parse isOngoing status for TV Series
+     *
+     * @param $data
+     * @return void
+     */
+    private function isOngoingParse($data): void
+    {
+        if (isset($data->title->episodes->isOngoing)) {
+            $this->data['is_ongoing'] = $data->title->episodes->isOngoing;
         }
     }
 
