@@ -45,6 +45,7 @@ class Title extends Base
         'images' => null,
         'videos' => null,
         'news' => null,
+        'metacritic' => null,
     ];
 
     /**
@@ -1474,6 +1475,68 @@ GRAPHQL;
         }
 
         return $this->data['news'];
+    }
+
+    /**
+     * Metacritic data like score and reviews
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function metacritic(): ?array
+    {
+        if (empty($this->data['metacritic'])) {
+            $query = <<<GRAPHQL
+query Metacritic(\$id: ID!) {
+  title(id: \$id) {
+    metacritic {
+      url
+      metascore {
+        score
+        reviewCount
+      }
+      reviews(first:9999) {
+        edges {
+          node {
+            reviewer
+            score
+            site
+            url
+            quote {
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "Metacritic", ["id" => $this->imdb_id]);
+
+            $reviews = [];
+            if (isset($data->title->metacritic->reviews) && $this->hasArrayItems($data->title->metacritic->reviews->edges)) {
+                foreach ($data->title->metacritic->reviews->edges as $edge) {
+                    $reviews[] = [
+                        'reviewer' => $edge->node->reviewer ?? null,
+                        'score' => $edge->node->score ?? 0,
+                        'quote' => $edge->node->quote->value ?? null,
+                        'site_name' => $edge->node->site ?? null,
+                        'site_url' => $edge->node->url ?? null
+                    ];
+                }
+            }
+
+            $this->data['metacritic'] = [
+                'url' => $data->title->metacritic->url ?? null,
+                'score' => $data->title->metacritic->metascore->score ?? 0,
+                'review_count' => $data->title->metacritic->metascore->reviewCount ?? 0,
+                'reviews' => $reviews
+            ];
+        }
+
+        return $this->data['metacritic'];
     }
 
     /***************************************[ Helper Methods ]***************************************/
