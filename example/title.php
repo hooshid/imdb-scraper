@@ -11,7 +11,7 @@ if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj->images(8);
     $titleObj->videos(8);
     $titleObj->news(8);
-    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates']);
+    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -312,6 +312,29 @@ $image = new Image();
                             </td>
                         </tr>
                     <?php } ?>
+
+                    <!-- Also Known As (AKAs) -->
+                    <?php if (!empty($title['akas'])) { ?>
+                        <tr>
+                            <td><b>Also Known:</b></td>
+                            <td>
+                                <ul class="expandable-list">
+                                    <?php foreach ($title['akas'] as $aka) { ?>
+                                        <li><?php echo $aka['country']; ?> - <?php echo $aka['title']; ?>
+
+                                            <?php if (!empty($aka['language'])) { ?>
+                                                (<?php echo $aka['language']; ?>)
+                                            <?php } ?>
+                                            
+                                            <?php if (!empty($aka['comments'])) { ?>
+                                                (<?php echo implode(', ', $aka['comments']); ?>)
+                                            <?php } ?>
+                                        </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
                 </table>
             </div>
 
@@ -411,7 +434,7 @@ $image = new Image();
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const lists = document.querySelectorAll('ul.expandable-list');
         const maxVisible = 5;
 
@@ -432,7 +455,7 @@ $image = new Image();
                     moreItem.textContent = 'more...';
                     moreItem.classList.add('show-more');
 
-                    moreItem.addEventListener('click', function() {
+                    moreItem.addEventListener('click', function () {
                         // Show all hidden items in this list only
                         const hiddenItems = list.querySelectorAll('.hidden-items');
                         hiddenItems.forEach(item => {

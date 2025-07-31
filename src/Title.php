@@ -48,6 +48,7 @@ class Title extends Base
         'news' => null,
         'metacritic' => null,
         'faq' => null,
+        'akas' => null,
     ];
 
     /**
@@ -1632,6 +1633,61 @@ GRAPHQL;
         }
 
         return $this->data['faq'];
+    }
+
+    /**
+     * Get title's alternative names
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function akas(): ?array
+    {
+        if (empty($this->data['akas'])) {
+            $filter = ', sort: {order: ASC by: COUNTRY}';
+            $query = <<<GRAPHQL
+country {
+  id
+  text
+}
+text
+attributes {
+  text
+}
+language {
+  id
+  text
+}
+GRAPHQL;
+
+            $data = $this->getAllData("AlsoKnow", "akas", $query, $filter);
+            if ($this->hasArrayItems($data)) {
+                foreach ($data as $edge) {
+                    $comments = [];
+                    if ($this->hasArrayItems($edge->node->attributes))
+                    {
+                        foreach ($edge->node->attributes as $attribute) {
+                            if (!empty($attribute->text)) {
+                                $comments[] = $attribute->text;
+                            }
+                        }
+                    }
+
+                    $this->data['akas'][] = [
+                        'title' => $edge->node->text ?? null,
+                        'country' => isset($edge->node->country->text) ?
+                            ucwords($edge->node->country->text) : 'Unknown',
+                        'country_id' => $edge->node->country->id ?? null,
+                        'language' => isset($edge->node->language->text) ?
+                            ucwords($edge->node->language->text) : null,
+                        'language_id' => $edge->node->language->id ?? null,
+                        'comments' => $comments
+                    ];
+                }
+            }
+        }
+
+        return $this->data['akas'];
     }
 
     /***************************************[ Helper Methods ]***************************************/
