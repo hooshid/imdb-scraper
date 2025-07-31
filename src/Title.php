@@ -49,6 +49,7 @@ class Title extends Base
         'metacritic' => null,
         'faq' => null,
         'akas' => null,
+        'alternate_versions' => null,
     ];
 
     /**
@@ -1664,8 +1665,7 @@ GRAPHQL;
             if ($this->hasArrayItems($data)) {
                 foreach ($data as $edge) {
                     $comments = [];
-                    if ($this->hasArrayItems($edge->node->attributes))
-                    {
+                    if ($this->hasArrayItems($edge->node->attributes)) {
                         foreach ($edge->node->attributes as $attribute) {
                             if (!empty($attribute->text)) {
                                 $comments[] = $attribute->text;
@@ -1675,11 +1675,9 @@ GRAPHQL;
 
                     $this->data['akas'][] = [
                         'title' => $edge->node->text ?? null,
-                        'country' => isset($edge->node->country->text) ?
-                            ucwords($edge->node->country->text) : 'Unknown',
+                        'country' => isset($edge->node->country->text) ? ucwords($edge->node->country->text) : 'Unknown',
                         'country_id' => $edge->node->country->id ?? null,
-                        'language' => isset($edge->node->language->text) ?
-                            ucwords($edge->node->language->text) : null,
+                        'language' => isset($edge->node->language->text) ? ucwords($edge->node->language->text) : null,
                         'language_id' => $edge->node->language->id ?? null,
                         'comments' => $comments
                     ];
@@ -1688,6 +1686,34 @@ GRAPHQL;
         }
 
         return $this->data['akas'];
+    }
+
+    /**
+     * Get the Alternate Versions for a given title
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function alternateVersions(): ?array
+    {
+        if (empty($this->data['alternate_versions'])) {
+            $query = <<<GRAPHQL
+text {
+  plainText
+}
+GRAPHQL;
+
+            $data = $this->getAllData("AlternateVersions", "alternateVersions", $query);
+            if ($this->hasArrayItems($data)) {
+                foreach ($data as $edge) {
+                    if (!empty($edge->node->text->plainText)) {
+                        $this->data['alternate_versions'][] = $edge->node->text->plainText;
+                    }
+                }
+            }
+        }
+
+        return $this->data['alternate_versions'];
     }
 
     /***************************************[ Helper Methods ]***************************************/

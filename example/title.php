@@ -11,7 +11,7 @@ if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj->images(8);
     $titleObj->videos(8);
     $titleObj->news(8);
-    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas']);
+    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas', 'alternate_versions']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -325,11 +325,25 @@ $image = new Image();
                                             <?php if (!empty($aka['language'])) { ?>
                                                 (<?php echo $aka['language']; ?>)
                                             <?php } ?>
-                                            
+
                                             <?php if (!empty($aka['comments'])) { ?>
                                                 (<?php echo implode(', ', $aka['comments']); ?>)
                                             <?php } ?>
                                         </li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Locations -->
+                    <?php if (!empty($title['alternate_versions'])) { ?>
+                        <tr>
+                            <td><b>Alternate Versions:</b></td>
+                            <td>
+                                <ul class="expandable-list">
+                                    <?php foreach ($title['alternate_versions'] as $alternate_version) { ?>
+                                        <li><?php echo $alternate_version; ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>
