@@ -185,6 +185,14 @@ $image = new Image();
                         </tr>
                     <?php } ?>
 
+                    <!-- Top250 -->
+                    <?php if ($title['ratings']['rank_in_top250']) { ?>
+                        <tr>
+                            <td><b>Rank in Top250:</b></td>
+                            <td><?php echo $title['ratings']['rank_in_top250']; ?></td>
+                        </tr>
+                    <?php } ?>
+
                     <!-- Taglines -->
                     <?php
                     if (!empty($title['taglines'])) { ?>

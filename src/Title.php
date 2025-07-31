@@ -125,6 +125,9 @@ query Title(\$id: ID!) {
     ratingsSummary {
       aggregateRating
       voteCount
+      topRanking {
+        rank
+      }
     }
     meterRanking {
       currentRank
@@ -493,6 +496,9 @@ query RatingVotes(\$id: ID!) {
     ratingsSummary {
       aggregateRating
       voteCount
+      topRanking {
+        rank
+      }
     }
   }
 }
@@ -514,6 +520,7 @@ GRAPHQL;
     {
         $this->data['ratings']['rating'] = $data->title->ratingsSummary->aggregateRating ?? null;
         $this->data['ratings']['votes'] = $data->title->ratingsSummary->voteCount ?? null;
+        $this->data['ratings']['rank_in_top250'] = $data->title->ratingsSummary->topRanking->rank <= 250 ? $data->title->ratingsSummary->topRanking->rank : null;
     }
 
     /**
@@ -1118,7 +1125,7 @@ GRAPHQL;
                         }
                     }
 
-                    $releaseDate = $this->buildDate($edge->node->day ?? null, $edge->node->month?? null, $edge->node->year?? null);
+                    $releaseDate = $this->buildDate($edge->node->day ?? null, $edge->node->month ?? null, $edge->node->year ?? null);
 
                     $this->data['release_dates'][] = [
                         'country' => $edge->node->country->text ?? null,
