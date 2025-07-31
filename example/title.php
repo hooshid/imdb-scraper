@@ -11,7 +11,7 @@ if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj->images(8);
     $titleObj->videos(8);
     $titleObj->news(8);
-    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas', 'alternate_versions']);
+    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas', 'alternate_versions', 'awards']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -351,6 +351,50 @@ $image = new Image();
                     <?php } ?>
                 </table>
             </div>
+
+            <!-- Awards -->
+            <?php if (!empty($title['awards'])) { ?>
+                <div class="head-title">Awards & Events - <?php echo $title['awards']['stats']['win']; ?> wins
+                    & <?php echo $title['awards']['stats']['nom']; ?> nominations
+                </div>
+                <div class="w-full">
+                    <?php foreach ($title['awards']['events'] as $items) { ?>
+                        <?php if (count($items)) { ?>
+                            <details>
+                                <summary><?php echo $items[0]['event_name']; ?> (<?php echo $items[0]['name']; ?>)
+                                    (<?php echo $items[0]['id']; ?>)
+                                </summary>
+                                <div>
+                                    <ul>
+                                        <?php foreach ($items as $item) { ?>
+                                            <li>
+                                                <?php echo $item['year']; ?> -
+
+                                                <?php if ($item['category']) { ?>
+                                                    <?php echo $item['category']; ?> -
+                                                <?php } ?>
+
+                                                <?php if ($item['notes']) { ?>
+                                                    <?php echo $item['notes']; ?> -
+                                                <?php } ?>
+
+                                                <span class="award-<?php echo $item['conclusion']; ?>"><?php echo $item['conclusion']; ?></span>
+
+                                                <?php if (!empty($item['names'])) { ?>
+                                                    -
+                                                    <?php foreach ($item['names'] as $name) { ?>
+                                                        <a href="name.php?id=<?php echo $name['id']; ?>"><?php echo $name['name']; ?></a>
+                                                    <?php } ?>
+                                                <?php } ?>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                </div>
+                            </details>
+                        <?php } ?>
+                    <?php } ?>
+                </div>
+            <?php } ?>
 
             <!-- Images -->
             <?php if (!empty($title['images'])) { ?>

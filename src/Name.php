@@ -1399,7 +1399,7 @@ GRAPHQL;
                 }
 
                 $characters = [];
-                if ($this->hasArrayItems($edge->node->credit->characters)) {
+                if (isset($edge->node->credit->characters) && $this->hasArrayItems($edge->node->credit->characters)) {
                     foreach ($edge->node->credit->characters as $character) {
                         if (!empty($character->name)) {
                             $characters[] = $character->name;

@@ -47,6 +47,7 @@ class Title extends Base
         'videos' => null,
         'news' => null,
         'metacritic' => null,
+        'awards' => null,
         'faq' => null,
         'akas' => null,
         'alternate_versions' => null,
@@ -1602,6 +1603,133 @@ GRAPHQL;
         }
 
         return $this->data['metacritic'];
+    }
+
+    /**
+     * Get all awards for a title
+     *
+     * @param bool $winsOnly
+     * @param string $event
+     * @return array|null
+     * @throws Exception
+     */
+    public function awards(bool $winsOnly = false, string $event = ""): ?array
+    {
+        if (empty($this->data['awards'])) {
+            $filter = $this->awardFilter($winsOnly, $event);
+            $query = <<<EOF
+award {
+  id
+  event {
+    id
+    text
+  }
+  text
+  category {
+    text
+  }
+  eventEdition {
+    year
+  }
+  notes {
+    plainText
+  }
+}
+isWinner
+awardedEntities {
+  ... on AwardedTitles {
+    secondaryAwardNames {
+      name {
+        id
+        nameText {
+          text
+        }
+        primaryImage {
+          url
+          width
+          height
+        }
+      }
+      note {
+        plainText
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->getAllData("Award", "awardNominations", $query, $filter);
+
+            $winnerCount = 0;
+            $nomineeCount = 0;
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $eventName = $edge->node->award->event->text ?? null;
+                    $isWinner = $edge->node->isWinner;
+                    $conclusion = $isWinner === true ? "Winner" : "Nominee";
+                    $isWinner === true ? $winnerCount++ : $nomineeCount++;
+
+                    // credited persons
+                    $names = [];
+                    if (isset($edge->node->awardedEntities->secondaryAwardNames) && $this->hasArrayItems($edge->node->awardedEntities->secondaryAwardNames)) {
+                        foreach ($edge->node->awardedEntities->secondaryAwardNames as $creditor) {
+                            $names[] = [
+                                'id' => $creditor->name->id,
+                                'name' => $creditor->name->nameText->text ?? null,
+                                'note' => isset($creditor->note->plainText) ? trim($creditor->note->plainText, " ()") : null,
+                                'image' => $this->parseImage($creditor->name->primaryImage)
+                            ];
+                        }
+                    }
+
+                    $eventId = $edge->node->award->event->id;
+                    $this->data['awards']['events'][$eventId][] = [
+                        'id' => $edge->node->award->event->id ?? null,
+                        'name' => $edge->node->award->text ?? null,
+                        'event_name' => $eventName,
+                        'year' => $edge->node->award->eventEdition->year ?? null,
+                        'category' => $edge->node->award->category->text ?? null,
+                        'notes' => $edge->node->award->notes->plainText ?? null,
+                        'names' => $names,
+                        'is_winner' => $isWinner,
+                        'conclusion' => $conclusion
+                    ];
+                }
+            }
+
+            $this->data['awards']['stats'] = [
+                'win' => $winnerCount,
+                'nom' => $nomineeCount
+            ];
+        }
+
+        return $this->data['awards'];
+    }
+
+    /**
+     * Build award filter string
+     *
+     * @param $winsOnly boolean
+     * @param $event string eventId
+     * @return string $filter
+     */
+    public function awardFilter(bool $winsOnly, string $event): string
+    {
+        $filter = ', sort: {by: PRESTIGIOUS, order: DESC}';
+        if (!empty($event) || $winsOnly === true) {
+            $filter .= ', filter:{';
+            if ($winsOnly === true) {
+                $filter .= 'wins:WINS_ONLY';
+                if (empty($event)) {
+                    $filter .= '}';
+                } else {
+                    $filter .= ', events:"' . trim($event) . '"}';
+                }
+            } else {
+                $filter .= 'events:"' . trim($event) . '"}';
+            }
+        }
+
+        return $filter;
     }
 
     /**
