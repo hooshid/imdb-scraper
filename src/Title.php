@@ -50,6 +50,10 @@ class Title extends Base
         'faq' => null,
         'akas' => null,
         'alternate_versions' => null,
+        'companies_production' => null,
+        'companies_distribution' => null,
+        'companies_special_effects' => null,
+        'companies_other' => null,
     ];
 
     /**
@@ -1716,6 +1720,64 @@ GRAPHQL;
         return $this->data['alternate_versions'];
     }
 
+    /**
+     * Info about Production Companies
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function companiesProduction(): ?array
+    {
+        if (empty($this->data['companies_production'])) {
+            $this->data['companies_production'] = $this->companyCredits("production");
+        }
+
+        return $this->data['companies_production'];
+    }
+
+    /**
+     * Info about distributors
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function companiesDistribution(): ?array
+    {
+        if (empty($this->data['companies_distribution'])) {
+            $this->data['companies_distribution'] = $this->companyCredits("distribution");
+        }
+        return $this->data['companies_distribution'];
+    }
+
+    /**
+     * Info about Special Effects companies
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function companiesSpecialEffects(): ?array
+    {
+        if (empty($this->data['companies_special_effects'])) {
+            $this->data['companies_special_effects'] = $this->companyCredits("specialEffects");
+        }
+
+        return $this->data['companies_special_effects'];
+    }
+
+    /**
+     * Info about other companies
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function companiesOther(): ?array
+    {
+        if (empty($this->data['companies_other'])) {
+            $this->data['companies_other'] = $this->companyCredits("miscellaneous");
+        }
+        return $this->data['companies_other'];
+    }
+
     /***************************************[ Helper Methods ]***************************************/
     /**
      * Get all edges of a field in the title type
@@ -1808,4 +1870,56 @@ GRAPHQL;
         }
     }
 
+    /**
+     * Fetch all company credits
+     *
+     * @param string $category e.g. distribution, production
+     * @return array
+     * @throws Exception
+     */
+    protected function companyCredits(string $category): array
+    {
+        $filter = ', filter: { categories: ["' . $category . '"] }';
+        $query = <<<EOF
+company {
+  id
+}
+displayableProperty {
+  value {
+    plainText
+  }
+}
+countries(limit: 1) {
+  text
+}
+attributes {
+  text
+}
+yearsInvolved {
+  year
+}
+EOF;
+        $data = $this->getAllData("CompanyCredits", "companyCredits", $query, $filter);
+        $results = [];
+        if ($this->hasArrayItems($data)) {
+            foreach ($data as $edge) {
+                $companyAttribute = [];
+                if ($this->hasArrayItems($edge->node->attributes)) {
+                    foreach ($edge->node->attributes as $attribute) {
+                        $companyAttribute[] = $attribute->text;
+                    }
+                }
+
+                $results[] = [
+                    "id" => $edge->node->company->id ?? null,
+                    "name" => $edge->node->displayableProperty->value->plainText ?? null,
+                    "country" => $edge->node->countries[0]->text ?? null,
+                    "attribute" => $companyAttribute,
+                    "year" => $edge->node->yearsInvolved->year ?? null,
+                ];
+            }
+        }
+
+        return $results;
+    }
 }
