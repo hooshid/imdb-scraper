@@ -11,7 +11,7 @@ if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj->images(8);
     $titleObj->videos(8);
     $titleObj->news(8);
-    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas', 'alternate_versions', 'awards', 'seasons', 'episodes']);
+    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'budget', 'grosses', 'akas', 'alternate_versions', 'awards', 'seasons', 'episodes']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -307,6 +307,28 @@ $image = new Image();
                                     <?php foreach ($title['certificates'] as $certificate) { ?>
                                         <li><?php echo $certificate['country']; ?>
                                             : <?php echo $certificate['rating']; ?></li>
+                                    <?php } ?>
+                                </ul>
+                            </td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Budget -->
+                    <?php if ($title['budget']) { ?>
+                        <tr>
+                            <td><b>Budget:</b></td>
+                            <td><?php echo number_format($title['budget']['amount']); ?><?php echo $title['budget']['currency']; ?></td>
+                        </tr>
+                    <?php } ?>
+
+                    <!-- Grosses -->
+                    <?php if (!empty($title['grosses'])) { ?>
+                        <tr>
+                            <td><b>Gross:</b></td>
+                            <td>
+                                <ul class="expandable-list">
+                                    <?php foreach ($title['grosses'] as $gross) { ?>
+                                        <li><?php echo $gross['area_type']; ?><?php echo number_format($gross['amount']); ?><?php echo $gross['currency']; ?></li>
                                     <?php } ?>
                                 </ul>
                             </td>

@@ -43,6 +43,8 @@ class Title extends Base
         'aspect_ratio' => null,
         'cameras' => null,
         'certificates' => null,
+        'budget' => null,
+        'grosses' => null,
         'seasons' => null,
         'episodes' => null,
         'images' => null,
@@ -1298,6 +1300,86 @@ GRAPHQL;
     }
 
     /**
+     * Info about production budget
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function budget(): ?array
+    {
+        if (empty($this->data['budget'])) {
+            $query = <<<GRAPHQL
+query ProductionBudget(\$id: ID!) {
+  title(id: \$id) {
+    productionBudget {
+      budget {
+        amount
+        currency
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "ProductionBudget", ["id" => $this->imdb_id]);
+            if (!empty($data->title->productionBudget->budget->amount)) {
+                $this->data['budget'] = [
+                    'amount' => $data->title->productionBudget->budget->amount ?? null,
+                    'currency' => $data->title->productionBudget->budget->currency ?? null,
+                ];
+            }
+        }
+
+        return $this->data['budget'];
+    }
+
+    /**
+     * Info about Grosses, ranked by amount
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function grosses(): ?array
+    {
+        if (empty($this->data['grosses'])) {
+            $query = <<<GRAPHQL
+query RankedLifetimeGrosses(\$id: ID!) {
+  title(id: \$id) {
+    rankedLifetimeGrosses(first: 9999) {
+      edges {
+        node {
+          boxOfficeAreaType {
+            text
+          }
+          total {
+            amount
+            currency
+          }
+        }
+      }
+    }
+  }
+}
+GRAPHQL;
+
+            $data = $this->graphql->query($query, "RankedLifetimeGrosses", ["id" => $this->imdb_id]);
+            if ($this->hasArrayItems($data->title->rankedLifetimeGrosses->edges)) {
+                foreach ($data->title->rankedLifetimeGrosses->edges as $edge) {
+                    if (!empty($edge->node->boxOfficeAreaType->text)) {
+                        $this->data['grosses'][] = [
+                            'area_type' => $edge->node->boxOfficeAreaType->text,
+                            'amount' => $edge->node->total->amount ?? null,
+                            'currency' => $edge->node->total->currency ?? null
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $this->data['grosses'];
+    }
+
+    /**
      * Get list of seasons of a series
      *
      * @return array|null
@@ -1406,7 +1488,6 @@ EOF;
 
         return $this->data['episodes'];
     }
-
 
     /**
      * Get all episodes of a title
@@ -2059,6 +2140,7 @@ GRAPHQL;
         if (empty($this->data['companies_distribution'])) {
             $this->data['companies_distribution'] = $this->companyCredits("distribution");
         }
+
         return $this->data['companies_distribution'];
     }
 
@@ -2088,6 +2170,7 @@ GRAPHQL;
         if (empty($this->data['companies_other'])) {
             $this->data['companies_other'] = $this->companyCredits("miscellaneous");
         }
+
         return $this->data['companies_other'];
     }
 
