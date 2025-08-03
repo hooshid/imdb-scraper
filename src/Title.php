@@ -43,6 +43,8 @@ class Title extends Base
         'aspect_ratio' => null,
         'cameras' => null,
         'certificates' => null,
+        'seasons' => null,
+        'episodes' => null,
         'images' => null,
         'videos' => null,
         'news' => null,
@@ -1293,6 +1295,189 @@ GRAPHQL;
         }
 
         return $this->data['certificates'];
+    }
+
+    /**
+     * Get list of seasons of a series
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function seasons(): ?array
+    {
+        if (empty($this->data['seasons'])) {
+            $querySeasons = <<<EOF
+query Seasons(\$id: ID!) {
+  title(id: \$id) {
+    episodes {
+      displayableSeasons(first: 9999) {
+        edges {
+          node {
+            text
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+            $seasonsData = $this->graphql->query($querySeasons, "Seasons", ["id" => $this->imdb_id]);
+            if (!empty($seasonsData->title->episodes)) {
+                foreach ($seasonsData->title->episodes->displayableSeasons->edges as $edge) {
+                    if (!empty($edge->node->text)) {
+                        $this->data['seasons'][] = $edge->node->text;
+                    }
+                }
+            }
+        }
+
+        return $this->data['seasons'];
+    }
+
+    /**
+     * Get the series episode(s)
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function episodes(): ?array
+    {
+        if (empty($this->data['episodes'])) {
+            $seasons = $this->seasons();
+            if (empty($seasons) || !is_array($seasons) || count($seasons) == 0) {
+                return [];
+            }
+
+            foreach ($seasons as $seasonNumber) {
+                if (empty($seasonNumber)) {
+                    continue;
+                }
+
+                if (strtolower($seasonNumber) == "unknown") {
+                    $SeasonUnknown = "unknown";
+                    $seasonFilter = "";
+                } else {
+                    $seasonFilter = $seasonNumber;
+                    $SeasonUnknown = "";
+                }
+                $filter = 'filter:{includeSeasons:["' . $seasonFilter . '","' . $SeasonUnknown . '"]}';
+
+
+                $seasonYear = $seasonNumber;
+                if (strtolower($seasonNumber) == "unknown") {
+                    $seasonYear = -1;
+                }
+
+                // Get all episodes
+                $episodesData = $this->graphQlGetAllEpisodes($filter);
+                $episodes = [];
+                foreach ($episodesData as $edge) {
+                    $episodeNumber = null;
+                    if (isset($edge->node->series->displayableEpisodeNumber->episodeNumber->episodeNumber)) {
+                        $episodeNumber = $edge->node->series->displayableEpisodeNumber->episodeNumber->episodeNumber;
+                        // Unknown episodes get a number to keep them separate.
+                        if (strtolower($episodeNumber) == "unknown") {
+                            $episodeNumber = -1;
+                        }
+                    }
+
+                    $releaseDate = $this->buildDate($edge->node->releaseDate->day ?? null, $edge->node->releaseDate->month ?? null, $edge->node->releaseDate->year ?? null);
+
+                    $episodes[] = [
+                        'id' => $edge->node->id ?? null,
+                        'title' => $edge->node->titleText->text ?? null,
+                        'release_date' => $releaseDate,
+                        'airdate' => [
+                            'day' => $edge->node->releaseDate->day ?? null,
+                            'month' => $edge->node->releaseDate->month ?? null,
+                            'year' => $edge->node->releaseDate->year ?? null
+                        ],
+                        'plot' => $edge->node->plot->plotText->plainText ?? null,
+                        'season' => $seasonNumber,
+                        'episode' => $episodeNumber,
+                        'runtime' => isset($edge->node->runtime->seconds) ? $edge->node->runtime->seconds / 60 : null,
+                        'image' => $this->parseImage($edge->node->primaryImage ?? null)
+                    ];
+                }
+
+                $this->data['episodes'][$seasonNumber] = $episodes;
+            }
+        }
+
+        return $this->data['episodes'];
+    }
+
+
+    /**
+     * Get all episodes of a title
+     *
+     * @param string $filter
+     * @return array
+     * @throws Exception
+     */
+    protected function graphQlGetAllEpisodes(string $filter): array
+    {
+        $query = <<<EOF
+query Episodes(\$id: ID!, \$after: ID) {
+  title(id: \$id) {
+    episodes {
+      episodes(first: 9999, after: \$after $filter) {
+        edges {
+          node {
+            id
+            titleText {
+              text
+            }
+            runtime {
+              seconds
+            }
+            plot {
+              plotText {
+                plainText
+              }
+            }
+            primaryImage {
+              url
+              width
+              height
+            }
+            releaseDate {
+              day
+              month
+              year
+            }
+            series {
+              displayableEpisodeNumber {
+                episodeNumber {
+                  episodeNumber
+                }
+              }
+            }
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+    }
+  }
+}
+EOF;
+        $fullQuery = implode("\n", array_map('trim', explode("\n", $query)));
+
+        // Results are paginated, so loop until we've got all the data
+        $endCursor = null;
+        $hasNextPage = true;
+        $edges = [];
+        while ($hasNextPage) {
+            $data = $this->graphql->query($fullQuery, "Episodes", ["id" => $this->imdb_id, "after" => $endCursor]);
+            $edges = array_merge($edges, $data->title->episodes->episodes->edges);
+            $hasNextPage = $data->title->episodes->episodes->pageInfo->hasNextPage;
+            $endCursor = $data->title->episodes->episodes->pageInfo->endCursor;
+        }
+
+        return $edges;
     }
 
     /**

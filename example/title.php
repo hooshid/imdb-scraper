@@ -11,7 +11,7 @@ if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj->images(8);
     $titleObj->videos(8);
     $titleObj->news(8);
-    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas', 'alternate_versions', 'awards']);
+    $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'akas', 'alternate_versions', 'awards', 'seasons', 'episodes']);
     if (isset($_GET["output"])) {
         header("Content-Type: application/json");
         echo json_encode($title);
@@ -351,6 +351,220 @@ $image = new Image();
                     <?php } ?>
                 </table>
             </div>
+
+            <!-- Seasons -->
+            <?php if (!empty($title['seasons'])) { ?>
+                <div class="head-title">Seasons</div>
+                <div class="w-full">
+                    <style>
+                        .tab-buttons {
+                            display: flex;
+                            border-bottom: 1px solid #ccc;
+                        }
+
+                        .tab-btn {
+                            padding: 10px 20px;
+                            background: #f1f1f1;
+                            cursor: pointer;
+                            transition: 0.3s;
+                            font-size: 16px;
+                            border-radius: 5px 5px 0 0;
+                            margin-right: 5px;
+                            border: 1px solid #ccc;
+                            border-bottom: 0;
+                        }
+
+                        .tab-btn:hover {
+                            background: #ddd;
+                        }
+
+                        .tab-btn.active {
+                            background: #678efe;
+                            color: white;
+                        }
+
+                        .tab-content {
+                            display: none;
+                            padding: 20px;
+                            border: 1px solid #ccc;
+                            border-top: none;
+                            animation: fadeEffect 0.5s;
+                        }
+
+                        .tab-content.active {
+                            display: block;
+                        }
+
+                        @keyframes fadeEffect {
+                            from {
+                                opacity: 0;
+                            }
+                            to {
+                                opacity: 1;
+                            }
+                        }
+                    </style>
+
+                    <style>
+                        .episode-card {
+                            display: flex;
+                            margin-bottom: 30px;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            background: #fff;
+                            transition: transform 0.3s ease;
+                        }
+
+                        .episode-card:hover {
+                            transform: translateY(-5px);
+                        }
+
+                        .episode-image {
+                            flex: 0 0 250px;
+                            height: 140px;
+                            overflow: hidden;
+                        }
+
+                        .episode-image img {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                        }
+
+                        .episode-details {
+                            flex: 1;
+                            padding: 15px 20px;
+                            position: relative;
+                        }
+
+                        .episode-header {
+                            display: flex;
+                            align-items: center;
+                            margin-bottom: 10px;
+                        }
+
+                        .episode-number {
+                            font-size: 14px;
+                            color: #666;
+                            margin-right: 15px;
+                        }
+
+                        .episode-title {
+                            font-size: 18px;
+                            font-weight: bold;
+                            margin: 0;
+                            color: #333;
+                        }
+
+                        .episode-date {
+                            font-size: 14px;
+                            color: #666;
+                            margin-left: auto;
+                        }
+
+                        .episode-plot {
+                            font-size: 14px;
+                            line-height: 1.5;
+                            color: #444;
+                            margin-bottom: 15px;
+                        }
+
+                        .episode-more {
+                            position: absolute;
+                            bottom: 15px;
+                            right: 20px;
+                            color: #1a73e8;
+                            text-decoration: none;
+                            font-size: 14px;
+                        }
+
+                        .season-header {
+                            font-size: 24px;
+                            margin: 30px 0 20px;
+                            padding-bottom: 10px;
+                            border-bottom: 1px solid #eee;
+                            color: #333;
+                        }
+                    </style>
+
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <?php foreach ($title['seasons'] as $season) { ?>
+                                <button class="tab-btn"
+                                        data-tab="tab<?php echo $season; ?>"><?php echo $season; ?></button>
+                            <?php } ?>
+                        </div>
+
+                        <?php foreach ($title['seasons'] as $season) { ?>
+                            <div id="tab<?php echo $season; ?>" class="tab-content">
+                                <?php foreach ($title['episodes'][$season] as $episode) { ?>
+                                    <div class="episode-card">
+                                        <div class="episode-image">
+                                            <?php if ($episode['image']) { ?>
+                                                <img src="<?php
+                                                echo $image->makeThumbnail($episode['image']['url'], $episode['image']['width'], $episode['image']['height'], 224, 126);
+                                                ?>" alt="<?php echo $episode['title']; ?>" loading="lazy">
+                                            <?php } ?>
+                                        </div>
+                                        <div class="episode-details">
+                                            <div class="episode-header">
+                                                <h3 class="episode-title">
+                                                    <?php if ($episode['season'] != "Unknown") { ?>
+                                                        S<?php echo $episode['season']; ?>.E<?php echo $episode['episode']; ?> •
+                                                    <?php } ?>
+                                                    <?php echo $episode['title']; ?></h3>
+                                                <span class="episode-date"><?php echo $episode['release_date']; ?>
+                                                    <?php if ($episode['runtime']) { ?>
+                                                        <br><?php echo $episode['runtime']; ?> minutes
+                                                    <?php } ?>
+                                                </span>
+                                            </div>
+                                            <p class="episode-plot"><?php echo $episode['plot']; ?></p>
+                                            <a href="https://www.imdb.com/title/<?php echo $episode['id']; ?>"
+                                               class="episode-more" target="_blank">More info</a>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Get all tab buttons and tab contents
+                        const tabButtons = document.querySelectorAll('.tab-btn');
+                        const tabContents = document.querySelectorAll('.tab-content');
+
+                        // Add click event to each tab button
+                        tabButtons.forEach(button => {
+                            button.addEventListener('click', () => {
+                                // Remove active class from all buttons and contents
+                                tabButtons.forEach(btn => btn.classList.remove('active'));
+                                tabContents.forEach(content => content.classList.remove('active'));
+
+                                // Add active class to clicked button
+                                button.classList.add('active');
+
+                                // Show the corresponding tab content
+                                const tabId = button.getAttribute('data-tab');
+                                document.getElementById(tabId).classList.add('active');
+                            });
+                        });
+
+                        // Get the first tab button and content
+                        const firstTabBtn = document.querySelector('.tab-btn');
+                        const firstTabContent = document.querySelector('.tab-content');
+
+                        // Add active class to both if they exist
+                        if (firstTabBtn && firstTabContent) {
+                            firstTabBtn.classList.add('active');
+                            firstTabContent.classList.add('active');
+                        }
+                    });
+                </script>
+            <?php } ?>
 
             <!-- Awards -->
             <?php if (!empty($title['awards'])) { ?>
