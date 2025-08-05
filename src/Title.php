@@ -66,6 +66,8 @@ class Title extends Base
         'goofs' => null,
         'quotes' => null,
         'trivias' => null,
+        'credits_principal' => null,
+        'credits_cast' => null,
     ];
 
     /**
@@ -2584,6 +2586,156 @@ EOF;
             }
         }
         return $this->data['trivias'];
+    }
+
+    /**
+     * Get the PrincipalCredits for this title (limited to 3 items per category) (director, writer, creator, star)
+     * Not all categories are always available
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function creditsPrincipal(): ?array
+    {
+        if (empty($this->data['credits_principal'])) {
+            $query = <<<EOF
+query PrincipalCredits(\$id: ID!) {
+  title(id: \$id) {
+    principalCredits {
+      credits(limit: 3) {
+        name {
+          nameText {
+            text
+          }
+          id
+        }
+        category {
+          text
+        }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "PrincipalCredits", ["id" => $this->imdb_id]);
+
+            if ($this->hasArrayItems($data->title->principalCredits))
+            {
+                foreach ($data->title->principalCredits as $value){
+                    $category = 'unknown';
+                    $credits = [];
+                    if (!empty($value->credits[0]->category->text)) {
+                        $category = strtolower($value->credits[0]->category->text);
+                        if ($category == "actor" || $category == "actress") {
+                            $category = "star";
+                        }
+                    }
+
+                    if (isset($value->credits) &&
+                        is_array($value->credits) &&
+                        count($value->credits) > 0
+                    )
+                    {
+                        foreach ($value->credits as $credit) {
+                            $credits[] = [
+                                'id' => $credit->name->id ?? null,
+                                'name' => $credit->name->nameText->text ?? null,
+                            ];
+                        }
+                    } elseif ($category == 'unknown') {
+                        continue;
+                    }
+
+                    $this->data['credits_principal'][$category] = $credits;
+                }
+            }
+        }
+
+        return $this->data['credits_principal'];
+    }
+
+    /**
+     * Get the actors/cast members for this title
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function creditsCast(): ?array
+    {
+        if (empty($this->data['credits_cast'])) {
+            $filter = ', filter:{categories:["cast"]}';
+            $query = <<<EOF
+name {
+  nameText {
+    text
+  }
+  id
+  primaryImage {
+    url
+    width
+    height
+  }
+}
+... on Cast {
+  characters {
+    name
+  }
+  attributes {
+    text
+  }
+}
+EOF;
+            $data = $this->getAllData("CreditQuery", "credits", $query, $filter);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $castCharacters = [];
+                    if (isset($edge->node->characters) &&
+                        is_array($edge->node->characters) &&
+                        count($edge->node->characters) > 0
+                    )
+                    {
+                        foreach ($edge->node->characters as $character) {
+                            if (!empty($character->name)) {
+                                $castCharacters[] = $character->name;
+                            }
+                        }
+                    }
+
+                    $comments = [];
+                    $nameAlias = null;
+                    $credited = true;
+                    if (isset($edge->node->attributes) &&
+                        is_array($edge->node->attributes) &&
+                        count($edge->node->attributes) > 0
+                    )
+                    {
+                        foreach ($edge->node->attributes as $attribute) {
+                            if (!empty($attribute->text)) {
+                                if (str_contains($attribute->text, "as ")) {
+                                    $nameAlias = trim(ltrim($attribute->text, "as"));
+                                } elseif (str_contains($attribute->text, "uncredited")) {
+                                    $credited = false;
+                                } else {
+                                    $comments[] = $attribute->text;
+                                }
+                            }
+                        }
+                    }
+
+                    $this->data['credits_cast'][] = [
+                        'id' => $edge->node->name->id ?? null,
+                        'name' => $edge->node->name->nameText->text ?? null,
+                        'alias' => $nameAlias,
+                        'credited' => $credited,
+                        'character' => $castCharacters,
+                        'comment' => $comments,
+                        'image' => $this->parseImage($edge->node->name->primaryImage ?? null),
+                    ];
+                }
+            }
+        }
+
+        return $this->data['credits_cast'];
     }
 
 
