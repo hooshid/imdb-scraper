@@ -59,6 +59,7 @@ class Title extends Base
         'companies_distribution' => null,
         'companies_special_effects' => null,
         'companies_other' => null,
+        'recommendations' => null,
     ];
 
     /**
@@ -2172,6 +2173,60 @@ GRAPHQL;
         }
 
         return $this->data['companies_other'];
+    }
+
+    /**
+     * Get recommended movies (People who liked this...also liked)
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function recommendations(): ?array
+    {
+        if (empty($this->data['recommendations'])) {
+            $query = <<<EOF
+query Recommendations(\$id: ID!) {
+  title(id: \$id) {
+    moreLikeThisTitles(first: 12) {
+      edges {
+        node {
+          id
+          titleText {
+            text
+          }
+          ratingsSummary {
+            aggregateRating
+          }
+          primaryImage {
+            url
+            width
+            height
+          }
+          releaseYear {
+            year
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "Recommendations", ["id" => $this->imdb_id]);
+
+            if ($this->hasArrayItems($data->title->moreLikeThisTitles->edges)) {
+                foreach ($data->title->moreLikeThisTitles->edges as $edge) {
+                    $this->data['recommendations'][] = [
+                        'id' => $edge->node->id,
+                        'title' => $edge->node->titleText->text,
+                        'rating' => $edge->node->ratingsSummary->aggregateRating ?? null,
+                        'year' => $edge->node->releaseYear->year ?? null,
+                        'image' => $this->parseImage($edge->node->primaryImage)
+                    ];
+                }
+            }
+        }
+
+        return $this->data['recommendations'];
     }
 
     /***************************************[ Helper Methods ]***************************************/
