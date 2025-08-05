@@ -59,6 +59,7 @@ class Title extends Base
         'companies_distribution' => null,
         'companies_special_effects' => null,
         'companies_other' => null,
+        'connections' => null,
         'recommendations' => null,
     ];
 
@@ -1445,12 +1446,6 @@ EOF;
                 }
                 $filter = 'filter:{includeSeasons:["' . $seasonFilter . '","' . $SeasonUnknown . '"]}';
 
-
-                $seasonYear = $seasonNumber;
-                if (strtolower($seasonNumber) == "unknown") {
-                    $seasonYear = -1;
-                }
-
                 // Get all episodes
                 $episodesData = $this->graphQlGetAllEpisodes($filter);
                 $episodes = [];
@@ -2176,7 +2171,88 @@ GRAPHQL;
     }
 
     /**
-     * Get recommended movies (People who liked this...also liked)
+     * Info about connections or references with other titles
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function connections(): ?array
+    {
+        // imdb connection category ids to camelCase
+        $categoryIds = [
+            'alternate_language_version_of',
+            'edited_from',
+            'edited_into',
+            'featured_in',
+            'features',
+            'followed_by',
+            'follows',
+            'referenced_in',
+            'references',
+            'remade_as',
+            'remake_of',
+            'same_franchise',
+            'spin_off',
+            'spin_off_from',
+            'spoofed_in',
+            'spoofs',
+            'version_of'
+        ];
+
+        if (empty($this->data['connections'])) {
+            foreach ($categoryIds as $categoryId) {
+                $this->data['connections'][$categoryId] = [];
+            }
+
+            $query = <<<EOF
+associatedTitle {
+  id
+  titleText {
+    text
+  }
+  titleType {
+    text
+  }
+  releaseYear {
+    year
+    endYear
+  }
+  series {
+    series {
+      titleText {
+        text
+      }
+    }
+  }
+}
+category {
+  id
+}
+description {
+  plainText
+}
+EOF;
+            $edges = $this->getAllData("Connections", "connections", $query);
+            if (count($edges) > 0) {
+                foreach ($edges as $edge) {
+                    $this->data['connections'][$edge->node->category->id][] = [
+                        'id' => $edge->node->associatedTitle->id,
+                        'title' => $edge->node->associatedTitle->titleText->text ?? null,
+                        'type' => $edge->node->associatedTitle->titleType->text ?? null,
+                        'year' => $edge->node->associatedTitle->releaseYear->year ?? null,
+                        'end_year' => $edge->node->associatedTitle->releaseYear->endYear ?? null,
+                        'series_name' => $edge->node->associatedTitle->series->series->titleText->text ?? null,
+                        'description' => $edge->node->description->plainText ?? null
+                    ];
+                }
+            }
+        }
+
+        return $this->data['connections'];
+    }
+
+    /**
+     * Get recommended titles (People who liked this...also liked)
      *
      * @return array|null
      * @throws Exception
