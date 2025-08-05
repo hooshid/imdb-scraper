@@ -60,6 +60,7 @@ class Title extends Base
         'companies_special_effects' => null,
         'companies_other' => null,
         'connections' => null,
+        'external_sites' => null,
         'recommendations' => null,
     ];
 
@@ -2249,6 +2250,50 @@ EOF;
         }
 
         return $this->data['connections'];
+    }
+
+    /**
+     * external websites with info of this title, excluding external reviews.
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function externalSites(): ?array
+    {
+        if (empty($this->data['external_sites'])) {
+            $query = <<<EOF
+label
+url
+externalLinkCategory {
+  id
+}
+externalLinkLanguages {
+  text
+}
+EOF;
+            $filter = ' filter: {excludeCategories: "review"}';
+            $edges = $this->getAllData("ExternalSites", "externalLinks", $query, $filter);
+            if (count($edges) > 0) {
+                foreach ($edges as $edge) {
+                    $language = [];
+                    if ($this->hasArrayItems($edge->node->externalLinkLanguages)) {
+                        foreach ($edge->node->externalLinkLanguages as $lang) {
+                            if (!empty($lang->text)) {
+                                $language[] = $lang->text;
+                            }
+                        }
+                    }
+
+                    $this->data['external_sites'][$edge->node->externalLinkCategory->id][] = [
+                        'label' => $edge->node->label ?? null,
+                        'url' => $edge->node->url ?? null,
+                        'language' => $language
+                    ];
+                }
+            }
+        }
+
+        return $this->data['external_sites'];
     }
 
     /**
