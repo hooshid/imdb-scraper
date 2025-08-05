@@ -62,6 +62,7 @@ class Title extends Base
         'connections' => null,
         'external_sites' => null,
         'recommendations' => null,
+        'parents_guide' => null,
     ];
 
     /**
@@ -2348,6 +2349,76 @@ EOF;
         }
 
         return $this->data['recommendations'];
+    }
+
+    /**
+     * Info for parents like Violence, Drugs. Alcohol etc
+     *
+     * @param bool $spoil if true spoilers are also included.
+     * @return array|null
+     * @throws Exception
+     */
+    public function parentsGuide(bool $spoil = false): ?array
+    {
+        if (empty($this->data['parents_guide'])) {
+            $filter = '';
+            if ($spoil === false) {
+                $filter = '(filter: {spoilers: EXCLUDE_SPOILERS})';
+            }
+
+            $query = <<<EOF
+query ParentsGuide (\$id: ID!) {
+  title(id: \$id) {
+    parentsGuide {
+      categories $filter {
+        category {
+          id
+        }
+        severity {
+          text
+          votedFor
+        }
+        totalSeverityVotes
+        guideItems(first: 9999) {
+          edges {
+            node {
+              isSpoiler
+              text {
+                plainText
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF;
+            $data = $this->graphql->query($query, "ParentsGuide", ["id" => $this->imdb_id]);
+
+            if ($this->hasArrayItems($data->title->parentsGuide->categories)) {
+                foreach ($data->title->parentsGuide->categories as $category) {
+                    $guideItems = [];
+                    if ($this->hasArrayItems($category->guideItems->edges)) {
+                        foreach ($category->guideItems->edges as $edge) {
+                            $guideItems[] = [
+                                'guide_text' => $edge->node->text->plainText ?? null,
+                                'is_spoiler' => $edge->node->isSpoiler,
+                            ];
+                        }
+                    }
+
+                    $this->data['parents_guide'][strtolower($category->category->id)] = [
+                        'severity' => $category->severity->text ?? null,
+                        'severity_voted_for' => $category->severity->votedFor ?? null,
+                        'severity_total_votes' => $category->totalSeverityVotes ?? null,
+                        'guide_items' => $guideItems
+                    ];
+                }
+            }
+        }
+
+        return $this->data['parents_guide'];
     }
 
     /***************************************[ Helper Methods ]***************************************/
