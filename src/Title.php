@@ -63,6 +63,9 @@ class Title extends Base
         'external_sites' => null,
         'recommendations' => null,
         'parents_guide' => null,
+        'goofs' => null,
+        'quotes' => null,
+        'trivias' => null,
     ];
 
     /**
@@ -2420,6 +2423,169 @@ EOF;
 
         return $this->data['parents_guide'];
     }
+
+    /**
+     * Get the goofs
+     *
+     * @param bool $spoil if true spoilers are also included.
+     * @return array|null
+     * @throws Exception
+     */
+    public function goofs(bool $spoil = false): ?array
+    {
+        if (empty($this->data['goofs'])) {
+            $categoryIds = [
+                'continuity',
+                'factual_error',
+                'not_a_goof',
+                'revealing_mistake',
+                'miscellaneous',
+                'anachronism',
+                'audio_visual_unsynchronized',
+                'crew_or_equipment_visible',
+                'error_in_geography',
+                'plot_hole',
+                'boom_mic_visible',
+                'character_error'
+            ];
+
+            foreach ($categoryIds as $categoryId) {
+                $this->data['goofs'][$categoryId] = [];
+            }
+
+            $filter = $spoil === false ? ', filter: {spoilers: EXCLUDE_SPOILERS}' : '';
+            $query = <<<EOF
+category {
+  id
+}
+displayableArticle {
+  body {
+    plainText
+  }
+}
+isSpoiler
+EOF;
+            $data = $this->getAllData("Goofs", "goofs", $query, $filter);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $this->data['goofs'][$edge->node->category->id][] = [
+                        'content' => $edge->node->displayableArticle->body->plainText ?? null,
+                        'is_spoiler' => $edge->node->isSpoiler
+                    ];
+                }
+            }
+        }
+
+        return $this->data['goofs'];
+    }
+
+    /**
+     * Get the quotes for a given movie
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function quotes(): ?array
+    {
+        if (empty($this->data['quotes'])) {
+            $query = <<<EOF
+displayableArticle {
+  body {
+    plaidHtml
+  }
+}
+EOF;
+            $data = $this->getAllData("Quotes", "quotes", $query);
+            if (count($data) > 0) {
+                foreach ($data as $key => $edge) {
+                    if (!empty($edge->node->displayableArticle->body->plaidHtml)) {
+                        $quoteParts = explode("<li>", $edge->node->displayableArticle->body->plaidHtml);
+                        foreach ($quoteParts as $quoteItem) {
+                            if (!empty(trim(strip_tags($quoteItem)))) {
+                                $this->data['quotes'][$key][] = trim(strip_tags($quoteItem));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $this->data['quotes'];
+    }
+
+    /**
+     * Get the trivia info
+     *
+     * @param $spoil bool true spoilers are also included.
+     * @return array|null
+     * @throws Exception
+     */
+    public function trivias(bool $spoil = false): ?array
+    {
+        $categoryIds = [
+            'uncategorized',
+            'actor-trademark',
+            'cameo',
+            'director-cameo',
+            'director-trademark',
+            'smithee'
+        ];
+
+        if (empty($this->trivias)) {
+            foreach ($categoryIds as $categoryId) {
+                $this->data['trivias'][$categoryId] = [];
+            }
+
+            $filter = $spoil === false ? ', filter: {spoilers: EXCLUDE_SPOILERS}' : '';
+            $query = <<<EOF
+category {
+  id
+}
+displayableArticle {
+  body {
+    plainText
+  }
+}
+isSpoiler
+trademark {
+  plainText
+}
+relatedNames {
+  nameText {
+    text
+  }
+  id
+}
+EOF;
+            $data = $this->getAllData("Trivia", "trivia", $query, $filter);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    $names = array();
+                    if (isset($edge->node->relatedNames) &&
+                        is_array($edge->node->relatedNames) &&
+                        count($edge->node->relatedNames) > 0
+                    ) {
+                        foreach ($edge->node->relatedNames as $name) {
+                            $names[] = array(
+                                'name' => $name->nameText->text ?? null,
+                                'id' => $name->id ?? null
+                            );
+                        }
+                    }
+
+                    $this->data['trivias'][$edge->node->category->id][] = [
+                        'content' => isset($edge->node->displayableArticle->body->plainText) ?
+                            preg_replace('/\s\s+/', ' ', $edge->node->displayableArticle->body->plainText) : null,
+                        'names' => $names,
+                        'trademark' => $edge->node->trademark->plainText ?? null,
+                        'isSpoiler' => $edge->node->isSpoiler
+                    ];
+                }
+            }
+        }
+        return $this->data['trivias'];
+    }
+
 
     /***************************************[ Helper Methods ]***************************************/
     /**
