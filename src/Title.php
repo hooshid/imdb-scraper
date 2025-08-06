@@ -68,7 +68,10 @@ class Title extends Base
         'trivias' => null,
         'credits_principal' => null,
         'credits_cast' => null,
+        'credits_crew' => null,
     ];
+
+    // TODO incompelete: soundtracks, watchOption, mainaward
 
     /**
      * @param string $id IMDB ID to use for data retrieval
@@ -2588,6 +2591,35 @@ EOF;
         return $this->data['trivias'];
     }
 
+
+    /**
+     * Get the Crazy Credits
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function crazyCredit(): ?array
+    {
+        if (empty($this->data['crazy_credits'])) {
+            $query = <<<EOF
+text {
+  plainText
+}
+EOF;
+            $data = $this->getAllData("CrazyCredits", "crazyCredits", $query);
+            if (count($data) > 0) {
+                foreach ($data as $edge) {
+                    if (!empty($edge->node->text->plainText)) {
+                        $this->data['crazy_credits'][] = preg_replace('/\s\s+/', ' ', $edge->node->text->plainText);
+                    }
+                }
+            }
+        }
+
+        return $this->data['crazy_credits'];
+    }
+
+
     /**
      * Get the PrincipalCredits for this title (limited to 3 items per category) (director, writer, creator, star)
      * Not all categories are always available
@@ -2619,9 +2651,8 @@ query PrincipalCredits(\$id: ID!) {
 EOF;
             $data = $this->graphql->query($query, "PrincipalCredits", ["id" => $this->imdb_id]);
 
-            if ($this->hasArrayItems($data->title->principalCredits))
-            {
-                foreach ($data->title->principalCredits as $value){
+            if ($this->hasArrayItems($data->title->principalCredits)) {
+                foreach ($data->title->principalCredits as $value) {
                     $category = 'unknown';
                     $credits = [];
                     if (!empty($value->credits[0]->category->text)) {
@@ -2634,8 +2665,7 @@ EOF;
                     if (isset($value->credits) &&
                         is_array($value->credits) &&
                         count($value->credits) > 0
-                    )
-                    {
+                    ) {
                         foreach ($value->credits as $credit) {
                             $credits[] = [
                                 'id' => $credit->name->id ?? null,
@@ -2692,8 +2722,7 @@ EOF;
                     if (isset($edge->node->characters) &&
                         is_array($edge->node->characters) &&
                         count($edge->node->characters) > 0
-                    )
-                    {
+                    ) {
                         foreach ($edge->node->characters as $character) {
                             if (!empty($character->name)) {
                                 $castCharacters[] = $character->name;
@@ -2707,8 +2736,7 @@ EOF;
                     if (isset($edge->node->attributes) &&
                         is_array($edge->node->attributes) &&
                         count($edge->node->attributes) > 0
-                    )
-                    {
+                    ) {
                         foreach ($edge->node->attributes as $attribute) {
                             if (!empty($attribute->text)) {
                                 if (str_contains($attribute->text, "as ")) {
@@ -2738,6 +2766,139 @@ EOF;
         return $this->data['credits_cast'];
     }
 
+    /**
+     * Get the crew (director, writer, producer, composer, cinematographer & ...) members for this title
+     *
+     * @param array $categories
+     * @return array|null
+     * @throws Exception
+     */
+    public function creditsCrew(array $categories = []): ?array
+    {
+        if (empty($categories)) {
+            $categories = [
+                'director',
+                'writer',
+                'producer',
+                'composer',
+                'cinematographer',
+                'editor',
+                'casting_director',
+                'production_designer',
+                'art_director',
+                'set_decorator',
+                'costume_designer',
+                'make_up_department',
+                'production_manager',
+                'assistant_director',
+                'art_department',
+                'sound_department',
+                'special_effects',
+                'visual_effects',
+                'stunts',
+                'camera_department',
+                'animation_department',
+                'casting_department',
+                'costume_department',
+                'editorial_department',
+                'location_management',
+                'music_department',
+                'script_department',
+                'transportation_department',
+                'miscellaneous',
+                'thanks',
+            ];
+        }
+
+        foreach ($categories as $category) {
+            $this->data['credits_crew'][$category] = $this->creditHelper($category);
+        }
+
+        return $this->data['credits_crew'];
+    }
+
+    /**
+     * Helper to get crew names
+     *
+     * @param string $crewCategory
+     * @return array
+     * @throws Exception
+     */
+    private function creditHelper(string $crewCategory): array
+    {
+        $filter = ', filter: { categories: ["' . $crewCategory . '"] }';
+        $output = [];
+        $query = <<<EOF
+name {
+  nameText {
+    text
+  }
+  id
+  primaryImage {
+    url
+    width
+    height
+  }
+}
+... on Crew {
+  jobs {
+    text
+  }
+  attributes {
+    text
+  }
+  episodeCredits(first: 9999) {
+    total
+    yearRange {
+      year
+      endYear
+    }
+  }
+}
+EOF;
+        $data = $this->getAllData("CreditCrew", "credits", $query, $filter);
+        if (count($data) > 0) {
+            foreach ($data as $edge) {
+                $jobs = [];
+                if ($this->hasArrayItems($edge->node->jobs)) {
+                    foreach ($edge->node->jobs as $value) {
+                        if (!empty($value->text)) {
+                            $jobs[] = $value->text;
+                        }
+                    }
+                }
+
+                $episodes = [];
+                if (!empty($edge->node->episodeCredits)) {
+                    $episodes = [
+                        'total' => $edge->node->episodeCredits->total ?? null,
+                        'year' => $edge->node->episodeCredits->yearRange->year ?? null,
+                        'end_year' => $edge->node->episodeCredits->yearRange->endYear ?? null
+                    ];
+                }
+
+                $attributes = [];
+                if ($this->hasArrayItems($edge->node->attributes)) {
+                    foreach ($edge->node->attributes as $attribute) {
+                        if (!empty($attribute->text)) {
+                            $attributes[] = $attribute->text;
+                        }
+                    }
+                }
+
+                $output[] = [
+                    'id' => $edge->node->name->id ?? null,
+                    'name' => $edge->node->name->nameText->text ?? null,
+                    'jobs' => $jobs,
+                    'attributes' => $attributes,
+                    'episode' => $episodes,
+                    'image' => $this->parseImage($edge->node->name->primaryImage),
+                ];
+            }
+        }
+
+        return $output;
+    }
 
     /***************************************[ Helper Methods ]***************************************/
     /**
