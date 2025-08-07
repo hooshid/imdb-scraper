@@ -543,7 +543,11 @@ GRAPHQL;
     {
         $this->data['ratings']['rating'] = $data->title->ratingsSummary->aggregateRating ?? null;
         $this->data['ratings']['votes'] = $data->title->ratingsSummary->voteCount ?? null;
-        $this->data['ratings']['rank_in_top250'] = $data->title->ratingsSummary->topRanking->rank <= 250 ? $data->title->ratingsSummary->topRanking->rank : null;
+        if(isset($data->title->ratingsSummary->topRanking->rank)) {
+            $this->data['ratings']['rank_in_top250'] = $data->title->ratingsSummary->topRanking->rank <= 250 ? $data->title->ratingsSummary->topRanking->rank : null;
+        } else {
+            $this->data['ratings']['rank_in_top250'] = null;
+        }
     }
 
     /**
