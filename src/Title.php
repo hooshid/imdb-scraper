@@ -510,7 +510,7 @@ GRAPHQL;
      * @return array|null
      * @throws Exception
      */
-    private function ratings(): ?array
+    public function ratings(): ?array
     {
         if (!$this->isFullCalled && empty($this->data['ratings'])) {
             $query = <<<GRAPHQL
@@ -2594,7 +2594,6 @@ EOF;
         }
         return $this->data['trivias'];
     }
-
 
     /**
      * Get the Crazy Credits
