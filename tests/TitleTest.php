@@ -295,6 +295,7 @@ class TitleTest extends TestCase
         $this->assertEquals('R', $result['United States']);
     }
 
+
     public function testMpaaReason()
     {
         $title = $this->getTitle("0133093"); // The Matrix
