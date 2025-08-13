@@ -103,7 +103,7 @@ query ComingSoon {
 GRAPHQL;
         $data = $this->graphql->query($query, "ComingSoon");
 
-        if (!$this->hasArrayItems($data->comingSoon->edges)) {
+        if (!isset($data->comingSoon->edges) || !is_array($data->comingSoon->edges) || count($data->comingSoon->edges) === 0) {
             return [];
         }
 

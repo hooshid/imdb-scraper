@@ -331,7 +331,7 @@ GRAPHQL;
      */
     private function processSearchResults(stdClass $data): array
     {
-        if (!$this->hasArrayItems($data->advancedNameSearch->edges)) {
+        if (!isset($data->advancedNameSearch->edges) || !is_array($data->advancedNameSearch->edges) || count($data->advancedNameSearch->edges) === 0) {
             return [
                 'results' => [],
                 'total' => 0

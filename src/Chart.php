@@ -89,7 +89,7 @@ query BoxOffice {
 GRAPHQL;
         $data = $this->graphql->query($query, "BoxOffice");
 
-        if (!$this->hasArrayItems($data->boxOfficeWeekendChart->entries)) {
+        if (!isset($data->boxOfficeWeekendChart->entries) || !is_array($data->boxOfficeWeekendChart->entries) || count($data->boxOfficeWeekendChart->entries) === 0) {
             return [];
         }
 
@@ -256,7 +256,7 @@ query Top250Title {
 GRAPHQL;
         $data = $this->graphql->query($query, "Top250Title");
 
-        if (!$this->hasArrayItems($data->titleChartRankings->edges)) {
+        if (!isset($data->titleChartRankings->edges) || !is_array($data->titleChartRankings->edges) || count($data->titleChartRankings->edges) === 0) {
             return [];
         }
 
@@ -395,7 +395,7 @@ query MostPopularTitle {
 GRAPHQL;
         $data = $this->graphql->query($query, "MostPopularTitle");
 
-        if (!$this->hasArrayItems($data->chartTitles->edges)) {
+        if (!isset($data->chartTitles->edges) || !is_array($data->chartTitles->edges) || count($data->chartTitles->edges) === 0) {
             return [];
         }
 
@@ -523,10 +523,11 @@ query MostPopularName {
 GRAPHQL;
         $data = $this->graphql->query($query, "MostPopularName");
 
-        $items = [];
-        if (!$this->hasArrayItems($data->chartNames->edges)) {
-            return $items;
+        if (!isset($data->chartNames->edges) || !is_array($data->chartNames->edges) || count($data->chartNames->edges) === 0) {
+            return [];
         }
+
+        $items = [];
 
         foreach ($data->chartNames->edges as $edge) {
             if (empty($edge->node->id) or empty($edge->node->nameText->text)) {

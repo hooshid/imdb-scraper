@@ -144,7 +144,9 @@ GRAPHQL;
 
         $video = $this->parseNode($data->video);
 
-        if ($this->hasArrayItems($data->video->playbackURLs)) {
+        if (isset($data->video->playbackURLs) &&
+            is_array($data->video->playbackURLs) &&
+            count($data->video->playbackURLs) > 0) {
             $urls = [];
             foreach ($data->video->playbackURLs as $url) {
                 $urls[] = [

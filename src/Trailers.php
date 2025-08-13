@@ -124,7 +124,7 @@ query RecentVideo {
 GRAPHQL;
         $data = $this->graphql->query($query, "RecentVideo");
 
-        if (!$this->hasArrayItems($data->recentVideos->videos)) {
+        if (!isset($data->recentVideos->videos) || !is_array($data->recentVideos->videos) || count($data->recentVideos->videos) === 0) {
             return [];
         }
 
@@ -246,7 +246,7 @@ query TrendingVideo {
 GRAPHQL;
         $data = $this->graphql->query($query, "TrendingVideo");
 
-        if (!$this->hasArrayItems($data->trendingTitles->titles)) {
+        if (!isset($data->trendingTitles->titles) || !is_array($data->trendingTitles->titles) || count($data->trendingTitles->titles) === 0) {
             return [];
         }
 

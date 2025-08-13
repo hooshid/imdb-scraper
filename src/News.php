@@ -85,7 +85,7 @@ query News {
 GRAPHQL;
         $data = $this->graphql->query($query, "News");
 
-        if (!$this->hasArrayItems($data->news->edges)) {
+        if (!isset($data->news->edges) || !is_array($data->news->edges) || count($data->news->edges) === 0) {
             return [];
         }
 

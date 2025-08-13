@@ -36,17 +36,6 @@ class Base extends Config
     }
 
     /**
-     * Safely checks if a nested object property exists and is an array
-     *
-     * @param mixed $property The nested property path to check (e.g., $data->mainSearch->edges)
-     * @return bool True if property exists and is an array, false otherwise
-     */
-    function hasArrayItems(mixed $property): bool
-    {
-        return isset($property) && is_array($property) && count($property) > 0;
-    }
-
-    /**
      * Parse image object into structured data
      *
      * @param object|null $imageObject Object containing image data

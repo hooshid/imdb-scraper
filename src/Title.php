@@ -796,10 +796,14 @@ GRAPHQL;
      */
     private function runtimesParse($data): void
     {
-        if ($this->hasArrayItems($data->title->runtimes->edges)) {
+        if (isset($data->title->runtimes->edges)
+            && is_array($data->title->runtimes->edges)
+            && count($data->title->runtimes->edges) > 0) {
             foreach ($data->title->runtimes->edges as $edge) {
                 $attributes = [];
-                if ($this->hasArrayItems($edge->node->attributes)) {
+                if (isset($edge->node->attributes)
+                    && is_array($edge->node->attributes)
+                    && count($edge->node->attributes) > 0) {
                     foreach ($edge->node->attributes as $attribute) {
                         if (!empty($attribute->text)) {
                             $attributes[] = $attribute->text;
@@ -854,7 +858,9 @@ GRAPHQL;
      */
     private function genresParse($data): void
     {
-        if ($this->hasArrayItems($data->title->titleGenres->genres)) {
+        if (isset($data->title->titleGenres->genres)
+            && is_array($data->title->titleGenres->genres)
+            && count($data->title->titleGenres->genres) > 0) {
             foreach ($data->title->titleGenres->genres as $edge) {
                 $this->data['genres'][] = $edge->genre->text;
             }
@@ -898,7 +904,9 @@ GRAPHQL;
      */
     private function languagesParse($data): void
     {
-        if ($this->hasArrayItems($data->title->spokenLanguages->spokenLanguages)) {
+        if (isset($data->title->spokenLanguages->spokenLanguages)
+            && is_array($data->title->spokenLanguages->spokenLanguages)
+            && count($data->title->spokenLanguages->spokenLanguages) > 0) {
             foreach ($data->title->spokenLanguages->spokenLanguages as $language) {
                 if (!empty($language->text)) {
                     $this->data['languages'][] = [
@@ -947,7 +955,9 @@ GRAPHQL;
      */
     private function countriesParse($data): void
     {
-        if ($this->hasArrayItems($data->title->countriesOfOrigin->countries)) {
+        if (isset($data->title->countriesOfOrigin->countries)
+            && is_array($data->title->countriesOfOrigin->countries)
+            && count($data->title->countriesOfOrigin->countries) > 0) {
             foreach ($data->title->countriesOfOrigin->countries as $country) {
                 if (!empty($country->text)) {
                     $this->data['countries'][] = [
@@ -997,7 +1007,9 @@ GRAPHQL;
      */
     private function taglinesParse($data): void
     {
-        if ($this->hasArrayItems($data->title->taglines->edges)) {
+        if (isset($data->title->taglines->edges)
+            && is_array($data->title->taglines->edges)
+            && count($data->title->taglines->edges) > 0) {
             foreach ($data->title->taglines->edges as $edge) {
                 $this->data['taglines'][] = $edge->node->text;
             }
@@ -1074,7 +1086,9 @@ query Plots(\$id: ID!) {
 GRAPHQL;
 
             $data = $this->graphql->query($query, "Plots", ["id" => $this->imdb_id]);
-            if ($this->hasArrayItems($data->title->plots->edges)) {
+            if (isset($data->title->plots->edges)
+                && is_array($data->title->plots->edges)
+                && count($data->title->plots->edges) > 0) {
                 foreach ($data->title->plots->edges as $edge) {
                     if (!empty($edge->node->plotText->plainText)) {
                         $this->data['plots'][] = [
@@ -1107,7 +1121,7 @@ keyword {
 GRAPHQL;
 
             $data = $this->getAllData("Keywords", "keywords", $query);
-            if ($this->hasArrayItems($data)) {
+            if (count($data) > 0) {
                 foreach ($data as $edge) {
                     if (!empty($edge->node->keyword->text->text)) {
                         $this->data['keywords'][] = $edge->node->keyword->text->text;
@@ -1141,10 +1155,12 @@ attributes {
 GRAPHQL;
 
             $data = $this->getAllData("ReleaseDates", "releaseDates", $query);
-            if ($this->hasArrayItems($data)) {
+            if (count($data) > 0) {
                 foreach ($data as $edge) {
                     $attributes = [];
-                    if ($this->hasArrayItems($edge->node->attributes)) {
+                    if (isset($edge->node->attributes)
+                        && is_array($edge->node->attributes)
+                        && count($edge->node->attributes) > 0) {
                         foreach ($edge->node->attributes as $attribute) {
                             if (!empty($attribute->text)) {
                                 $attributes[] = $attribute->text;
@@ -1190,10 +1206,12 @@ displayableProperty {
 GRAPHQL;
 
             $data = $this->getAllData("FilmingLocations", "filmingLocations", $query);
-            if ($this->hasArrayItems($data)) {
+            if (count($data) > 0) {
                 foreach ($data as $edge) {
                     $scenes = null;
-                    if ($this->hasArrayItems($edge->node->displayableProperty->qualifiersInMarkdownList)) {
+                    if (isset($edge->node->displayableProperty->qualifiersInMarkdownList)
+                        && is_array($edge->node->displayableProperty->qualifiersInMarkdownList)
+                        && count($edge->node->displayableProperty->qualifiersInMarkdownList) > 0) {
                         foreach ($edge->node->displayableProperty->qualifiersInMarkdownList as $attribute) {
                             if (!empty($attribute->plainText)) {
                                 $scenes[] = $attribute->plainText;
@@ -1292,10 +1310,12 @@ attributes {
 GRAPHQL;
 
             $data = $this->getAllData("Mpaa", "certificates", $query);
-            if ($this->hasArrayItems($data)) {
+            if (count($data) > 0) {
                 foreach ($data as $edge) {
                     $comments = null;
-                    if ($this->hasArrayItems($edge->node->attributes)) {
+                    if (isset($edge->node->attributes)
+                        && is_array($edge->node->attributes)
+                        && count($edge->node->attributes) > 0) {
                         foreach ($edge->node->attributes as $attribute) {
                             if (!empty($attribute->text)) {
                                 $comments[] = $attribute->text;
@@ -1379,7 +1399,9 @@ query RankedLifetimeGrosses(\$id: ID!) {
 GRAPHQL;
 
             $data = $this->graphql->query($query, "RankedLifetimeGrosses", ["id" => $this->imdb_id]);
-            if ($this->hasArrayItems($data->title->rankedLifetimeGrosses->edges)) {
+            if (isset($data->title->rankedLifetimeGrosses->edges)
+                && is_array($data->title->rankedLifetimeGrosses->edges)
+                && count($data->title->rankedLifetimeGrosses->edges) > 0) {
                 foreach ($data->title->rankedLifetimeGrosses->edges as $edge) {
                     if (!empty($edge->node->boxOfficeAreaType->text)) {
                         $this->data['grosses'][] = [
@@ -1628,7 +1650,9 @@ GRAPHQL;
      */
     private function imagesParse($data): void
     {
-        if ($this->hasArrayItems($data->title->images->edges)) {
+        if (isset($data->title->images->edges)
+            && is_array($data->title->images->edges)
+            && count($data->title->images->edges) > 0) {
             $images = [];
             foreach ($data->title->images->edges as $edge) {
                 if (empty($edge->node->id) || empty($edge->node->url)) {
@@ -1756,7 +1780,9 @@ GRAPHQL;
 
             $data = $this->graphql->query($query, "Video", ["id" => $this->imdb_id]);
 
-            if ($this->hasArrayItems($data->title->videoStrip->edges)) {
+            if (isset($data->title->videoStrip->edges)
+                && is_array($data->title->videoStrip->edges)
+                && count($data->title->videoStrip->edges) > 0) {
                 $videoClass = new Video();
                 $this->data['videos'] = $videoClass->parseVideoResults($data->title->videoStrip->edges, $videoContentType, $videoIncludeMature);
             }
@@ -1810,7 +1836,9 @@ query News(\$id: ID!) {
 }
 GRAPHQL;
             $data = $this->graphql->query($query, "News", ["id" => $this->imdb_id]);
-            if ($this->hasArrayItems($data->title->news->edges)) {
+            if (isset($data->title->news->edges)
+                && is_array($data->title->news->edges)
+                && count($data->title->news->edges) > 0) {
                 $newsClass = new News();
                 $this->data['news'] = $newsClass->parseNewsResults($data->title->news->edges);
             }
@@ -1858,7 +1886,9 @@ GRAPHQL;
             $data = $this->graphql->query($query, "Metacritic", ["id" => $this->imdb_id]);
 
             $reviews = [];
-            if (isset($data->title->metacritic->reviews) && $this->hasArrayItems($data->title->metacritic->reviews->edges)) {
+            if (isset($data->title->metacritic->reviews)
+                && is_array($data->title->metacritic->reviews)
+                && count($data->title->metacritic->reviews) > 0) {
                 foreach ($data->title->metacritic->reviews->edges as $edge) {
                     $reviews[] = [
                         'reviewer' => $edge->node->reviewer ?? null,
@@ -1946,7 +1976,9 @@ EOF;
 
                     // credited persons
                     $names = [];
-                    if (isset($edge->node->awardedEntities->secondaryAwardNames) && $this->hasArrayItems($edge->node->awardedEntities->secondaryAwardNames)) {
+                    if (isset($edge->node->awardedEntities->secondaryAwardNames)
+                        && is_array($edge->node->awardedEntities->secondaryAwardNames)
+                        && count($edge->node->awardedEntities->secondaryAwardNames) > 0) {
                         foreach ($edge->node->awardedEntities->secondaryAwardNames as $creditor) {
                             $names[] = [
                                 'id' => $creditor->name->id,
@@ -2030,7 +2062,7 @@ isSpoiler
 GRAPHQL;
 
             $data = $this->getAllData("Faq", "faqs", $query, $filter);
-            if ($this->hasArrayItems($data)) {
+            if (count($data) > 0) {
                 foreach ($data as $edge) {
                     $this->data['faq'][] = [
                         'question' => $edge->node->question->plainText ?? null,
@@ -2070,10 +2102,12 @@ language {
 GRAPHQL;
 
             $data = $this->getAllData("AlsoKnow", "akas", $query, $filter);
-            if ($this->hasArrayItems($data)) {
+            if (count($data) > 0) {
                 foreach ($data as $edge) {
                     $comments = [];
-                    if ($this->hasArrayItems($edge->node->attributes)) {
+                    if (isset($edge->node->attributes)
+                        && is_array($edge->node->attributes)
+                        && count($edge->node->attributes) > 0) {
                         foreach ($edge->node->attributes as $attribute) {
                             if (!empty($attribute->text)) {
                                 $comments[] = $attribute->text;
@@ -2112,7 +2146,7 @@ text {
 GRAPHQL;
 
             $data = $this->getAllData("AlternateVersions", "alternateVersions", $query);
-            if ($this->hasArrayItems($data)) {
+            if (count($data) > 0) {
                 foreach ($data as $edge) {
                     if (!empty($edge->node->text->plainText)) {
                         $this->data['alternate_versions'][] = $edge->node->text->plainText;
@@ -2289,7 +2323,9 @@ EOF;
             if (count($edges) > 0) {
                 foreach ($edges as $edge) {
                     $language = [];
-                    if ($this->hasArrayItems($edge->node->externalLinkLanguages)) {
+                    if (isset($edge->node->externalLinkLanguages)
+                        && is_array($edge->node->externalLinkLanguages)
+                        && count($edge->node->externalLinkLanguages) > 0) {
                         foreach ($edge->node->externalLinkLanguages as $lang) {
                             if (!empty($lang->text)) {
                                 $language[] = $lang->text;
@@ -2347,7 +2383,9 @@ query Recommendations(\$id: ID!) {
 EOF;
             $data = $this->graphql->query($query, "Recommendations", ["id" => $this->imdb_id]);
 
-            if ($this->hasArrayItems($data->title->moreLikeThisTitles->edges)) {
+            if (isset($data->title->moreLikeThisTitles->edges)
+                && is_array($data->title->moreLikeThisTitles->edges)
+                && count($data->title->moreLikeThisTitles->edges) > 0) {
                 foreach ($data->title->moreLikeThisTitles->edges as $edge) {
                     $this->data['recommendations'][] = [
                         'id' => $edge->node->id,
@@ -2408,10 +2446,14 @@ query ParentsGuide (\$id: ID!) {
 EOF;
             $data = $this->graphql->query($query, "ParentsGuide", ["id" => $this->imdb_id]);
 
-            if ($this->hasArrayItems($data->title->parentsGuide->categories)) {
+            if (isset($data->title->parentsGuide->categories)
+                && is_array($data->title->parentsGuide->categories)
+                && count($data->title->parentsGuide->categories) > 0) {
                 foreach ($data->title->parentsGuide->categories as $category) {
                     $guideItems = [];
-                    if ($this->hasArrayItems($category->guideItems->edges)) {
+                    if (isset($category->guideItems->edges)
+                        && is_array($category->guideItems->edges)
+                        && count($category->guideItems->edges) > 0) {
                         foreach ($category->guideItems->edges as $edge) {
                             $guideItems[] = [
                                 'guide_text' => $edge->node->text->plainText ?? null,
@@ -2654,7 +2696,9 @@ query PrincipalCredits(\$id: ID!) {
 EOF;
             $data = $this->graphql->query($query, "PrincipalCredits", ["id" => $this->imdb_id]);
 
-            if ($this->hasArrayItems($data->title->principalCredits)) {
+            if (isset($data->title->principalCredits)
+                && is_array($data->title->principalCredits)
+                && count($data->title->principalCredits) > 0) {
                 foreach ($data->title->principalCredits as $value) {
                     $category = 'unknown';
                     $credits = [];
@@ -2863,7 +2907,9 @@ EOF;
         if (count($data) > 0) {
             foreach ($data as $edge) {
                 $jobs = [];
-                if ($this->hasArrayItems($edge->node->jobs)) {
+                if (isset($edge->node->jobs)
+                    && is_array($edge->node->jobs)
+                    && count($edge->node->jobs) > 0) {
                     foreach ($edge->node->jobs as $value) {
                         if (!empty($value->text)) {
                             $jobs[] = $value->text;
@@ -2881,7 +2927,9 @@ EOF;
                 }
 
                 $attributes = [];
-                if ($this->hasArrayItems($edge->node->attributes)) {
+                if (isset($edge->node->attributes)
+                    && is_array($edge->node->attributes)
+                    && count($edge->node->attributes) > 0) {
                     foreach ($edge->node->attributes as $attribute) {
                         if (!empty($attribute->text)) {
                             $attributes[] = $attribute->text;
@@ -2976,10 +3024,16 @@ query TechSpec(\$id: ID!) {
 GRAPHQL;
         $data = $this->graphql->query($query, "TechSpec", ["id" => $this->imdb_id]);
 
-        if ($this->hasArrayItems($data->title->technicalSpecifications->$type->items)) {
+        if (isset($data->title->technicalSpecifications->$type->items) &&
+            is_array($data->title->technicalSpecifications->$type->items) &&
+            count($data->title->technicalSpecifications->$type->items) > 0
+        )
+        {
             foreach ($data->title->technicalSpecifications->$type->items as $item) {
                 $attributes = null;
-                if ($this->hasArrayItems($item->attributes)) {
+                if (isset($item->attributes) &&
+                    is_array($item->attributes) &&
+                    count($item->attributes) > 0) {
                     foreach ($item->attributes as $attribute) {
                         if (!empty($attribute->text)) {
                             $attributes[] = $attribute->text;
@@ -3026,10 +3080,12 @@ yearsInvolved {
 EOF;
         $data = $this->getAllData("CompanyCredits", "companyCredits", $query, $filter);
         $results = [];
-        if ($this->hasArrayItems($data)) {
+        if (count($data) > 0) {
             foreach ($data as $edge) {
                 $companyAttribute = [];
-                if ($this->hasArrayItems($edge->node->attributes)) {
+                if (isset($edge->node->attributes)
+                    && is_array($edge->node->attributes)
+                    && count($edge->node->attributes) > 0) {
                     foreach ($edge->node->attributes as $attribute) {
                         $companyAttribute[] = $attribute->text;
                     }

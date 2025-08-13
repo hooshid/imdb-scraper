@@ -607,7 +607,9 @@ GRAPHQL;
      */
     private function nickNamesParse($data): void
     {
-        if ($this->hasArrayItems($data->name->nickNames)) {
+        if (isset($data->name->nickNames)
+            && is_array($data->name->nickNames)
+            && count($data->name->nickNames) > 0) {
             foreach ($data->name->nickNames as $nickName) {
                 $this->data['nick_names'][] = $nickName->text;
             }
@@ -651,7 +653,9 @@ GRAPHQL;
      */
     private function akaNamesParse($data): void
     {
-        if ($this->hasArrayItems($data->name->akas->edges)) {
+        if (isset($data->name->akas->edges)
+            && is_array($data->name->akas->edges)
+            && count($data->name->akas->edges) > 0) {
             foreach ($data->name->akas->edges as $edge) {
                 $this->data['aka_names'][] = $edge->node->text;
             }
@@ -757,7 +761,9 @@ GRAPHQL;
      */
     private function bioParse($data): void
     {
-        if ($this->hasArrayItems($data->name->bios->edges)) {
+        if (isset($data->name->bios->edges)
+            && is_array($data->name->bios->edges)
+            && count($data->name->bios->edges) > 0) {
             foreach ($data->name->bios->edges as $edge) {
                 if (empty($edge->node->text->plainText)) {
                     continue;
@@ -806,7 +812,9 @@ GRAPHQL;
      */
     private function professionsParse($data): void
     {
-        if ($this->hasArrayItems($data->name->primaryProfessions)) {
+        if (isset($data->name->primaryProfessions)
+            && is_array($data->name->primaryProfessions)
+            && count($data->name->primaryProfessions) > 0) {
             foreach ($data->name->primaryProfessions as $primaryProfession) {
                 $this->data['professions'][] = $primaryProfession->category->text;
             }
@@ -878,7 +886,9 @@ GRAPHQL;
      */
     private function spousesParse($data): void
     {
-        if ($this->hasArrayItems($data->name->spouses)) {
+        if (isset($data->name->spouses)
+            && is_array($data->name->spouses)
+            && count($data->name->spouses) > 0) {
             foreach ($data->name->spouses as $spouse) {
                 if (empty($spouse->spouse->name->id)) {
                     continue;
@@ -901,7 +911,9 @@ GRAPHQL;
                 // Comments and children
                 $comment = [];
                 $children = 0;
-                if ($this->hasArrayItems($spouse->attributes)) {
+                if (isset($spouse->attributes)
+                    && is_array($spouse->attributes)
+                    && count($spouse->attributes) > 0) {
                     foreach ($spouse->attributes as $attribute) {
                         if (!empty($attribute->text)) {
                             if (stripos($attribute->text, "child") !== false) {
@@ -1143,7 +1155,9 @@ GRAPHQL;
      */
     private function imagesParse($data): void
     {
-        if ($this->hasArrayItems($data->name->images->edges)) {
+        if (isset($data->name->images->edges)
+            && is_array($data->name->images->edges)
+            && count($data->name->images->edges) > 0) {
             $images = [];
             foreach ($data->name->images->edges as $edge) {
                 if (empty($edge->node->id) || empty($edge->node->url)) {
@@ -1269,7 +1283,9 @@ query Video(\$id: ID!) {
 GRAPHQL;
             $data = $this->graphql->query($query, "Video", ["id" => $this->imdb_id]);
 
-            if ($this->hasArrayItems($data->name->primaryVideos->edges)) {
+            if (isset($data->name->primaryVideos->edges)
+                && is_array($data->name->primaryVideos->edges)
+                && count($data->name->primaryVideos->edges) > 0) {
                 $videoClass = new Video();
                 $this->data['videos'] = $videoClass->parseVideoResults($data->name->primaryVideos->edges, $videoContentType, $videoIncludeMature);
             }
@@ -1323,7 +1339,9 @@ query News(\$id: ID!) {
 }
 GRAPHQL;
             $data = $this->graphql->query($query, "News", ["id" => $this->imdb_id]);
-            if ($this->hasArrayItems($data->name->news->edges)) {
+            if (isset($data->name->news->edges)
+                && is_array($data->name->news->edges)
+                && count($data->name->news->edges) > 0) {
                 $newsClass = new News();
                 $this->data['news'] = $newsClass->parseNewsResults($data->name->news->edges);
             }
@@ -1391,7 +1409,9 @@ GRAPHQL;
      */
     private function creditKnownForParse($data): void
     {
-        if ($this->hasArrayItems($data->name->knownFor->edges)) {
+        if (isset($data->name->knownFor->edges)
+            && is_array($data->name->knownFor->edges)
+            && count($data->name->knownFor->edges) > 0) {
             $items = [];
             foreach ($data->name->knownFor->edges as $edge) {
                 if (empty($edge->node->credit->title->id) || empty($edge->node->credit->title->titleText->text)) {
@@ -1399,7 +1419,9 @@ GRAPHQL;
                 }
 
                 $characters = [];
-                if (isset($edge->node->credit->characters) && $this->hasArrayItems($edge->node->credit->characters)) {
+                if (isset($edge->node->credit->characters)
+                    && is_array($edge->node->credit->characters)
+                    && count($edge->node->credit->characters) > 0) {
                     foreach ($edge->node->credit->characters as $character) {
                         if (!empty($character->name)) {
                             $characters[] = $character->name;
@@ -1542,14 +1564,18 @@ GRAPHQL;
      */
     private function creditsParse($data): void
     {
-        if ($this->hasArrayItems($data)) {
+        if (isset($data)
+            && is_array($data)
+            && count($data) > 0) {
             foreach ($data as $edge) {
                 if (empty($edge->node->title->id)) {
                     continue;
                 }
 
                 $characters = [];
-                if (isset($edge->node->characters) && $this->hasArrayItems($edge->node->characters)) {
+                if (isset($edge->node->characters)
+                    && is_array($edge->node->characters)
+                    && count($edge->node->characters) > 0) {
                     foreach ($edge->node->characters as $character) {
                         if (!empty($character->name)) {
                             $characters[] = $character->name;
@@ -1558,7 +1584,9 @@ GRAPHQL;
                 }
 
                 $jobs = [];
-                if (isset($edge->node->jobs) && $this->hasArrayItems($edge->node->jobs)) {
+                if (isset($edge->node->jobs)
+                    && is_array($edge->node->jobs)
+                    && count($edge->node->jobs) > 0) {
                     foreach ($edge->node->jobs as $job) {
                         if (!empty($job->text)) {
                             $jobs[] = $job->text;
@@ -1645,7 +1673,9 @@ GRAPHQL;
 
                     // credited titles
                     $titles = [];
-                    if (isset($edge->node->awardedEntities->secondaryAwardTitles) && $this->hasArrayItems($edge->node->awardedEntities->secondaryAwardTitles)) {
+                    if (isset($edge->node->awardedEntities->secondaryAwardTitles)
+                        && is_array($edge->node->awardedEntities->secondaryAwardTitles)
+                        && count($edge->node->awardedEntities->secondaryAwardTitles) > 0) {
                         foreach ($edge->node->awardedEntities->secondaryAwardTitles as $title) {
                             $titles[] = [
                                 'id' => $title->title->id,
@@ -2169,7 +2199,9 @@ GRAPHQL;
                 ];
 
                 $authors = [];
-                if (isset($edge->node->authors) && $this->hasArrayItems($edge->node->authors)) {
+                if (isset($edge->node->authors)
+                    && is_array($edge->node->authors)
+                    && count($edge->node->authors) > 0) {
                     foreach ($edge->node->authors as $author) {
                         if (!empty($author->plainText)) {
                             $authors[] = $author->plainText;

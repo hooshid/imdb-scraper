@@ -59,7 +59,7 @@ GRAPHQL;
 
         $data = $this->graphql->query($query, "SearchKeyword");
 
-        if (!$this->hasArrayItems($data->mainSearch->edges)) {
+        if (!isset($data->mainSearch->edges) || !is_array($data->mainSearch->edges) || count($data->mainSearch->edges) === 0) {
             return [];
         }
 
