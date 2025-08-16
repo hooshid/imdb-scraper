@@ -5,6 +5,19 @@ require __DIR__ . "/../vendor/autoload.php";
 // check search string is imdb id or searchTerm with specific type
 $search = trim(strip_tags($_GET["search"]));
 
+function extractImdbId($url): ?string
+{
+    $pattern = '/(tt|nm)\d+/';
+    if (preg_match($pattern, $url, $matches)) {
+        return $matches[0];
+    }
+    return null;
+}
+
+if (extractImdbId($search)) {
+    $search = extractImdbId($search);
+}
+
 // if search input is empty, go back to example page
 if (empty($search)) {
     header("Location: /example");

@@ -269,7 +269,7 @@ GRAPHQL;
                 continue;
             }
 
-            if (!empty($videoIncludeMature) && isset($node->isMature) && $node->isMature !== $videoIncludeMature) {
+            if (isset($node->isMature) && $videoIncludeMature === false && $node->isMature === true) {
                 continue;
             }
 

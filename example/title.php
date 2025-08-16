@@ -9,7 +9,7 @@ $id = $_GET["id"];
 if (isset($id) and preg_match('/^(tt\d+|\d+)$/', $id)) {
     $titleObj = new Title($id);
     $titleObj->images(8);
-    $titleObj->videos(8);
+    $titleObj->videos(8,null,true);
     $titleObj->news(8);
     $title = $titleObj->full(['release_dates', 'keywords', 'locations', 'sounds', 'colors', 'aspect_ratio', 'cameras', 'certificates', 'budget', 'grosses', 'akas', 'alternate_versions', 'awards', 'seasons', 'episodes']);
     if (isset($_GET["output"])) {
@@ -589,7 +589,7 @@ $image = new Image();
             <?php } ?>
 
             <!-- Awards -->
-            <?php if (!empty($title['awards'])) { ?>
+            <?php if (!empty($title['awards']) && isset($title['awards']['events'])) { ?>
                 <div class="head-title">Awards & Events - <?php echo $title['awards']['stats']['win']; ?> wins
                     & <?php echo $title['awards']['stats']['nom']; ?> nominations
                 </div>
