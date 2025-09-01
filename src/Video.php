@@ -273,6 +273,10 @@ GRAPHQL;
                 continue;
             }
 
+            if(empty($node->primaryTitle->id)){
+                continue;
+            }
+
             $results[] = $this->parseNode($node);
         }
 
