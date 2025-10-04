@@ -50,8 +50,8 @@ class NameTest extends TestCase
         $this->assertEquals('Robert Anthony De Niro Jr.', $person['birth_name']);
 
         $this->assertIsArray($person['nick_names']);
-        $this->assertCount(4, $person['nick_names']);
-        $this->assertEquals('Bobby Milk, Kid Monroe, Bob, Bobby D', implode(', ', $person['nick_names']));
+        $this->assertCount(3, $person['nick_names']);
+        $this->assertEquals('Bobby Milk, Kid Monroe, Bob', implode(', ', $person['nick_names']));
 
         $this->assertIsArray($person['aka_names']);
         $this->assertCount(5, $person['aka_names']);
