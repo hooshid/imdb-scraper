@@ -40,13 +40,13 @@ class VideoTest extends TestCase
         // playback urls
         $this->assertCount(5, $vi['urls']);
 
-        $this->assertEquals('AUTO', $vi['urls'][0]['quality']);
-        $this->assertEquals('M3U8', $vi['urls'][0]['mime_type']);
-        $this->assertNotNull($vi['urls'][0]['url']);
-
-        $this->assertEquals('1080p', $vi['urls'][1]['quality']);
-        $this->assertEquals('MP4', $vi['urls'][1]['mime_type']);
+        $this->assertEquals('AUTO', $vi['urls'][1]['quality']);
+        $this->assertEquals('M3U8', $vi['urls'][1]['mime_type']);
         $this->assertNotNull($vi['urls'][1]['url']);
+
+        $this->assertEquals('1080p', $vi['urls'][0]['quality']);
+        $this->assertEquals('MP4', $vi['urls'][0]['mime_type']);
+        $this->assertNotNull($vi['urls'][0]['url']);
     }
 
 }
