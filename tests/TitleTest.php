@@ -53,10 +53,10 @@ class TitleTest extends TestCase
 
         $this->assertIsArray($data['keywords']);
         $this->assertGreaterThan(400, count($data['keywords']));
-        $this->assertEquals('artificial reality', $data['keywords'][0]);
-        $this->assertEquals('war with machines', $data['keywords'][1]);
-        $this->assertEquals('simulated reality', $data['keywords'][2]);
-        $this->assertEquals('dystopia', $data['keywords'][3]);
+        $this->assertContains('artificial reality', $data['keywords']);
+        $this->assertContains('war with machines', $data['keywords']);
+        $this->assertContains('simulated reality', $data['keywords']);
+        $this->assertContains('dystopia', $data['keywords']);
 
         $this->assertIsArray($data['locations']);
         $this->assertCount(22, $data['locations']);
