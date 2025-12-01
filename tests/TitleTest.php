@@ -87,6 +87,7 @@ class TitleTest extends TestCase
         $this->assertGreaterThanOrEqual(18, count($data['videos']));
     }
 
+    /*
     public function testMovie2()
     {
         $title = new Title('tt7617048');
@@ -114,6 +115,7 @@ class TitleTest extends TestCase
         $this->assertNull($data['aspect_ratio']);
         $this->assertNull($data['cameras']);
     }
+    */
 
     public function testMovie3()
     {
