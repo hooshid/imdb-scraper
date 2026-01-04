@@ -64,8 +64,8 @@ class ChartTest extends TestCase
         $this->assertEquals("Breaking Bad", $result[0]['title']);
         $this->assertEquals(1, $result[0]['rank']);
         $this->assertEquals("TV Series", $result[0]['type']);
-        $this->assertEquals(45, $result[0]['runtime_minutes']);
-        $this->assertEquals(2700, $result[0]['runtime_seconds']);
+        $this->assertEquals(48, $result[0]['runtime_minutes']);
+        $this->assertEquals(2880, $result[0]['runtime_seconds']);
         $this->assertEquals(2008, $result[0]['year']);
         $this->assertGreaterThan(9, $result[0]['rating']);
         $this->assertGreaterThan(2300000, $result[0]['votes']);

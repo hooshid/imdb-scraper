@@ -62,11 +62,11 @@ class NameSearchTest extends TestCase
     public function testDied()
     {
         $name = new NameSearch();
-        $data = $name->search(['deathDateRangeStart' => '2025-01-16', 'deathDateRangeEnd' => '2025-01-16']);
+        $data = $name->search(['deathDateRangeStart' => '2025-01-15', 'deathDateRangeEnd' => '2025-01-15']);
         $results = $data['results'];
 
         $this->assertIsArray($results);
-        $this->assertCount(16, $results);
+        $this->assertCount(26, $results);
 
         // 1. David Lynch
         $this->assertIsArray($results[0]['image']);
