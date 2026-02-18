@@ -26,7 +26,7 @@ class TitleTest extends TestCase
         $this->assertEquals(3156, $data['image']['height']);
 
         $this->assertEquals(8.7, $data['ratings']['rating']);
-        $this->assertGreaterThan(2000000, $data['ratings']['votes']);
+        $this->assertGreaterThan(2200000, $data['ratings']['votes']);
 
         $this->assertIsInt($data['rank']['current_rank']);
         $this->assertIsString($data['rank']['change_direction']);
