@@ -28,7 +28,7 @@ We have comprehensive documentation available on our [GitHub Wiki](https://githu
 * Title
   * [x] Movie/Series Title
   * [x] Trailers
-  * [ ] Series seasons
+  * [x] Series seasons & Episodes
 * Calendar
 * Video
 
