@@ -194,8 +194,8 @@ class TitleTest extends TestCase
 
         $this->assertIsArray($data['image']);
         $this->assertEquals('https://m.media-amazon.com/images/M/MV5BYjIxZTMwZmUtOTUzYS00YmU2LWJhNDAtNzA2NDg0NDA0MjVkXkEyXkFqcGc@._V1_.jpg', $data['image']['url']);
-        $this->assertEquals(960, $data['image']['width']);
-        $this->assertEquals(1440, $data['image']['height']);
+        $this->assertEquals(2560, $data['image']['width']);
+        $this->assertEquals(3840, $data['image']['height']);
 
         $this->assertIsArray($data['languages']);
         $this->assertCount(4, $data['languages']);
