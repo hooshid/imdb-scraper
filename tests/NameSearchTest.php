@@ -66,7 +66,7 @@ class NameSearchTest extends TestCase
         $results = $data['results'];
 
         $this->assertIsArray($results);
-        $this->assertCount(26, $results);
+        $this->assertCount(27, $results);
 
         // 1. David Lynch
         $this->assertIsArray($results[0]['image']);

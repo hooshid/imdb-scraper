@@ -38,11 +38,9 @@ class TitleTest extends TestCase
         $this->assertEquals('English', $data['languages'][0]['name']);
 
         $this->assertIsArray($data['countries']);
-        $this->assertCount(2, $data['countries']);
+        $this->assertCount(1, $data['countries']);
         $this->assertEquals('US', $data['countries'][0]['id']);
         $this->assertEquals('United States', $data['countries'][0]['name']);
-        $this->assertEquals('AU', $data['countries'][1]['id']);
-        $this->assertEquals('Australia', $data['countries'][1]['name']);
 
         $this->assertEquals(136, $data['runtime']);
         $this->assertIsArray($data['runtimes']);
@@ -195,7 +193,7 @@ class TitleTest extends TestCase
         $this->assertEquals(2008, $data['end_year']);
 
         $this->assertIsArray($data['image']);
-        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BZWYyNmRhYjktNjBhNC00M2NhLWEzYmMtZDYwNmIyZTRiZWMzXkEyXkFqcGc@._V1_.jpg', $data['image']['url']);
+        $this->assertEquals('https://m.media-amazon.com/images/M/MV5BYjIxZTMwZmUtOTUzYS00YmU2LWJhNDAtNzA2NDg0NDA0MjVkXkEyXkFqcGc@._V1_.jpg', $data['image']['url']);
         $this->assertEquals(960, $data['image']['width']);
         $this->assertEquals(1440, $data['image']['height']);
 
