@@ -14,7 +14,9 @@ use RuntimeException;
 class Request
 {
     private const DEFAULT_TIMEOUT = 45;
-    private const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0';
+    private const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36';
+
+    private ?Config $config;
 
     /** @var CurlHandle cURL handle */
     private CurlHandle $ch;
@@ -34,13 +36,15 @@ class Request
      * @param string $url URL to request
      * @throws RuntimeException If cURL initialization fails
      */
-    public function __construct(string $url)
+    public function __construct(string $url, ?Config $config = null)
     {
         $ch = curl_init($url);
 
         if ($ch === false) {
             throw new RuntimeException('Failed to initialize cURL handle');
         }
+
+        $this->config = $config ?: $this;
 
         $this->ch = $ch;
         $this->configureDefaultCurlOptions();
@@ -59,6 +63,40 @@ class Request
             CURLOPT_TIMEOUT => self::DEFAULT_TIMEOUT,
             CURLOPT_FAILONERROR => true,
         ]);
+
+        if ($this->config->proxy) {
+            $proxy = parse_url($this->config->proxy);
+
+            curl_setopt(
+                $this->ch,
+                CURLOPT_PROXY,
+                $proxy['host'] . ':' . $proxy['port']
+            );
+
+            if (isset($proxy['user'])) {
+                curl_setopt(
+                    $this->ch,
+                    CURLOPT_PROXYUSERPWD,
+                    $proxy['user'] . ':' . ($proxy['pass'] ?? '')
+                );
+            }
+
+            switch ($proxy['scheme'] ?? '') {
+                case 'socks5':
+                    curl_setopt($this->ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+                    break;
+
+                case 'socks5h':
+                    curl_setopt($this->ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME);
+                    break;
+
+                case 'http':
+                case 'https':
+                default:
+                    curl_setopt($this->ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+                    break;
+            }
+        }
     }
 
     /**
@@ -104,7 +142,6 @@ class Request
         }
 
         $response = curl_exec($this->ch);
-        curl_close($this->ch);
         if (is_string($response)) {
             $this->page = $response;
             return true;

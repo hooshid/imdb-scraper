@@ -37,4 +37,13 @@ class Config
      * es-MX (Spanisch Mexico)
      */
     public string $language = "en-US";
+    
+    /**
+     * Proxy address
+     * @var string|null
+     * Examples:
+     * http://127.0.0.1:8080
+     * socks5://127.0.0.1:9050
+     */
+    public string|null $proxy = null;
 }

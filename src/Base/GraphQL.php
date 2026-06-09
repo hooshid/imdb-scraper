@@ -43,7 +43,7 @@ class GraphQL
      */
     public function query(string $query, string $operationName, array $variables = []): stdClass
     {
-        $request = new Request(self::API_ENDPOINT);
+        $request = new Request(self::API_ENDPOINT, $this->config);
         $this->configureRequestHeaders($request);
 
         $payload = $this->buildRequestPayload($query, $operationName, $variables);
