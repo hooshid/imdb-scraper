@@ -70,7 +70,7 @@ class ChartTest extends TestCase
         $this->assertGreaterThan(9, $result[0]['rating']);
         $this->assertGreaterThan(2300000, $result[0]['votes']);
         $this->assertIsArray($result[0]['image']);
-        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BMzU5ZGYzNmQtMTdhYy00OGRiLTg0NmQtYjVjNzliZTg1ZGE4XkEyXkFqcGc@._V1_.jpg", $result[0]['image']['url']);
+        $this->assertEquals("https://m.media-amazon.com/images/M/MV5BOWE4NTc3YmYtNmU2Mi00ZjhkLWE1MTItZmM1M2U1ODU3YjFlXkEyXkFqcGc@._V1_.jpg", $result[0]['image']['url']);
     }
 
     public function testMostPopularTitles()
