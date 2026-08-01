@@ -62,6 +62,7 @@ class GraphQL
     private function configureRequestHeaders(Request $request): void
     {
         $request->addHeaderLine("Content-Type", "application/json");
+        $request->addHeaderLine("x-imdb-client-name", "imdb-web-next-localized");
 
         if (!empty($this->config->country)) {
             $request->addHeaderLine("X-Imdb-User-Country", $this->config->country);
