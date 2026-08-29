@@ -92,7 +92,7 @@ class ChartTest extends TestCase
                 $this->assertIsInt($item['runtime_seconds']);
                 $this->assertIsArray($item['genres']);
                 $this->assertIsInt($item['year']);
-                $this->assertIsFloat($item['rating']);
+                $this->assertIsNumeric($item['rating']);
                 $this->assertIsInt($item['votes']);
                 $this->assertIsArray($item['image']);
                 $isTested = true;

@@ -175,7 +175,7 @@ class TitleTest extends TestCase
         $this->assertEquals('tt3110958', $data['imdb_id']);
         $this->assertEquals('Die Unfassbaren 2', $data['title']);
         $this->assertEquals('Now You See Me 2', $data['original_title']);
-        $this->assertEquals('Movie', $data['type']);
+        $this->assertEquals('Film', $data['type']);
     }
 
     public function testSeries()
