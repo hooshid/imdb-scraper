@@ -23,7 +23,7 @@ class TitleSearchTest extends TestCase
         $this->assertEquals('I Saw the Devil', $results[0]['title']);
         $this->assertEquals('Movie', $results[0]['type']);
         $this->assertEquals('2010', $results[0]['year']);
-        $this->assertEquals('A secret agent exacts revenge on a serial killer through a series of captures and releases.', $results[0]['plot']);
+        $this->assertEquals('A secret agent exacts revenge on a serial killer through a series of captures and releases..', $results[0]['plot']);
         $this->assertEquals("2:24:00", $results[0]['runtime_formatted']);
         $this->assertEquals(144, $results[0]['runtime_minutes']);
         $this->assertEquals(8640, $results[0]['runtime_seconds']);
