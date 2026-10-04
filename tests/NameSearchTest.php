@@ -32,7 +32,7 @@ class NameSearchTest extends TestCase
                 $this->assertLessThan(3, $result['index']);
                 $this->assertEquals('nm6675440', $result['id']);
                 $this->assertEquals('Lily-Rose Depp', $result['name']);
-                $this->assertEquals('Actress, Composer, Soundtrack', implode(", ", $result['professions']));
+                $this->assertEquals('Actress, Composer, Producer', implode(", ", $result['professions']));
                 $this->assertGreaterThan(250, strlen($result['bio']));
                 $this->assertIsArray($result['known_for']);
                 $this->assertCount(5, $result['known_for']);
